@@ -2,7 +2,8 @@
   "compilerOptions": {
     /* Base Options */
     "target": "ES2022",
-    "module": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -11,7 +12,6 @@
     "sourceMap": true,
 
     /* Bundler mode */
-    "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
