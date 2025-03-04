@@ -96,7 +96,7 @@ const sorted = NeXID.sortIds(myIds);
 ### Advanced Usage: Custom Generator
 
 ```typescript
-import { createXidGenerator } from 'xid';
+import { createXidGenerator } from 'nexid';
 
 // Create a custom generator with options
 const generator = createXidGenerator({
@@ -165,7 +165,7 @@ if (id.isNil()) {
 
 ## Performance
 
-XID achieves excellent performance while maintaining its feature set:
+NeXID achieves excellent performance while maintaining its feature set:
 
 | Library         | Speed (IDs/sec) | Time-based | URL-safe | Fixed length | Size (chars) |
 | --------------- | --------------: | :--------: | :------: | :----------: | :----------: |
@@ -174,7 +174,7 @@ XID achieves excellent performance while maintaining its feature set:
 | uuid v4         |       9,317,440 |     ❌     |    ❌    |      ✅      |      36      |
 | nanoid          |       7,012,800 |     ❌     |    ✅    |      ✅      |      21      |
 | uuid v1         |       3,326,121 |     ✅     |    ❌    |      ✅      |      36      |
-| **xid**         |   **3,110,861** |     ✅     |    ✅    |      ✅      |      **20**      |
+| **NeXID**       |   **3,110,861** |     ✅     |    ✅    |      ✅      |    **20**    |
 | shortid         |         714,054 |     ❌     |    ✅    |      ❌      |   variable   |
 | ksuid           |          85,597 |     ✅     |    ✅    |      ✅      |      27      |
 | ulid            |          50,167 |     ✅     |    ✅    |      ✅      |      26      |
@@ -183,14 +183,14 @@ Note: Benchmarks run on Node.js v22 on a modern machine. Results may vary.
 
 ## Browser Support
 
-XID works in all modern browsers and uses the native `crypto.getRandomValues()` API for secure random generation.
+NeXID works in all modern browsers and uses the native `crypto.getRandomValues()` API for secure random generation.
 
 ## Error Handling
 
 The library throws typed errors to help handle edge cases:
 
 ```typescript
-import { InvalidIDError, RandomSourceUnavailableError } from 'xid';
+import { InvalidIDError, RandomSourceUnavailableError } from 'nexid';
 
 try {
   const id = fromString('invalid-id-string');
