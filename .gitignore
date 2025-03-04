@@ -1,0 +1,82 @@
+# Rust specific ignores
+target/
+**/*.rs.bk
+Cargo.lock
+# Keep Cargo.lock for binaries, remove for libraries
+
+# WebAssembly specific
+*.wasm
+*.wasm.map
+*.wasm.d.ts
+pkg/
+
+# Node.js / TypeScript
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn/
+.pnp.*
+*.tsbuildinfo
+.eslintcache
+
+# Build output
+build/
+out/
+dist/
+benchmark-results/
+coverage/
+bundles-dev/
+
+# Backups
+backups/
+archive/
+
+# Editor specific files
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# OS specific files
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+.directory
+.Trash-*
+
+# Logs and databases
+*.log
+*.sqlite
+*.sqlite3
+*.db
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Temporary files
+tmp/
+temp/
+.cache/
+
+# Claude Code
+CLAUDE.md
