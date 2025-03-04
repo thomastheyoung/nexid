@@ -1,10 +1,10 @@
-# XID - Fast, Lexicographically Sortable Unique IDs
+# NeXID - Fast, Lexicographically Sortable Unique IDs
 
-[![npm version](https://img.shields.io/npm/v/xid-ts.svg?style=flat&color=orange)](https://www.npmjs.com/package/xid)
+[![npm version](https://img.shields.io/npm/v/nexid-ts.svg?style=flat&color=orange)](https://www.npmjs.com/package/nexid)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-blue)](https://www.typescriptlang.org/)
 [![License: ISC](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
-A fast, efficient TypeScript implementation of the [XID specification](https://github.com/rs/xid) - globally unique identifiers that are lexicographically sortable. This library provides a complete solution for generating and working with XIDs in both Node.js and browser environments.
+A fast, efficient TypeScript implementation of the [XID specification](https://github.com/rs/xid) - globally unique identifiers that are lexicographically sortable. This library provides a complete solution for generating and working with NeXIDs in both Node.js and browser environments.
 
 ## Features
 
@@ -20,16 +20,16 @@ A fast, efficient TypeScript implementation of the [XID specification](https://g
 ## Installation
 
 ```bash
-npm install xid
+npm install nexid
 ```
 
 ## Quick Start
 
 ```typescript
-import Xid from 'xid';
+import NeXID from 'nexid';
 
 // Generate a new ID
-const id = Xid.newId();
+const id = NeXID.newId();
 console.log(id.toString()); // e.g. "cv37img5tppgl4002kb0"
 
 // Extract the timestamp
@@ -37,13 +37,13 @@ const timestamp = id.getTime();
 console.log(timestamp.toISOString()); // e.g. "2025-03-04T03:54:00.000Z"
 
 // Parse from an existing string
-const parsedId = Xid.fromString('cv37img5tppgl4002kb0');
+const parsedId = NeXID.fromString('cv37img5tppgl4002kb0');
 
 // Sort IDs chronologically (oldest to newest)
-const sortedIds = Xid.sortIds([id3, id1, id2]);
+const sortedIds = NeXID.sortIds([id3, id1, id2]);
 ```
 
-## Why XID?
+## Why NeXID?
 
 XIDs provide a perfect balance of features that make them ideal for many applications:
 
@@ -54,7 +54,7 @@ XIDs provide a perfect balance of features that make them ideal for many applica
 
 ## Structure
 
-Each XID consists of 12 bytes (96 bits), encoded as 20 characters:
+Each NeXID consists of 12 bytes (96 bits), encoded as 20 characters:
 
 ```
 |--- 4 bytes ---||--- 3 bytes ---||--- 2 bytes ---||--- 3 bytes ---|
@@ -74,23 +74,23 @@ This is then encoded using base32-hex (characters 0-9 and a-v), resulting in a 2
 
 ```typescript
 // Generate a new ID with the current timestamp
-const id = Xid.newId();
+const id = NeXID.newId();
 
 // Generate an ID with a specific timestamp
-const pastId = Xid.newId(new Date('2020-01-01'));
+const pastId = NeXID.newId(new Date('2020-01-01'));
 
 // Parse an ID from a string
-const parsed = Xid.fromString('cv37img5tppgl4002kb0');
+const parsed = NeXID.fromString('cv37img5tppgl4002kb0');
 
 // Create an ID from raw bytes
 const bytes = new Uint8Array(12); // Must be exactly 12 bytes
-const idFromBytes = Xid.fromBytes(bytes);
+const idFromBytes = NeXID.fromBytes(bytes);
 
 // Get a nil (zero) ID
-const nilID = Xid.nilId;
+const nilID = NeXID.nilId;
 
 // Sort an array of IDs lexicographically (which also sorts them chronologically)
-const sorted = Xid.sortIds(myIds);
+const sorted = NeXID.sortIds(myIds);
 ```
 
 ### Advanced Usage: Custom Generator
