@@ -41,7 +41,7 @@ This document presents benchmark results comparing NeXID with other popular ID g
 
 ### Feature Comparison
 
-NeXID provides the best overall feature set:
+NeXID follows the original [XID specification](https://github.com/rs/xid), and provides the following feature set:
 
 - **Lexicographical sorting**: Critical for databases, binary searches, and sequential access
 - **Time-based order**: Ensures chronological access patterns
