@@ -21,14 +21,6 @@ yarn-error.log*
 *.tsbuildinfo
 .eslintcache
 
-# Build output
-build/
-out/
-dist/
-benchmark-results/
-coverage/
-bundles-dev/
-
 # Backups
 backups/
 archive/
