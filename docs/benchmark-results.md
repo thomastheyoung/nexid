@@ -18,7 +18,7 @@ This document presents benchmark results comparing NeXID with other popular ID g
 | uuid v4         |       9,118,251 |             ❌             |     ❌     |    ❌    |      ✅      |      36      |
 | nanoid          |       6,821,007 |             ❌             |     ❌     |    ✅    |      ✅      |      21      |
 | uuid v1         |       3,092,987 |             ❌             |     ✅     |    ❌    |      ✅      |      36      |
-| **NeXID**       |   **3,019,350** |             ✅             |     ✅     |    ✅    |      ✅      |      20      |
+| **NeXID**       |   **3,019,350** |             ✅             |     ✅     |    ✅    |      ✅      |    **20**    |
 | shortid         |         694,467 |             ❌             |     ❌     |    ✅    |      ❌      |   variable   |
 | ksuid           |          80,564 |             ✅             |     ✅     |    ✅    |      ✅      |      27      |
 | ulid            |          54,114 |             ✅             |     ✅     |    ✅    |      ✅      |      26      |
@@ -27,7 +27,7 @@ This document presents benchmark results comparing NeXID with other popular ID g
 
 | Library         | Sample ID                              | Length | Bytes |
 | --------------- | -------------------------------------- | -----: | ----: |
-| NeXID           | `cv37u705tppkluj9ro7g`                 |     20 |    20 |
+| **NeXID**       | `cv37u705tppkluj9ro7g`                 | **20** |**20** |
 | uuid v1         | `4f58ae90-f8ac-11ef-9bb5-edd63dc69670` |     36 |    36 |
 | uuid v4         | `7ab9f36c-f795-4f2e-a143-9818584669ce` |     36 |    36 |
 | node randomUUID | `89e5d415-f0c6-491a-923b-1782f4b9f98b` |     36 |    36 |
@@ -57,7 +57,7 @@ For a dataset with 10 million IDs:
 
 - UUID v4: ~360MB
 - NeXID: ~200MB
-- Savings: ~160MB (44% reduction)
+- **Savings**: ~160MB (44% reduction)
 
 This size difference becomes particularly important in:
 
@@ -70,7 +70,7 @@ This size difference becomes particularly important in:
 
 1. **Distributed Systems**: NeXID is ideal for distributed systems where coordination-free ID generation is required while maintaining lexicographical sortability.
 
-2. **Time-Series Data**: The time-ordering property makes NeXID perfect for time-series data, logs, and events.
+2. **Time-Series Data**: The time-ordering property makes NeXID a good choice for time-series data, logs, and events.
 
 3. **High-Performance Applications**: With over 3 million IDs per second, NeXID is suitable for high-throughput systems.
 
@@ -82,8 +82,8 @@ This size difference becomes particularly important in:
 
 2. **For cryptographic applications**: All libraries except shortid provide cryptographically strong random values.
 
-3. **For general purpose use**: NeXID provides the best balance of features while maintaining excellent performance.
+3. **For general purpose use**: NeXID provides a great balance of features while maintaining excellent performance.
 
-4. **For lexicographical and time-based sorting with URL safety**: NeXID, ULID, and KSUID all excel, with NeXID offering the best performance and smallest size.
+4. **For lexicographical and time-based sorting with URL safety**: NeXID, ULID, and KSUID all excel, with NeXID offering a good balance between performance and smallest size.
 
-XID stands out for its excellent balance of performance, compact size, lexicographical sorting, time-based ordering, and URL safety. For most applications, it represents the ideal choice among the tested libraries.
+XID is meant to provide a healthy balance of performance, compact size, lexicographical sorting, time-based ordering, and URL safety. For most applications, it represents a good choice among the tested libraries.
