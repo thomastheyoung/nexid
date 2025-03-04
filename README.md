@@ -174,7 +174,7 @@ XID achieves excellent performance while maintaining its feature set:
 | uuid v4         |       9,317,440 |     ❌     |    ❌    |      ✅      |      36      |
 | nanoid          |       7,012,800 |     ❌     |    ✅    |      ✅      |      21      |
 | uuid v1         |       3,326,121 |     ✅     |    ❌    |      ✅      |      36      |
-| **xid**         |   **3,110,861** |     ✅     |    ✅    |      ✅      |      20      |
+| **xid**         |   **3,110,861** |     ✅     |    ✅    |      ✅      |      **20**      |
 | shortid         |         714,054 |     ❌     |    ✅    |      ❌      |   variable   |
 | ksuid           |          85,597 |     ✅     |    ✅    |      ✅      |      27      |
 | ulid            |          50,167 |     ✅     |    ✅    |      ✅      |      26      |
