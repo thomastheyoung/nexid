@@ -43,5 +43,17 @@
     "typescript": "^5.8.2",
     "ulid": "^2.3.0",
     "uuid": "^11.1.0"
-  }
+  },
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thomastheyoung/nexid.git"
+  },
+  "bugs": {
+    "url": "https://github.com/thomastheyoung/nexid/issues"
+  },
+  "homepage": "https://github.com/thomastheyoung/nexid#readme"
 }
