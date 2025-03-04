@@ -45,7 +45,7 @@ const sortedIds = NeXID.sortIds([id3, id1, id2]);
 
 ## Why NeXID?
 
-XIDs provide a perfect balance of features that make them ideal for many applications:
+XIDs aim to provide a useful balance of features that make them ideal for many applications:
 
 1. **vs. UUID** - Significantly more compact (20 chars vs 36), with lexicographical and chronological sorting
 2. **vs. auto-increment** - Distributed generation without central coordination
