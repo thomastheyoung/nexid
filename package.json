@@ -1,6 +1,9 @@
 {
   "name": "nexid",
-  "version": "0.1.1",
+  "version": "0.1.2",
+  "author": "Thomas LE JEUNE",
+  "license": "MIT",
+  "description": "Fast, time-sortable unique identifiers for the JavaScript ecosystem. Port of the original Go library github/rs/xid by Olivier Poitrey.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -18,19 +21,6 @@
     "bundle:node": "esbuild src/index.ts --bundle --platform=node --outfile=dist/bundle-node.js",
     "bundle:web": "esbuild src/index.ts --bundle --platform=browser --minify --sourcemap --outfile=dist/bundle-web.js"
   },
-  "keywords": [
-    "id",
-    "uuid",
-    "nexid",
-    "identifier",
-    "unique",
-    "typescript",
-    "global",
-    "sortable"
-  ],
-  "author": "Thomas LE JEUNE",
-  "license": "MIT",
-  "description": "Fast, time-sortable unique identifiers for the JavaScript ecosystem. Port of the original Go library github/rs/xid by Olivier Poitrey.",
   "devDependencies": {
     "@types/node": "^22.13.9",
     "esbuild": "0.25.0",
@@ -55,5 +45,15 @@
   "bugs": {
     "url": "https://github.com/thomastheyoung/nexid/issues"
   },
-  "homepage": "https://github.com/thomastheyoung/nexid#readme"
+  "homepage": "https://github.com/thomastheyoung/nexid#readme",
+  "keywords": [
+    "id",
+    "uuid",
+    "nexid",
+    "identifier",
+    "unique",
+    "typescript",
+    "global",
+    "sortable"
+  ]
 }

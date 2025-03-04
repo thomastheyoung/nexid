@@ -1,6 +1,6 @@
 # NeXID - Fast, Lexicographically Sortable Unique IDs
 
-[![npm version](https://img.shields.io/npm/v/nexid-ts.svg?style=flat&color=orange)](https://www.npmjs.com/package/nexid)
+[![npm version](https://img.shields.io/npm/v/nexid.svg?style=flat&color=orange)](https://www.npmjs.com/package/nexid)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-blue)](https://www.typescriptlang.org/)
 [![License: ISC](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
