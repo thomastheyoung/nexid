@@ -1,25 +1,41 @@
 {
   "name": "nexid",
-  "version": "0.1.2",
-  "author": "Thomas LE JEUNE",
+  "version": "0.2.0",
+  "author": "Thomas LE JEUNE <thomastheyoung@gmail.com>",
   "license": "MIT",
   "description": "Fast, time-sortable unique identifiers for the JavaScript ecosystem. Port of the original Go library github/rs/xid by Olivier Poitrey.",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "files": [
     "dist",
     "LICENSE",
     "README.md"
   ],
+  "bin": "./bin/nexid.js",
+  "module": "./dist/esm/index.js",
+  "main": "./dist/cjs/index.js",
+  "types": "./dist/cjs/index.d.ts",
+  "unpkg": "./dist/esm/index.js",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
+    }
+  },
   "scripts": {
-    "prepublish": "npm run clean && npm run build",
-    "clean": "rm -rf dist",
-    "build": "npx tsc",
-    "test": "tsx test/nexid.test.ts",
-    "benchmark": "node test/benchmark.js",
+    "preversion": "npm test",
+    "postversion": "npm publish",
+    "prepublishOnly": "git push origin --follow-tags",
+    "clean": "rm -rf dist bin",
+    "build": "npm run clean && tsc -p tsconfig.json && tsc -p tsconfig-cjs.json",
     "bundle": "node esbuild.mjs",
-    "bundle:node": "esbuild src/index.ts --bundle --platform=node --outfile=dist/bundle-node.js",
-    "bundle:web": "esbuild src/index.ts --bundle --platform=browser --minify --sourcemap --outfile=dist/bundle-web.js"
+    "test": "tsx test/nexid.test.ts",
+    "benchmark": "node test/benchmark.js"
   },
   "devDependencies": {
     "@types/node": "^22.13.9",
@@ -33,6 +49,9 @@
     "typescript": "^5.8.2",
     "ulid": "^2.3.0",
     "uuid": "^11.1.0"
+  },
+  "engines": {
+    "node": "20 || >=22"
   },
   "directories": {
     "doc": "docs",

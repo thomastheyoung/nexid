@@ -7,18 +7,18 @@ const sharedOptions = {
   color: true,
 };
 
-// Node build
-await esbuild.build({
-  ...sharedOptions,
-  platform: 'node',
-  outfile: './dist/bundle-node.js',
-});
-
-// Web/Browser build
+// Non-minified bundle
 await esbuild.build({
   ...sharedOptions,
   platform: 'browser',
-  outfile: './dist/bundle-web.js',
+  outfile: './bin/nexid.js',
+});
+
+// Minified bundle
+await esbuild.build({
+  ...sharedOptions,
+  platform: 'browser',
+  outfile: './bin/nexid-min.js',
   minify: true,
   sourcemap: true,
 });

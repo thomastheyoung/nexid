@@ -1,19 +1,21 @@
 {
   "compilerOptions": {
     /* Base Options */
-    "target": "ES2020",
-    "module": "CommonJS",
+    "target": "ES2022",
+    "module": "ESNext",
     "skipLibCheck": true,
-    "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "outDir": "dist",
+    "outDir": "./dist/esm",
     "declaration": true,
+    "sourceMap": true,
 
     /* Bundler mode */
+    "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
+    "importHelpers": true,
 
     /* Type Checking */
     "alwaysStrict": true,
@@ -38,5 +40,5 @@
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "archive/**"]
+  "exclude": ["src/**/*.test.ts", "node_modules", "dist", "docs"]
 }
