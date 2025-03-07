@@ -1,11 +1,10 @@
 {
   "name": "nexid",
-  "version": "0.2.1",
+  "version": "1.0.0",
   "author": "Thomas LE JEUNE <thomastheyoung@gmail.com>",
   "license": "MIT",
   "description": "Fast, time-sortable unique identifiers for the JavaScript ecosystem. Port of the original Go library github/rs/xid by Olivier Poitrey.",
   "files": [
-    "dist",
     "LICENSE",
     "README.md"
   ],
@@ -31,13 +30,13 @@
     "preversion": "npm test",
     "postversion": "npm publish",
     "prepublishOnly": "git push origin --follow-tags",
-    "clean": "rm -rf dist bin",
-    "build": "npm run clean && tsc -p tsconfig.json && tsc -p tsconfig-cjs.json",
-    "bundle": "node esbuild.mjs",
-    "test": "tsx test/nexid.test.ts",
-    "benchmark": "node test/benchmark.js"
+    "build": "rm -rf dist && tsc -p tsconfig.json && tsc -p tsconfig-cjs.json",
+    "bundle": "rm -rf bin && node esbuild.mjs",
+    "benchmark": "node tests/benchmark.js",
+    "test": "vitest"
   },
   "devDependencies": {
+    "@types/deno": "^2.2.0",
     "@types/node": "^22.13.9",
     "esbuild": "0.25.0",
     "hyperid": "^3.3.0",
@@ -48,14 +47,16 @@
     "tsx": "^4.19.3",
     "typescript": "^5.8.2",
     "ulid": "^2.3.0",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^3.0.8"
   },
   "engines": {
     "node": "20 || >=22"
   },
   "directories": {
     "doc": "docs",
-    "test": "test"
+    "test": "tests"
   },
   "repository": {
     "type": "git",

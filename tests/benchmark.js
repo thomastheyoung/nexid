@@ -14,7 +14,8 @@ const hyperid = require('hyperid');
 const shortid = require('shortid');
 
 // Import our NeXID implementation (from the compiled JS)
-const NeXID = require('../dist/cjs/index');
+// const NeXID = require('../dist/cjs/index.js');
+const NeXID = require('../bin/nexid-min.js');
 
 // Constants
 const NUM_IDS = 1_000_000; // 1 million IDs for reporting
@@ -27,9 +28,12 @@ const sampleIds = {};
 
 // Run the benchmark
 async function runBenchmark() {
+  const neXIDGenerator = await NeXID.init();
+
   // ID generators
   const generators = {
-    NeXID: () => NeXID.newId().toString(),
+    'NeXID.newId()': () => neXIDGenerator.newId().toString(),
+    'NeXID.fastId()': () => neXIDGenerator.fastId(),
     'uuid v1': () => uuidv1(),
     'uuid v4': () => uuidv4(),
     'node randomUUID': () => crypto.randomUUID(),
@@ -112,21 +116,6 @@ async function runBenchmark() {
     .forEach(([name, id, byteLength]) => {
       console.log(`${name.padEnd(20)}: ${id} (${id.length} chars, ${byteLength} bytes)`);
     });
-
-  // Print feature comparison
-  console.log('\nFeature Comparison:');
-  console.log('------------------------------------------------------------------------------');
-  console.log('Library                | Time-based | URL-safe | Fixed length | Compact size |');
-  console.log('-----------------------|------------|----------|--------------|--------------|');
-  console.log('NeXID                  |    ✅      |    ✅    |      ✅      |      ✅      |');
-  console.log('uuid v1                |    ✅      |    ❌    |      ✅      |      ❌      |');
-  console.log('uuid v4                |    ❌      |    ❌    |      ✅      |      ❌      |');
-  console.log('node randomUUID        |    ❌      |    ❌    |      ✅      |      ❌      |');
-  console.log('ulid                   |    ✅      |    ✅    |      ✅      |      ✅      |');
-  console.log('ksuid                  |    ✅      |    ✅    |      ✅      |      ❌      |');
-  console.log('nanoid                 |    ❌      |    ✅    |      ✅      |      ✅      |');
-  console.log('hyperid                |    ❌      |    ❌    |      ❌      |      ✅      |');
-  console.log('shortid                |    ❌      |    ✅    |      ❌      |      ✅      |');
 }
 
 // Helper function to get approximate byte length

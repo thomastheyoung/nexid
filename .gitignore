@@ -9,6 +9,9 @@ yarn-error.log*
 *.tsbuildinfo
 .eslintcache
 
+# Source docs
+sources/
+
 # Output
 dist/
 bin/
