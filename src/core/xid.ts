@@ -33,6 +33,15 @@ export const PROCESS_ID_MASK = 0xffff;
 /** 8-bit mask for byte operations */
 export const BYTE_MASK = 0xff;
 
+export type XID = Readonly<{
+  bytes: Readonly<XIDBytes>;
+  time: Date;
+  machineId: Uint8Array;
+  processId: number;
+  counter: number;
+  toString: () => string;
+}>;
+
 // ============================================================================
 // Custom Error Types
 // ============================================================================
@@ -64,7 +73,7 @@ export class InvalidXIDError extends Error {
  * protects against modification of internal data, but direct array indexing
  * is still provided for performance in read operations.
  */
-export type XID = Readonly<Uint8Array> & { readonly __xid: unique symbol };
+export type XIDBytes = Readonly<Uint8Array> & { readonly __xid: unique symbol };
 
 // ============================================================================
 // Factory Functions
@@ -77,7 +86,7 @@ export type XID = Readonly<Uint8Array> & { readonly __xid: unique symbol };
  * @returns A new XID instance
  * @throws InvalidXIDError if bytes are provided but not exactly 12 bytes long
  */
-export function createXID(bytes?: Uint8Array | null): XID {
+export function createXID(bytes?: Uint8Array): XIDBytes {
   if (bytes && bytes.length !== RAW_LEN) {
     throw new InvalidXIDError(`ID must be exactly ${RAW_LEN} bytes`);
   }
@@ -87,7 +96,7 @@ export function createXID(bytes?: Uint8Array | null): XID {
 
   // We can't truly freeze the array, but we use TypeScript's readonly
   // to prevent accidental modification at compile time
-  return copy as XID;
+  return copy as XIDBytes;
 }
 
 /**
@@ -96,7 +105,7 @@ export function createXID(bytes?: Uint8Array | null): XID {
  * @param bytes - The 12-byte array to create the ID from
  * @returns A Result containing either the new XID or an error message
  */
-export function fromBytes(bytes: Uint8Array): Result<XID> {
+export function fromBytes(bytes: Uint8Array): Result<XIDBytes> {
   try {
     return Result.Ok(createXID(bytes));
   } catch (error) {
@@ -110,7 +119,7 @@ export function fromBytes(bytes: Uint8Array): Result<XID> {
  * @param idString - The string to parse (expected to be 20 characters in base32-hex format)
  * @returns A Result containing either the parsed XID or an error message
  */
-export function fromString(idString: string): Result<XID> {
+export function fromString(idString: string): Result<XIDBytes> {
   try {
     const bytes = decode(idString);
     return Result.Ok(createXID(bytes));
@@ -124,7 +133,7 @@ export function fromString(idString: string): Result<XID> {
  *
  * @returns A nil XID (all bytes set to zero)
  */
-export function nilXID(): XID {
+export function nilXID(): XIDBytes {
   return createXID();
 }
 
@@ -138,7 +147,7 @@ export function nilXID(): XID {
  * @param id - The XID to extract the timestamp from
  * @returns A Date object representing when the ID was created
  */
-export function getTime(id: XID): Date {
+export function getTime(id: XIDBytes): Date {
   // First 4 bytes contain Unix timestamp (seconds since epoch)
   const seconds = (id[0] << 24) | (id[1] << 16) | (id[2] << 8) | id[3];
   return new Date(seconds * 1000);
@@ -151,7 +160,7 @@ export function getTime(id: XID): Date {
  * @param id - The XID to extract the machine ID from
  * @returns A copy of the 3-byte machine ID portion
  */
-export function getMachineId(id: XID): Uint8Array {
+export function getMachineId(id: XIDBytes): Uint8Array {
   return id.slice(4, 7);
 }
 
@@ -162,7 +171,7 @@ export function getMachineId(id: XID): Uint8Array {
  * @param id - The XID to extract the process ID from
  * @returns A number representing the process ID
  */
-export function getProcessId(id: XID): number {
+export function getProcessId(id: XIDBytes): number {
   return (id[7] << 8) | id[8];
 }
 
@@ -174,7 +183,7 @@ export function getProcessId(id: XID): number {
  * @param id - The XID to extract the counter from
  * @returns A number representing the counter value
  */
-export function getCounter(id: XID): number {
+export function getCounter(id: XIDBytes): number {
   return (id[9] << 16) | (id[10] << 8) | id[11];
 }
 
@@ -188,18 +197,8 @@ export function getCounter(id: XID): number {
  * @param id - The XID to convert to string
  * @returns A 20-character string representation of the ID
  */
-export function toString(id: XID): string {
+export function toString(id: XIDBytes): string {
   return encode(id);
-}
-
-/**
- * Serializes an XID to a JSON-compatible string representation.
- *
- * @param id - The XID to serialize
- * @returns The string representation of the ID
- */
-export function toJSON(id: XID): string {
-  return toString(id);
 }
 
 // ============================================================================
@@ -214,8 +213,8 @@ export function toJSON(id: XID): string {
  * @param b - Second XID to compare
  * @returns Negative number if a is smaller (older), 0 if equal, positive if a is greater (newer)
  */
-export function compare(a: XID, b: XID): number {
-  return compareBytes(a, a);
+export function compare(a: XIDBytes, b: XIDBytes): number {
+  return compareBytes(a, b);
 }
 
 /**
@@ -226,7 +225,7 @@ export function compare(a: XID, b: XID): number {
  * @param b - Second XID to compare
  * @returns True if the XIDs contain identical bytes, false otherwise
  */
-export function equals(a: XID, b: XID): boolean {
+export function equals(a: XIDBytes, b: XIDBytes): boolean {
   if (a === b) return true;
 
   // Compare all bytes
@@ -246,7 +245,7 @@ export function equals(a: XID, b: XID): boolean {
  * @param id - The XID to check
  * @returns True if this is a nil ID, false otherwise
  */
-export function isNil(id: XID): boolean {
+export function isNil(id: XIDBytes): boolean {
   for (let i = 0; i < RAW_LEN; i++) {
     if (id[i] !== 0) {
       return false;
@@ -265,7 +264,7 @@ export function isNil(id: XID): boolean {
  * @param ids - Array of XIDs to sort
  * @returns A new array containing the sorted XIDs
  */
-export function sort(ids: readonly XID[]): XID[] {
+export function sort(ids: readonly XIDBytes[]): XIDBytes[] {
   return [...ids].sort(compare);
 }
 
@@ -294,7 +293,6 @@ export const xid = {
   getProcessId,
   getCounter,
   toString,
-  toJSON,
   compare,
   equals,
   isNil,

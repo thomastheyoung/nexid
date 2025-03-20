@@ -20,7 +20,7 @@
  *                          │
  *                          ▼
  * ┌─────────────────────────────────────────────────┐
- * │  Isolated State Cell (SharedArrayBuffer+Atomics)│
+ * │ Isolated State Cell (SharedArrayBuffer+Atomics) │
  * └────────────────────────┬────────────────────────┘
  *                          │
  *                          ▼
@@ -33,7 +33,7 @@ import { Environment } from '../env';
 import { RuntimeEnvironment } from '../types/platform';
 import { encode, RAW_LEN } from './encoding';
 import { validateRandomBytesFunction } from './validators';
-import { BYTE_MASK, createXID, XID } from './xid';
+import { BYTE_MASK, createXID, XIDBytes } from './xid';
 
 // ============================================================================
 // Types
@@ -75,7 +75,7 @@ export type GeneratorComponents = Readonly<{
  */
 export type Generator = Readonly<{
   /** Creates a new XID using the current timestamp or a provided date */
-  newId: (datetime?: Date) => XID;
+  newId: (datetime?: Date) => XIDBytes;
 
   /** Creates a new ID directly as a string (more efficient) */
   fastId: () => string;
@@ -127,7 +127,7 @@ function createGenerator(components: GeneratorComponents): Generator {
   /**
    * Creates the raw 12-byte ID buffer with the appropriate components.
    */
-  function createIdBytes(timestamp: number): Uint8Array {
+  function createIdBytes(timestamp: number): Readonly<Uint8Array> {
     // Convert to seconds for the ID (XID spec uses seconds, not milliseconds)
     timestamp = Math.floor(timestamp / 1000);
 
@@ -159,14 +159,14 @@ function createGenerator(components: GeneratorComponents): Generator {
 
   // Public API - pure functions that insulate callers from internal state
   return Object.freeze({
-    newId: (datetime?: Date): XID => {
+    newId: (datetime?: Date): XIDBytes => {
       const timestamp = datetime instanceof Date ? +datetime : Date.now();
       return createXID(createIdBytes(timestamp));
     },
 
     fastId: (): string => {
       const timestamp = Date.now();
-      return encode(createIdBytes(timestamp) as XID);
+      return encode(createIdBytes(timestamp) as XIDBytes);
     },
 
     info: () => ({
