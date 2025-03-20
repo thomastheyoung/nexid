@@ -1,9 +1,51 @@
 /**
  * @module nexid/core/xid
+ *
+ * Core XID immutable value type and operations.
+ *
+ * This module provides the fundamental XID implementation - globally unique,
+ * lexicographically sortable identifiers with a rich functional API. Each XID
+ * consists of 12 bytes (96 bits) with the following structure:
+ *
+ *   ╔═══════════════════════════════════════════════════════════════╗
+ *   ║0             3║4             6║7             8║9            11║
+ *   ║--- 4 bytes ---║--- 3 bytes ---║--- 2 bytes ---║--- 3 bytes ---║
+ *   ║═══════════════════════════════════════════════════════════════║
+ *   ║     time      ║   machine ID  ║   process ID  ║    counter    ║
+ *   ╚═══════════════════════════════════════════════════════════════╝
+ *
+ * DESIGN PRINCIPLES:
+ * - Immutability: All XID values and operations are immutable
+ * - Functional composition: Pure operations on value objects
+ * - Type safety: Comprehensive type definitions with exhaustive checks
  */
 
 import { Result } from '../types/result';
 import { compareBytes, decode, encode, RAW_LEN } from './encoding';
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+/** 16-bit mask for process ID */
+export const PROCESS_ID_MASK = 0xffff;
+
+/** 8-bit mask for byte operations */
+export const BYTE_MASK = 0xff;
+
+// ============================================================================
+// Custom Error Types
+// ============================================================================
+
+/**
+ * Error thrown when an invalid XID is provided or constructed.
+ */
+export class InvalidXIDError extends Error {
+  constructor(message: string) {
+    super(`[NeXID] ${message}`);
+    this.name = 'InvalidXIDError';
+  }
+}
 
 // ============================================================================
 // Opaque Type Definition
@@ -25,41 +67,27 @@ import { compareBytes, decode, encode, RAW_LEN } from './encoding';
 export type XID = Readonly<Uint8Array> & { readonly __xid: unique symbol };
 
 // ============================================================================
-// Error Types
-// ============================================================================
-
-export class InvalidXIDError extends Error {
-  constructor(message: string) {
-    super(`[NeXID] ${message}`);
-    this.name = 'InvalidXIDError';
-  }
-}
-
-// ============================================================================
 // Factory Functions
 // ============================================================================
 
 /**
- * Creates a new XID from raw bytes with validation.
+ * Creates a new XID from raw bytes.
  *
  * @param bytes - Raw 12-byte array for the ID. If omitted, creates a nil (zero) ID.
- * @returns A Result containing either the new XID or an error
+ * @returns A new XID instance
+ * @throws InvalidXIDError if bytes are provided but not exactly 12 bytes long
  */
-export function createXID(bytes?: Uint8Array | null): Result<XID> {
-  try {
-    if (bytes && bytes.length !== RAW_LEN) {
-      return Result.Err(new InvalidXIDError(`ID must be exactly ${RAW_LEN} bytes`));
-    }
-
-    // Always create a defensive copy to maintain isolation
-    const copy = bytes ? new Uint8Array(bytes) : new Uint8Array(RAW_LEN);
-
-    // We can't truly freeze the array, but we use TypeScript's readonly
-    // to prevent accidental modification at compile time
-    return Result.Ok(copy as XID);
-  } catch (error) {
-    return Result.Err(error instanceof Error ? error : new InvalidXIDError(String(error)));
+export function createXID(bytes?: Uint8Array | null): XID {
+  if (bytes && bytes.length !== RAW_LEN) {
+    throw new InvalidXIDError(`ID must be exactly ${RAW_LEN} bytes`);
   }
+
+  // Always create a defensive copy to maintain isolation
+  const copy = bytes ? new Uint8Array(bytes) : new Uint8Array(RAW_LEN);
+
+  // We can't truly freeze the array, but we use TypeScript's readonly
+  // to prevent accidental modification at compile time
+  return copy as XID;
 }
 
 /**
@@ -70,7 +98,7 @@ export function createXID(bytes?: Uint8Array | null): Result<XID> {
  */
 export function fromBytes(bytes: Uint8Array): Result<XID> {
   try {
-    return createXID(bytes);
+    return Result.Ok(createXID(bytes));
   } catch (error) {
     return Result.Err(error instanceof Error ? error : new InvalidXIDError(String(error)));
   }
@@ -85,7 +113,7 @@ export function fromBytes(bytes: Uint8Array): Result<XID> {
 export function fromString(idString: string): Result<XID> {
   try {
     const bytes = decode(idString);
-    return createXID(bytes);
+    return Result.Ok(createXID(bytes));
   } catch (error) {
     return Result.Err(error instanceof Error ? error : new InvalidXIDError(String(error)));
   }
@@ -97,7 +125,7 @@ export function fromString(idString: string): Result<XID> {
  * @returns A nil XID (all bytes set to zero)
  */
 export function nilXID(): XID {
-  return createXID().unwrapOr(new Uint8Array(RAW_LEN) as XID);
+  return createXID();
 }
 
 // ============================================================================
@@ -118,17 +146,18 @@ export function getTime(id: XID): Date {
 
 /**
  * Extracts the machine identifier component from an XID.
+ * This is a 3-byte value derived from platform-specific identifiers.
  *
  * @param id - The XID to extract the machine ID from
  * @returns A copy of the 3-byte machine ID portion
  */
 export function getMachineId(id: XID): Uint8Array {
-  // Return a copy to maintain immutability boundary
   return id.slice(4, 7);
 }
 
 /**
  * Extracts the process ID component from an XID.
+ * This is a 2-byte value representing the process that generated the ID.
  *
  * @param id - The XID to extract the process ID from
  * @returns A number representing the process ID
@@ -139,6 +168,8 @@ export function getProcessId(id: XID): number {
 
 /**
  * Extracts the counter component from an XID.
+ * This is a 3-byte value that increments for each ID generated by the same
+ * process, ensuring uniqueness even when multiple IDs are generated in the same second.
  *
  * @param id - The XID to extract the counter from
  * @returns A number representing the counter value
@@ -148,7 +179,7 @@ export function getCounter(id: XID): number {
 }
 
 // ============================================================================
-// Direct Access Methods
+// Conversion Functions
 // ============================================================================
 
 /**
@@ -160,19 +191,6 @@ export function getCounter(id: XID): number {
 export function toString(id: XID): string {
   return encode(id);
 }
-
-/**
- * Returns a copy of the raw bytes of the XID.
- *
- * @param id - The XID to get bytes from
- * @returns A new Uint8Array containing a copy of the bytes
- */
-export function toBytes(id: XID): Uint8Array {
-  // Return a copy to maintain immutability boundary
-  return new Uint8Array(id);
-}
-
-// Rest of implementation follows...
 
 /**
  * Serializes an XID to a JSON-compatible string representation.
@@ -197,7 +215,7 @@ export function toJSON(id: XID): string {
  * @returns Negative number if a is smaller (older), 0 if equal, positive if a is greater (newer)
  */
 export function compare(a: XID, b: XID): number {
-  return compareBytes(a, b);
+  return compareBytes(a, a);
 }
 
 /**
@@ -212,7 +230,13 @@ export function equals(a: XID, b: XID): boolean {
   if (a === b) return true;
 
   // Compare all bytes
-  return a.every((byte, i) => byte === b[i]);
+  for (let i = 0; i < RAW_LEN; i++) {
+    if (a[i] !== b[i]) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 /**
@@ -223,7 +247,12 @@ export function equals(a: XID, b: XID): boolean {
  * @returns True if this is a nil ID, false otherwise
  */
 export function isNil(id: XID): boolean {
-  return id.every((byte) => byte === 0);
+  for (let i = 0; i < RAW_LEN; i++) {
+    if (id[i] !== 0) {
+      return false;
+    }
+  }
+  return true;
 }
 
 // ============================================================================
