@@ -33,6 +33,7 @@
     "build": "rm -rf dist && tsc -p tsconfig.json && tsc -p tsconfig-cjs.json",
     "bundle": "rm -rf bin && node esbuild.mjs",
     "benchmark": "node tests/benchmark.js",
+    "combine": "find ./src -type f -name \"*.ts\" | sort | while read file; do echo \"// $file\"; cat \"$file\"; echo \"\"; done > ./sources/combined.ts",
     "test": "vitest"
   },
   "devDependencies": {

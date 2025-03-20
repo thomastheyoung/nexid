@@ -31,18 +31,18 @@ await esbuild.build({
 // CJS (require)
 // ================================
 
-// Non-minified bundle
-await esbuild.build({
-  ...sharedOptions,
-  platform: 'browser',
-  outfile: './bin/nexid-web.js',
-});
+// // Non-minified bundle
+// await esbuild.build({
+//   ...sharedOptions,
+//   platform: 'browser',
+//   outfile: './bin/nexid-web.js',
+// });
 
-// Minified bundle
-await esbuild.build({
-  ...sharedOptions,
-  platform: 'browser',
-  outfile: './bin/nexid-web-min.js',
-  minify: true,
-  sourcemap: true,
-});
+// // Minified bundle
+// await esbuild.build({
+//   ...sharedOptions,
+//   platform: 'browser',
+//   outfile: './bin/nexid-web-min.js',
+//   minify: true,
+//   sourcemap: true,
+// });
