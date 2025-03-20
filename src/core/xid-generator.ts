@@ -34,7 +34,6 @@ import { RuntimeEnvironment } from '../types/platform';
 import { encode, RAW_LEN } from './encoding';
 import { validateRandomBytesFunction } from './validators';
 import { BYTE_MASK, createXID, XID } from './xid';
-import { XIDBytes } from './xid-bytes';
 
 // ============================================================================
 // Types
@@ -128,7 +127,7 @@ function createGenerator(components: GeneratorComponents): Generator {
   /**
    * Creates the raw 12-byte ID buffer with the appropriate components.
    */
-  function createIdBytes(timestamp: number): XIDBytes {
+  function createIdBytes(timestamp: number): Uint8Array {
     // Convert to seconds for the ID (XID spec uses seconds, not milliseconds)
     timestamp = Math.floor(timestamp / 1000);
 
@@ -155,7 +154,7 @@ function createGenerator(components: GeneratorComponents): Generator {
     id[10] = (currentCounter >> 8) & BYTE_MASK;
     id[11] = currentCounter & BYTE_MASK;
 
-    return id as XIDBytes;
+    return id;
   }
 
   // Public API - pure functions that insulate callers from internal state
@@ -167,7 +166,7 @@ function createGenerator(components: GeneratorComponents): Generator {
 
     fastId: (): string => {
       const timestamp = Date.now();
-      return encode(createIdBytes(timestamp));
+      return encode(createIdBytes(timestamp) as XID);
     },
 
     info: () => ({

@@ -14,7 +14,7 @@
  * @module nexid/core/encoding
  */
 
-import { XIDBytes } from './xid-bytes';
+import { XID } from './xid';
 
 // ============================================================================
 // Constants
@@ -91,7 +91,7 @@ export const RAW_LEN = 12;
  * const encodedString = encode(bytes); // Returns a 20-character string
  * ```
  */
-export function encode(id: XIDBytes): string {
+export function encode(id: XID): string {
   // Use a number array for character codes instead of string array
   const charCodes = new Array<number>(ENCODED_LEN);
 
