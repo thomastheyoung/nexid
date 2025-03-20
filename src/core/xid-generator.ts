@@ -31,9 +31,10 @@
 
 import { Environment } from '../env';
 import { RuntimeEnvironment } from '../types/platform';
-import { encode, RAW_LEN } from './encoding';
+import { BYTE_MASK, RAW_LEN } from './constants';
+import { encode } from './encoding';
 import { validateRandomBytesFunction } from './validators';
-import { BYTE_MASK, createXID, XIDBytes } from './xid';
+import { createXID, XID, XIDBytes } from './xid';
 
 // ============================================================================
 // Types
@@ -42,7 +43,7 @@ import { BYTE_MASK, createXID, XIDBytes } from './xid';
 /**
  * Configuration options for creating a custom XID generator.
  */
-export type GeneratorOptions = Readonly<{
+export type XIDGeneratorOptions = Readonly<{
   /** Custom machine ID to use */
   machineId?: string;
 
@@ -56,7 +57,7 @@ export type GeneratorOptions = Readonly<{
 /**
  * Internal components used by the generator.
  */
-export type GeneratorComponents = Readonly<{
+export type XIDGeneratorComponents = Readonly<{
   /** Detected runtime environment */
   runtime: RuntimeEnvironment;
 
@@ -73,9 +74,9 @@ export type GeneratorComponents = Readonly<{
 /**
  * XID generator functions.
  */
-export type Generator = Readonly<{
+export type XIDGenerator = Readonly<{
   /** Creates a new XID using the current timestamp or a provided date */
-  newId: (datetime?: Date) => XIDBytes;
+  newId: (datetime?: Date) => XID;
 
   /** Creates a new ID directly as a string (more efficient) */
   fastId: () => string;
@@ -100,8 +101,9 @@ export type Generator = Readonly<{
  *
  * @param components - The components required for ID generation
  * @returns A generator object with functions for creating XIDs
+ * @private
  */
-function createGenerator(components: GeneratorComponents): Generator {
+function internalGenerator(components: XIDGeneratorComponents): XIDGenerator {
   // Thread-safe counter using SharedArrayBuffer and Atomics
   // This is our controlled state cell - the only stateful component
   const counterBuffer = new SharedArrayBuffer(4);
@@ -127,7 +129,7 @@ function createGenerator(components: GeneratorComponents): Generator {
   /**
    * Creates the raw 12-byte ID buffer with the appropriate components.
    */
-  function createIdBytes(timestamp: number): Readonly<Uint8Array> {
+  function createRawXID(timestamp: number): Readonly<XIDBytes> {
     // Convert to seconds for the ID (XID spec uses seconds, not milliseconds)
     timestamp = Math.floor(timestamp / 1000);
 
@@ -154,19 +156,19 @@ function createGenerator(components: GeneratorComponents): Generator {
     id[10] = (currentCounter >> 8) & BYTE_MASK;
     id[11] = currentCounter & BYTE_MASK;
 
-    return id;
+    return id as XIDBytes;
   }
 
   // Public API - pure functions that insulate callers from internal state
   return Object.freeze({
-    newId: (datetime?: Date): XIDBytes => {
+    newId: (datetime?: Date): XID => {
       const timestamp = datetime instanceof Date ? +datetime : Date.now();
-      return createXID(createIdBytes(timestamp));
+      return createXID(createRawXID(timestamp));
     },
 
     fastId: (): string => {
       const timestamp = Date.now();
-      return encode(createIdBytes(timestamp) as XIDBytes);
+      return encode(createRawXID(timestamp));
     },
 
     info: () => ({
@@ -190,8 +192,8 @@ export const ComponentFactory = {
    */
   async create(
     environment: Environment.Container,
-    options: GeneratorOptions = {}
-  ): Promise<GeneratorComponents> {
+    options: XIDGeneratorOptions = {}
+  ): Promise<XIDGeneratorComponents> {
     let { randomBytes, hash, machineId, processId } = environment;
 
     // Apply custom machine ID if provided
@@ -243,8 +245,8 @@ export const ComponentFactory = {
  * @param options - Optional configuration for customizing the generator
  * @returns A Promise that resolves to a new Generator instance
  */
-export async function createXIDGenerator(options: GeneratorOptions = {}): Promise<Generator> {
+export async function createXIDGenerator(options: XIDGeneratorOptions = {}): Promise<XIDGenerator> {
   const environment = await Environment.setup();
   const components = await ComponentFactory.create(environment, options);
-  return createGenerator(components);
+  return internalGenerator(components);
 }

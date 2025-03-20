@@ -21,26 +21,8 @@
  */
 
 import { Result } from '../types/result';
-import { compareBytes, decode, encode, RAW_LEN } from './encoding';
-
-// ============================================================================
-// Constants
-// ============================================================================
-
-/** 16-bit mask for process ID */
-export const PROCESS_ID_MASK = 0xffff;
-
-/** 8-bit mask for byte operations */
-export const BYTE_MASK = 0xff;
-
-export type XID = Readonly<{
-  bytes: Readonly<XIDBytes>;
-  time: Date;
-  machineId: Uint8Array;
-  processId: number;
-  counter: number;
-  toString: () => string;
-}>;
+import { RAW_LEN } from './constants';
+import { compareBytes, decode, encode } from './encoding';
 
 // ============================================================================
 // Custom Error Types
@@ -57,8 +39,17 @@ export class InvalidXIDError extends Error {
 }
 
 // ============================================================================
-// Opaque Type Definition
+// Definitions
 // ============================================================================
+
+export type XID = Readonly<{
+  bytes: XIDBytes;
+  getTime: () => Date;
+  getMachineId: () => Readonly<Uint8Array>;
+  getProcessId: () => number;
+  getCounter: () => number;
+  toString: () => string;
+}>;
 
 /**
  * XID opaque type representing a globally unique, lexicographically sortable ID.
@@ -86,17 +77,15 @@ export type XIDBytes = Readonly<Uint8Array> & { readonly __xid: unique symbol };
  * @returns A new XID instance
  * @throws InvalidXIDError if bytes are provided but not exactly 12 bytes long
  */
-export function createXID(bytes?: Uint8Array): XIDBytes {
-  if (bytes && bytes.length !== RAW_LEN) {
-    throw new InvalidXIDError(`ID must be exactly ${RAW_LEN} bytes`);
-  }
-
-  // Always create a defensive copy to maintain isolation
-  const copy = bytes ? new Uint8Array(bytes) : new Uint8Array(RAW_LEN);
-
-  // We can't truly freeze the array, but we use TypeScript's readonly
-  // to prevent accidental modification at compile time
-  return copy as XIDBytes;
+export function createXID(rawId: XIDBytes): XID {
+  return {
+    bytes: rawId,
+    getTime: () => getTime(rawId),
+    getMachineId: () => new Uint8Array(getMachineId(rawId)),
+    getProcessId: () => getProcessId(rawId),
+    getCounter: () => getCounter(rawId),
+    toString: () => encode(rawId),
+  };
 }
 
 /**
@@ -105,9 +94,9 @@ export function createXID(bytes?: Uint8Array): XIDBytes {
  * @param bytes - The 12-byte array to create the ID from
  * @returns A Result containing either the new XID or an error message
  */
-export function fromBytes(bytes: Uint8Array): Result<XIDBytes> {
+export function fromBytes(bytes: Uint8Array): Result<XID> {
   try {
-    return Result.Ok(createXID(bytes));
+    return Result.Ok(createXID(bytes as XIDBytes));
   } catch (error) {
     return Result.Err(error instanceof Error ? error : new InvalidXIDError(String(error)));
   }
@@ -119,10 +108,10 @@ export function fromBytes(bytes: Uint8Array): Result<XIDBytes> {
  * @param idString - The string to parse (expected to be 20 characters in base32-hex format)
  * @returns A Result containing either the parsed XID or an error message
  */
-export function fromString(idString: string): Result<XIDBytes> {
+export function fromString(idString: string): Result<XID> {
   try {
     const bytes = decode(idString);
-    return Result.Ok(createXID(bytes));
+    return Result.Ok(createXID(bytes as XIDBytes));
   } catch (error) {
     return Result.Err(error instanceof Error ? error : new InvalidXIDError(String(error)));
   }
@@ -134,7 +123,7 @@ export function fromString(idString: string): Result<XIDBytes> {
  * @returns A nil XID (all bytes set to zero)
  */
 export function nilXID(): XIDBytes {
-  return createXID();
+  return new Uint8Array(RAW_LEN) as XIDBytes;
 }
 
 // ============================================================================

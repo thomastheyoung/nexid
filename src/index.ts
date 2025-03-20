@@ -21,7 +21,7 @@
  */
 
 import { createXID, fromBytes, fromString, nilXID, XID, xid } from './core/xid';
-import { createXIDGenerator, Generator, GeneratorOptions } from './core/xid-generator';
+import { createXIDGenerator, XIDGenerator, XIDGeneratorOptions } from './core/xid-generator';
 
 // ============================================================================
 // Singleton Generator Management
@@ -31,7 +31,7 @@ import { createXIDGenerator, Generator, GeneratorOptions } from './core/xid-gene
  * Lazy-loaded singleton generator instance.
  * @private
  */
-let generator: Generator;
+let generator: XIDGenerator;
 
 /**
  * Initializes and returns the global XID generator.
@@ -39,7 +39,7 @@ let generator: Generator;
  * @returns A Promise that resolves to the global XID generator
  * @private
  */
-async function getGenerator(): Promise<Generator> {
+async function getGenerator(): Promise<XIDGenerator> {
   if (!generator) {
     generator = await createXIDGenerator();
   }
@@ -121,9 +121,9 @@ export default NeXID;
  * Named exports for more advanced usage patterns.
  */
 export { createXID, createXIDGenerator, fromBytes, fromString };
-export type { Generator, GeneratorOptions };
+export type { XIDGenerator, XIDGeneratorOptions };
 
 /**
  * Initialize the global generator instance.
  */
-export const init: () => Promise<Generator> = getGenerator;
+export const init: () => Promise<XIDGenerator> = getGenerator;

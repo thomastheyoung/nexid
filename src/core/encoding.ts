@@ -14,6 +14,7 @@
  * @module nexid/core/encoding
  */
 
+import { ENCODED_LEN, ENCODING, RAW_LEN } from './constants';
 import { XIDBytes } from './xid';
 
 // ============================================================================
@@ -21,19 +22,10 @@ import { XIDBytes } from './xid';
 // ============================================================================
 
 /**
- * Character set for base32-hex encoding.
- * Uses digits 0-9 and lowercase letters a-v, creating an URL-safe encoding.
- * This alphabet is compatible with the original XID specification.
- */
-export const ENCODING = '0123456789abcdefghijklmnopqrstuv';
-
-/**
  * Pre-computed array of character codes for the encoding alphabet.
  * This optimizes encoding by avoiding repeated character code lookups.
  */
-export const ENCODING_CHARS: Uint8Array = new Uint8Array(
-  Array.from(ENCODING).map((c) => c.charCodeAt(0))
-);
+const ENCODING_CHARS: Uint8Array = new Uint8Array(Array.from(ENCODING).map((c) => c.charCodeAt(0)));
 
 /**
  * Lookup table for decoding base32-hex characters to their 5-bit values.
@@ -42,8 +34,6 @@ export const ENCODING_CHARS: Uint8Array = new Uint8Array(
  * in the base32-hex encoding. Invalid characters are marked with 0xff.
  * This pre-computation significantly improves decoding performance by
  * eliminating character lookups during the critical path.
- *
- * @private
  */
 const DECODING_TABLE: Uint8Array = (() => {
   // Create a table covering the ASCII range (0-122)
@@ -58,17 +48,8 @@ const DECODING_TABLE: Uint8Array = (() => {
   return table;
 })();
 
-/**
- * Length of the encoded ID string (20 characters).
- * Each 5 bits of the 12-byte binary ID is encoded as one character.
- */
-export const ENCODED_LEN = 20;
-
-/**
- * Length of the raw binary ID in bytes (12 bytes / 96 bits).
- * This consists of 4 bytes timestamp + 3 bytes machine ID + 2 bytes process ID + 3 bytes counter.
- */
-export const RAW_LEN = 12;
+// Reuse a number array for character codes instead of string array
+const ENCODING_DEST = new Array<number>(ENCODED_LEN);
 
 // ============================================================================
 // Encoding Functions
@@ -84,17 +65,8 @@ export const RAW_LEN = 12;
  *
  * @param id - Raw 12-byte ID to encode
  * @returns A 20-character base32-hex encoded string
- * @throws Error if the input array is not exactly 12 bytes
- * @example
- * ```typescript
- * const bytes = new Uint8Array(12); // Fill with appropriate values
- * const encodedString = encode(bytes); // Returns a 20-character string
- * ```
  */
 export function encode(id: XIDBytes): string {
-  // Use a number array for character codes instead of string array
-  const charCodes = new Array<number>(ENCODED_LEN);
-
   // Access bytes directly for performance optimization
   const b0 = id[0],
     b1 = id[1],
@@ -111,30 +83,30 @@ export function encode(id: XIDBytes): string {
 
   // Reverse order filling to keep bit significance (highest to lowest-order).
   // Preserves sort order: newer IDs (with a higher timestamp) will compare greater lexicographically
-  charCodes[19] = ENCODING_CHARS[(b11 << 4) & 0x1f];
-  charCodes[18] = ENCODING_CHARS[(b11 >> 1) & 0x1f];
-  charCodes[17] = ENCODING_CHARS[((b11 >> 6) | (b10 << 2)) & 0x1f];
-  charCodes[16] = ENCODING_CHARS[(b10 >> 3) & 0x1f];
-  charCodes[15] = ENCODING_CHARS[b9 & 0x1f];
-  charCodes[14] = ENCODING_CHARS[((b9 >> 5) | (b8 << 3)) & 0x1f];
-  charCodes[13] = ENCODING_CHARS[(b8 >> 2) & 0x1f];
-  charCodes[12] = ENCODING_CHARS[((b8 >> 7) | (b7 << 1)) & 0x1f];
-  charCodes[11] = ENCODING_CHARS[((b7 >> 4) | (b6 << 4)) & 0x1f];
-  charCodes[10] = ENCODING_CHARS[(b6 >> 1) & 0x1f];
-  charCodes[9] = ENCODING_CHARS[((b6 >> 6) | (b5 << 2)) & 0x1f];
-  charCodes[8] = ENCODING_CHARS[(b5 >> 3) & 0x1f];
-  charCodes[7] = ENCODING_CHARS[b4 & 0x1f];
-  charCodes[6] = ENCODING_CHARS[((b4 >> 5) | (b3 << 3)) & 0x1f];
-  charCodes[5] = ENCODING_CHARS[(b3 >> 2) & 0x1f];
-  charCodes[4] = ENCODING_CHARS[((b3 >> 7) | (b2 << 1)) & 0x1f];
-  charCodes[3] = ENCODING_CHARS[((b2 >> 4) | (b1 << 4)) & 0x1f];
-  charCodes[2] = ENCODING_CHARS[(b1 >> 1) & 0x1f];
-  charCodes[1] = ENCODING_CHARS[((b1 >> 6) | (b0 << 2)) & 0x1f];
-  charCodes[0] = ENCODING_CHARS[(b0 >> 3) & 0x1f];
+  ENCODING_DEST[19] = ENCODING_CHARS[(b11 << 4) & 0x1f];
+  ENCODING_DEST[18] = ENCODING_CHARS[(b11 >> 1) & 0x1f];
+  ENCODING_DEST[17] = ENCODING_CHARS[((b11 >> 6) | (b10 << 2)) & 0x1f];
+  ENCODING_DEST[16] = ENCODING_CHARS[(b10 >> 3) & 0x1f];
+  ENCODING_DEST[15] = ENCODING_CHARS[b9 & 0x1f];
+  ENCODING_DEST[14] = ENCODING_CHARS[((b9 >> 5) | (b8 << 3)) & 0x1f];
+  ENCODING_DEST[13] = ENCODING_CHARS[(b8 >> 2) & 0x1f];
+  ENCODING_DEST[12] = ENCODING_CHARS[((b8 >> 7) | (b7 << 1)) & 0x1f];
+  ENCODING_DEST[11] = ENCODING_CHARS[((b7 >> 4) | (b6 << 4)) & 0x1f];
+  ENCODING_DEST[10] = ENCODING_CHARS[(b6 >> 1) & 0x1f];
+  ENCODING_DEST[9] = ENCODING_CHARS[((b6 >> 6) | (b5 << 2)) & 0x1f];
+  ENCODING_DEST[8] = ENCODING_CHARS[(b5 >> 3) & 0x1f];
+  ENCODING_DEST[7] = ENCODING_CHARS[b4 & 0x1f];
+  ENCODING_DEST[6] = ENCODING_CHARS[((b4 >> 5) | (b3 << 3)) & 0x1f];
+  ENCODING_DEST[5] = ENCODING_CHARS[(b3 >> 2) & 0x1f];
+  ENCODING_DEST[4] = ENCODING_CHARS[((b3 >> 7) | (b2 << 1)) & 0x1f];
+  ENCODING_DEST[3] = ENCODING_CHARS[((b2 >> 4) | (b1 << 4)) & 0x1f];
+  ENCODING_DEST[2] = ENCODING_CHARS[(b1 >> 1) & 0x1f];
+  ENCODING_DEST[1] = ENCODING_CHARS[((b1 >> 6) | (b0 << 2)) & 0x1f];
+  ENCODING_DEST[0] = ENCODING_CHARS[(b0 >> 3) & 0x1f];
 
   // Convert character codes to string all at once.
   // This is more efficient than building the string character by character
-  return String.fromCharCode.apply(null, charCodes);
+  return String.fromCharCode.apply(null, ENCODING_DEST);
 }
 
 /**
@@ -147,15 +119,6 @@ export function encode(id: XIDBytes): string {
  * @param str - The 20-character string to decode
  * @returns The decoded 12-byte buffer
  * @throws Error if the input string is invalid (wrong length or invalid characters)
- * @example
- * ```typescript
- * try {
- *   const bytes = decode('cv37img5tppgl4002kb0');
- *   // bytes is a Uint8Array(12)
- * } catch (error) {
- *   console.error('Invalid XID string:', error.message);
- * }
- * ```
  */
 export function decode(str: string): Uint8Array {
   // Validate input length

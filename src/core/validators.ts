@@ -31,31 +31,6 @@ import { Result } from 'nexid/types/result';
  * @returns A Result that resolves to:
  *   - `Ok<RandomBytes>` containing the validated function when valid
  *   - `Err` with a descriptive error message when invalid
- * @example
- * ```typescript
- * // Example 1: Validating a custom random source
- * const customRandom = (size: number) => {
- *   const bytes = new Uint8Array(size);
- *   // Fill with random values...
- *   return bytes;
- * };
- *
- * const validationResult = validateRandomBytesFunction(customRandom);
- * if (validationResult.isOk()) {
- *   const validatedRandomFn = validationResult.unwrap();
- *   // Use validated function...
- * } else {
- *   console.error("Validation failed:", validationResult.unwrapErr());
- * }
- *
- * // Example 2: Handling validation failure
- * const invalidRandom = (size: number) => {
- *   return "not a Uint8Array" as any;
- * };
- *
- * const invalidResult = validateRandomBytesFunction(invalidRandom);
- * console.assert(invalidResult.isErr()); // Will be true
- * ```
  */
 export function validateRandomBytesFunction(fn: Function): Result<Adapter.RandomBytes> {
   try {
@@ -85,35 +60,6 @@ export function validateRandomBytesFunction(fn: Function): Result<Adapter.Random
  * @returns A Result that resolves to:
  *   - `Ok<Hash>` containing the validated hash function when valid
  *   - `Err` with a descriptive error message when invalid
- * @example
- * ```typescript
- * // Example 1: Validating a custom hash function
- * const customHash = async (data: string | Uint8Array) => {
- *   // Convert to bytes if string
- *   const bytes = typeof data === 'string'
- *     ? new TextEncoder().encode(data)
- *     : data;
- *
- *   // Perform hashing and return 32-byte result
- *   return new Uint8Array(32).fill(1); // Simplified example
- * };
- *
- * const validationResult = validateHashFunction(customHash);
- * if (validationResult.isOk()) {
- *   const validatedHashFn = validationResult.unwrap();
- *   // Use validated function...
- * }
- *
- * // Example 2: Error handling with invalid hash function
- * const invalidHash = async (data: any) => {
- *   return new Uint8Array(16); // Wrong length
- * };
- *
- * validateHashFunction(invalidHash).match({
- *   Ok: (fn) => console.log("Valid hash function"),
- *   Err: (err) => console.error("Invalid hash function:", err)
- * });
- * ```
  */
 export function validateHashFunction(fn: Function): Result<Adapter.Hash> {
   try {
