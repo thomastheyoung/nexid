@@ -1,4 +1,6 @@
 /**
+ * @module nexid/core/encoding
+ *
  * NeXID Core - Encoding and Decoding Implementation
  *
  * This module provides efficient encoding and decoding functions for XID values,
@@ -10,8 +12,6 @@
  * where each character represents 5 bits of data (with the final character using
  * only 4 bits). This module includes highly optimized implementations to maximize
  * performance in both Node.js and browser environments.
- *
- * @module nexid/core/encoding
  */
 
 import { ENCODED_LEN, ENCODING, RAW_LEN } from './constants';
@@ -67,6 +67,8 @@ const ENCODING_DEST = new Array<number>(ENCODED_LEN);
  * @returns A 20-character base32-hex encoded string
  */
 export function encode(id: XIDBytes): string {
+  const charCodes = ENCODING_DEST;
+
   // Access bytes directly for performance optimization
   const b0 = id[0],
     b1 = id[1],
@@ -83,30 +85,30 @@ export function encode(id: XIDBytes): string {
 
   // Reverse order filling to keep bit significance (highest to lowest-order).
   // Preserves sort order: newer IDs (with a higher timestamp) will compare greater lexicographically
-  ENCODING_DEST[19] = ENCODING_CHARS[(b11 << 4) & 0x1f];
-  ENCODING_DEST[18] = ENCODING_CHARS[(b11 >> 1) & 0x1f];
-  ENCODING_DEST[17] = ENCODING_CHARS[((b11 >> 6) | (b10 << 2)) & 0x1f];
-  ENCODING_DEST[16] = ENCODING_CHARS[(b10 >> 3) & 0x1f];
-  ENCODING_DEST[15] = ENCODING_CHARS[b9 & 0x1f];
-  ENCODING_DEST[14] = ENCODING_CHARS[((b9 >> 5) | (b8 << 3)) & 0x1f];
-  ENCODING_DEST[13] = ENCODING_CHARS[(b8 >> 2) & 0x1f];
-  ENCODING_DEST[12] = ENCODING_CHARS[((b8 >> 7) | (b7 << 1)) & 0x1f];
-  ENCODING_DEST[11] = ENCODING_CHARS[((b7 >> 4) | (b6 << 4)) & 0x1f];
-  ENCODING_DEST[10] = ENCODING_CHARS[(b6 >> 1) & 0x1f];
-  ENCODING_DEST[9] = ENCODING_CHARS[((b6 >> 6) | (b5 << 2)) & 0x1f];
-  ENCODING_DEST[8] = ENCODING_CHARS[(b5 >> 3) & 0x1f];
-  ENCODING_DEST[7] = ENCODING_CHARS[b4 & 0x1f];
-  ENCODING_DEST[6] = ENCODING_CHARS[((b4 >> 5) | (b3 << 3)) & 0x1f];
-  ENCODING_DEST[5] = ENCODING_CHARS[(b3 >> 2) & 0x1f];
-  ENCODING_DEST[4] = ENCODING_CHARS[((b3 >> 7) | (b2 << 1)) & 0x1f];
-  ENCODING_DEST[3] = ENCODING_CHARS[((b2 >> 4) | (b1 << 4)) & 0x1f];
-  ENCODING_DEST[2] = ENCODING_CHARS[(b1 >> 1) & 0x1f];
-  ENCODING_DEST[1] = ENCODING_CHARS[((b1 >> 6) | (b0 << 2)) & 0x1f];
-  ENCODING_DEST[0] = ENCODING_CHARS[(b0 >> 3) & 0x1f];
+  charCodes[19] = ENCODING_CHARS[(b11 << 4) & 0x1f];
+  charCodes[18] = ENCODING_CHARS[(b11 >> 1) & 0x1f];
+  charCodes[17] = ENCODING_CHARS[((b11 >> 6) | (b10 << 2)) & 0x1f];
+  charCodes[16] = ENCODING_CHARS[(b10 >> 3) & 0x1f];
+  charCodes[15] = ENCODING_CHARS[b9 & 0x1f];
+  charCodes[14] = ENCODING_CHARS[((b9 >> 5) | (b8 << 3)) & 0x1f];
+  charCodes[13] = ENCODING_CHARS[(b8 >> 2) & 0x1f];
+  charCodes[12] = ENCODING_CHARS[((b8 >> 7) | (b7 << 1)) & 0x1f];
+  charCodes[11] = ENCODING_CHARS[((b7 >> 4) | (b6 << 4)) & 0x1f];
+  charCodes[10] = ENCODING_CHARS[(b6 >> 1) & 0x1f];
+  charCodes[9] = ENCODING_CHARS[((b6 >> 6) | (b5 << 2)) & 0x1f];
+  charCodes[8] = ENCODING_CHARS[(b5 >> 3) & 0x1f];
+  charCodes[7] = ENCODING_CHARS[b4 & 0x1f];
+  charCodes[6] = ENCODING_CHARS[((b4 >> 5) | (b3 << 3)) & 0x1f];
+  charCodes[5] = ENCODING_CHARS[(b3 >> 2) & 0x1f];
+  charCodes[4] = ENCODING_CHARS[((b3 >> 7) | (b2 << 1)) & 0x1f];
+  charCodes[3] = ENCODING_CHARS[((b2 >> 4) | (b1 << 4)) & 0x1f];
+  charCodes[2] = ENCODING_CHARS[(b1 >> 1) & 0x1f];
+  charCodes[1] = ENCODING_CHARS[((b1 >> 6) | (b0 << 2)) & 0x1f];
+  charCodes[0] = ENCODING_CHARS[(b0 >> 3) & 0x1f];
 
   // Convert character codes to string all at once.
   // This is more efficient than building the string character by character
-  return String.fromCharCode.apply(null, ENCODING_DEST);
+  return String.fromCharCode.apply(null, charCodes);
 }
 
 /**

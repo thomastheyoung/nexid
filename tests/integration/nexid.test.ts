@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
+import { helpers } from '../../src/core/helpers';
 import { XID } from '../../src/core/xid';
-import NeXID, { XIDGenerator, createXIDGenerator } from '../../src/index';
+import NeXID, { XIDGenerator, XIDGeneratorBuilder } from '../../src/index';
 
 function toNS(ms: number, decimals: number = 2): string {
   return (ms * 100_000).toFixed(decimals);
@@ -43,7 +44,7 @@ describe('NeXID Integration', () => {
       const id = nexid.newId();
 
       // ID timestamp should be close to current time
-      const idTime = id.getTime();
+      const idTime = id.time;
       const diffSeconds = Math.abs((idTime.getTime() - now.getTime()) / 1000);
 
       // Should be within a reasonable time range (10 seconds)
@@ -57,21 +58,16 @@ describe('NeXID Integration', () => {
       const idString = original.toString();
 
       // Parse the string back to an XID
-      const parsed = NeXID.fromString(idString);
+      const parsed = XID.fromString(idString);
 
-      expect(parsed.isOk()).toBe(true);
-
-      const id = parsed.unwrap();
-      expect(id).toBeInstanceOf(XID);
-      expect(id.toString()).toBe(idString);
-      expect(id.equals(original)).toBe(true);
+      expect(parsed).toBeInstanceOf(XID);
+      expect(parsed.toString()).toBe(idString);
+      expect(helpers.equals(parsed.bytes, original.bytes)).toBe(true);
     });
 
     it('returns error for invalid strings', () => {
       const invalid = 'not-a-valid-xid';
-      const result = NeXID.fromString(invalid);
-
-      expect(result.isErr()).toBe(true);
+      expect(() => XID.fromString(invalid)).toThrow();
     });
   });
 
@@ -80,23 +76,23 @@ describe('NeXID Integration', () => {
       const customProcessId = 0x1234;
 
       // Create custom generator with options
-      const generator = await createXIDGenerator({
-        machineId: 'custom-machine-id',
-        processId: customProcessId,
-      });
+      const nexid = await new XIDGeneratorBuilder()
+        .withMachineId('custom-machine-id')
+        .withProcessId(customProcessId)
+        .build();
 
       // Generate an ID
-      const id = generator.newId();
+      const id = nexid.newId();
 
       // Check that it uses our custom values
-      expect(id.getMachineId()).toEqual(generator.machineId);
-      expect(id.getProcessId()).toBe(customProcessId);
+      expect(id.machineId).toEqual(nexid.info().machineId);
+      expect(id.processId).toBe(customProcessId);
     });
   });
 
   describe('Nil ID', () => {
     it('provides a nil ID', () => {
-      const nilId = NeXID.nilId;
+      const nilId = XID.nilXID();
 
       expect(nilId).toBeInstanceOf(XID);
       expect(nilId.isNil()).toBe(true);
@@ -113,15 +109,15 @@ describe('NeXID Integration', () => {
       const id3 = nexid.newId(new Date(now)); // now
 
       // Shuffle the IDs
-      const shuffled = [id3, id1, id2];
+      const shuffled = [id3.bytes, id1.bytes, id2.bytes];
 
       // Sort them
-      const sorted = NeXID.sortIds(shuffled);
+      const sorted = helpers.sortIds(shuffled);
 
       // Should be in chronological order
-      expect(sorted[0].equals(id1)).toBe(true);
-      expect(sorted[1].equals(id2)).toBe(true);
-      expect(sorted[2].equals(id3)).toBe(true);
+      expect(helpers.equals(sorted[0], id1.bytes)).toBe(true);
+      expect(helpers.equals(sorted[1], id2.bytes)).toBe(true);
+      expect(helpers.equals(sorted[2], id3.bytes)).toBe(true);
     });
   });
 
@@ -134,8 +130,8 @@ describe('NeXID Integration', () => {
       expect(idString).toMatch(/^[0-9a-v]{20}$/);
 
       // Should be parsable
-      const parsed = NeXID.fromString(idString);
-      expect(parsed.isOk()).toBe(true);
+      const parsed = XID.fromString(idString);
+      expect(parsed).toBeInstanceOf(XID);
     });
 
     it('generates unique ID strings', async () => {

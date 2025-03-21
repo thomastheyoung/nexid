@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { compareBytes, decode, encode, RAW_LEN } from '../../src/core/encoding';
+import { RAW_LEN } from '../../src/core/constants';
+import { compareBytes, decode, encode } from '../../src/core/encoding';
+import { XIDBytes } from '../../src/core/xid';
 
 describe('Encoding Functions', () => {
   describe('encode function', () => {
@@ -24,7 +26,7 @@ describe('Encoding Functions', () => {
       ];
 
       testCases.forEach((testCase) => {
-        const result = encode(testCase.bytes);
+        const result = encode(testCase.bytes as XIDBytes);
         expect(result).toBe(testCase.expected);
       });
     });
@@ -37,7 +39,7 @@ describe('Encoding Functions', () => {
         bytes[0] = i;
 
         // Encode it
-        const encoded = encode(bytes);
+        const encoded = encode(bytes as XIDBytes);
 
         // Decode it back
         const decoded = decode(encoded);
@@ -104,7 +106,7 @@ describe('Encoding Functions', () => {
         }
 
         // Encode then decode
-        const encoded = encode(bytes);
+        const encoded = encode(bytes as XIDBytes);
         const decoded = decode(encoded);
 
         // Should get back the original bytes

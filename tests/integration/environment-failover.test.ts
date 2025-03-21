@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import os from 'node:os';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createXIDGenerator } from '../../src/index';
+import { XIDGeneratorBuilder } from '../../src/core/xid-generator';
 
 describe('Environment Failover', () => {
   beforeEach(() => {
@@ -23,7 +23,7 @@ describe('Environment Failover', () => {
       vi.spyOn(globalThis.crypto, 'getRandomValues').mockImplementation(mockError);
 
       // Should still initialize
-      const nexid = await createXIDGenerator();
+      const nexid = await new XIDGeneratorBuilder().build();
 
       // Should be able to generate IDs
       const id = nexid.newId();
@@ -37,7 +37,7 @@ describe('Environment Failover', () => {
       vi.spyOn(os, 'networkInterfaces').mockImplementation(mockError);
 
       // Should still initialize
-      const nexid = await createXIDGenerator();
+      const nexid = await new XIDGeneratorBuilder().build();
 
       // Should be able to generate IDs
       const id = nexid.newId();
@@ -51,8 +51,8 @@ describe('Environment Failover', () => {
       vi.stubGlobal('process', { pid: undefined });
 
       // Should still initialize
-      const nexid = await createXIDGenerator();
-      expect(nexid.pid === currentPid).toBeFalsy();
+      const nexid = await new XIDGeneratorBuilder().build();
+      expect(nexid.info().pid === currentPid).toBeFalsy();
 
       // Should be able to generate IDs
       const id = nexid.newId();
@@ -67,14 +67,17 @@ describe('Environment Failover', () => {
       const processId = 0x1234;
       const timestamp = new Date('2023-01-01T00:00:00Z');
 
-      const nexid = await createXIDGenerator({ machineId: 'custom-machine-id', processId });
+      const nexid = await new XIDGeneratorBuilder()
+        .withMachineId('custom-machine-id')
+        .withProcessId(processId)
+        .build();
 
       // Generate an ID with a fixed timestamp
       const id = nexid.newId(timestamp);
 
       // The first 9 bytes (timestamp, machine ID, process ID) should be predictable
       // Only the counter varies
-      const bytes = id.toBytes();
+      const bytes = id.bytes;
 
       // Check timestamp (first 4 bytes)
       const timestampBytes = bytes.slice(0, 4);
@@ -88,7 +91,7 @@ describe('Environment Failover', () => {
 
       // Check machine ID (next 3 bytes)
       const actualMachineId = bytes.slice(4, 7);
-      expect(actualMachineId).toEqual(nexid.machineId);
+      expect(actualMachineId).toEqual(nexid.info().machineId);
 
       // Check process ID (next 2 bytes)
       const actualProcessId = (bytes[7] << 8) | bytes[8];

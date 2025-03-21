@@ -29,47 +29,17 @@
  * └─────────────────────────────────────────────────┘
  */
 
+import { Adapter } from 'nexid/env/adapters/base';
 import { Environment } from '../env';
 import { RuntimeEnvironment } from '../types/platform';
 import { BYTE_MASK, RAW_LEN } from './constants';
 import { encode } from './encoding';
 import { validateRandomBytesFunction } from './validators';
-import { createXID, XID, XIDBytes } from './xid';
+import { XID, XIDBytes } from './xid';
 
 // ============================================================================
-// Types
+// Generator Factory
 // ============================================================================
-
-/**
- * Configuration options for creating a custom XID generator.
- */
-export type XIDGeneratorOptions = Readonly<{
-  /** Custom machine ID to use */
-  machineId?: string;
-
-  /** Custom process ID to use (must be a number) */
-  processId?: number;
-
-  /** Custom function to generate random bytes */
-  randomSource?: (size: number) => Uint8Array;
-}>;
-
-/**
- * Internal components used by the generator.
- */
-export type XIDGeneratorComponents = Readonly<{
-  /** Detected runtime environment */
-  runtime: RuntimeEnvironment;
-
-  /** 3-byte machine identifier component */
-  machineId: Readonly<Uint8Array>;
-
-  /** 16-bit process identifier component */
-  pid: number;
-
-  /** Random seed for counter initialization */
-  randomSeed: number;
-}>;
 
 /**
  * XID generator functions.
@@ -89,10 +59,6 @@ export type XIDGenerator = Readonly<{
   }>;
 }>;
 
-// ============================================================================
-// Generator Factory
-// ============================================================================
-
 /**
  * Creates a new XID generator with the provided components.
  *
@@ -103,7 +69,7 @@ export type XIDGenerator = Readonly<{
  * @returns A generator object with functions for creating XIDs
  * @private
  */
-function internalGenerator(components: XIDGeneratorComponents): XIDGenerator {
+function createGenerator(components: XIDGeneratorComponents): XIDGenerator {
   // Thread-safe counter using SharedArrayBuffer and Atomics
   // This is our controlled state cell - the only stateful component
   const counterBuffer = new SharedArrayBuffer(4);
@@ -129,7 +95,7 @@ function internalGenerator(components: XIDGeneratorComponents): XIDGenerator {
   /**
    * Creates the raw 12-byte ID buffer with the appropriate components.
    */
-  function createRawXID(timestamp: number): Readonly<XIDBytes> {
+  function buildXIDBytes(timestamp: number): Readonly<XIDBytes> {
     // Convert to seconds for the ID (XID spec uses seconds, not milliseconds)
     timestamp = Math.floor(timestamp / 1000);
 
@@ -163,12 +129,12 @@ function internalGenerator(components: XIDGeneratorComponents): XIDGenerator {
   return Object.freeze({
     newId: (datetime?: Date): XID => {
       const timestamp = datetime instanceof Date ? +datetime : Date.now();
-      return createXID(createRawXID(timestamp));
+      return XID.fromBytes(buildXIDBytes(timestamp));
     },
 
     fastId: (): string => {
       const timestamp = Date.now();
-      return encode(createRawXID(timestamp));
+      return encode(buildXIDBytes(timestamp));
     },
 
     info: () => ({
@@ -184,9 +150,26 @@ function internalGenerator(components: XIDGeneratorComponents): XIDGenerator {
 // ============================================================================
 
 /**
+ * Internal components used by the generator.
+ */
+type XIDGeneratorComponents = Readonly<{
+  /** Detected runtime environment */
+  runtime: RuntimeEnvironment;
+
+  /** 3-byte machine identifier component */
+  machineId: Readonly<Uint8Array>;
+
+  /** 16-bit process identifier component */
+  pid: number;
+
+  /** Random seed for counter initialization */
+  randomSeed: number;
+}>;
+
+/**
  * Factory for creating generator components from environmental capabilities.
  */
-export const ComponentFactory = {
+const ComponentFactory = {
   /**
    * Creates generator components for the specified environment with optional customizations.
    */
@@ -233,20 +216,51 @@ export const ComponentFactory = {
 };
 
 // ============================================================================
-// Public Factory Functions
+// Public Builder
 // ============================================================================
 
 /**
- * Creates a new XID generator with environment-specific settings.
- *
- * This factory function automatically detects the runtime environment and
- * creates an appropriate generator with platform-specific optimizations.
- *
- * @param options - Optional configuration for customizing the generator
- * @returns A Promise that resolves to a new Generator instance
+ * Configuration options for creating a custom XID generator.
  */
-export async function createXIDGenerator(options: XIDGeneratorOptions = {}): Promise<XIDGenerator> {
-  const environment = await Environment.setup();
-  const components = await ComponentFactory.create(environment, options);
-  return internalGenerator(components);
+export type XIDGeneratorOptions = {
+  /** Custom machine ID to use */
+  machineId?: string;
+
+  /** Custom process ID to use (must be a number) */
+  processId?: number;
+
+  /** Custom function to generate random bytes */
+  randomSource?: Adapter.RandomBytes;
+};
+
+// Builder pattern for generator options
+export class XIDGeneratorBuilder {
+  private options: XIDGeneratorOptions = {};
+  private environment: Environment.Container | null = null;
+
+  withEnvironment(env: Environment.Container): XIDGeneratorBuilder {
+    this.environment = env;
+    return this;
+  }
+
+  withMachineId(machineId: string): XIDGeneratorBuilder {
+    this.options.machineId = machineId;
+    return this;
+  }
+
+  withProcessId(processId: number): XIDGeneratorBuilder {
+    this.options.processId = processId;
+    return this;
+  }
+
+  withRandomSource(randomSource: (size: number) => Uint8Array): XIDGeneratorBuilder {
+    this.options.randomSource = randomSource;
+    return this;
+  }
+
+  async build(): Promise<XIDGenerator> {
+    const environment = this.environment ?? (await Environment.setup());
+    const components = await ComponentFactory.create(environment, this.options);
+    return createGenerator(components);
+  }
 }

@@ -20,8 +20,9 @@
  * - Platform adapters abstract environment-specific implementations
  */
 
-import { createXID, fromBytes, fromString, nilXID, XID, xid } from './core/xid';
-import { createXIDGenerator, XIDGenerator, XIDGeneratorOptions } from './core/xid-generator';
+import { compare, equals, isNil, sortIds } from './core/helpers';
+import { XID } from './core/xid';
+import { XIDGenerator, XIDGeneratorBuilder, XIDGeneratorOptions } from './core/xid-generator';
 
 // ============================================================================
 // Singleton Generator Management
@@ -41,7 +42,7 @@ let generator: XIDGenerator;
  */
 async function getGenerator(): Promise<XIDGenerator> {
   if (!generator) {
-    generator = await createXIDGenerator();
+    generator = await new XIDGeneratorBuilder().build();
   }
   return generator;
 }
@@ -62,10 +63,10 @@ const NeXID = {
   init: getGenerator,
 
   /**
-   * Creates a new ID using the global generator.
+   * Creates a new ID using the global generator and wrap it with XIDWrapper
    *
    * @param [datetime] - Optional Date object to use for the timestamp
-   * @returns A Promise that resolves to a new XID
+   * @returns A Promise that resolves to a new XIDWrapper
    */
   newId: async (datetime?: Date): Promise<XID> => {
     const gen = await getGenerator();
@@ -73,7 +74,7 @@ const NeXID = {
   },
 
   /**
-   * Generates an ID string directly without creating an XID object.
+   * Generates an ID string directly without creating an XIDWrapper object.
    *
    * @returns A Promise that resolves to a 20-character string representation
    */
@@ -82,30 +83,11 @@ const NeXID = {
     return gen.fastId();
   },
 
-  /**
-   * Parses a string representation of an XID.
-   */
-  fromString,
-
-  /**
-   * Creates an XID from raw bytes.
-   */
-  fromBytes,
-
-  /**
-   * A nil (zero) ID, useful as a default value or placeholder.
-   */
-  nilId: nilXID(),
-
-  /**
-   * Sorts an array of XIDs lexicographically.
-   */
-  sortIds: xid.sort,
-
-  /**
-   * Function namespace containing all XID operations.
-   */
-  xid,
+  // Helpers
+  compare,
+  equals,
+  isNil,
+  sortIds,
 };
 
 // ============================================================================
@@ -120,7 +102,7 @@ export default NeXID;
 /**
  * Named exports for more advanced usage patterns.
  */
-export { createXID, createXIDGenerator, fromBytes, fromString };
+export { XIDGeneratorBuilder };
 export type { XIDGenerator, XIDGeneratorOptions };
 
 /**

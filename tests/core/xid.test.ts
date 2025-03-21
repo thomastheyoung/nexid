@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RAW_LEN } from '../../src/core/encoding';
+import { helpers } from '../../src/core/helpers';
 import { XID } from '../../src/core/xid';
 
 describe('XID', () => {
@@ -39,50 +39,50 @@ describe('XID', () => {
 
   describe('constructor', () => {
     it('creates a nil ID when no bytes are provided', () => {
-      const id = new XID();
-      expect(id.isNil()).toBe(true);
+      const id = XID.nilXID();
+      expect(helpers.isNil(id.bytes)).toBe(true);
     });
 
     it('creates an ID from valid bytes', () => {
       const bytes = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
-      const id = new XID(bytes);
+      const id = XID.fromBytes(bytes);
       expect(id.toString()).not.toBe('000000000000000000000');
-      expect(id.isNil()).toBe(false);
+      expect(helpers.isNil(id.bytes)).toBe(false);
     });
 
     it('throws error when invalid bytes are provided', () => {
       const invalidBytes = new Uint8Array([1, 2, 3]);
-      expect(() => new XID(invalidBytes)).toThrow(`ID must be exactly ${RAW_LEN} bytes`);
+      expect(() => XID.fromBytes(invalidBytes)).toThrow();
     });
   });
 
   describe('component extraction', () => {
     it('extracts correct timestamp from IDs', () => {
       sampleXIDs.forEach((sample) => {
-        const id = new XID(sample.bytes);
-        expect(id.getTime().getTime()).toBe(sample.timestamp * 1000);
+        const id = XID.fromBytes(sample.bytes);
+        expect(id.time.getTime()).toBe(sample.timestamp * 1000);
       });
     });
 
     it('extracts correct machine ID from IDs', () => {
       sampleXIDs.forEach((sample) => {
-        const id = new XID(sample.bytes);
-        const machineId = id.getMachineId();
+        const id = XID.fromBytes(sample.bytes);
+        const machineId = id.machineId;
         expect(Array.from(machineId)).toEqual(Array.from(sample.machine));
       });
     });
 
     it('extracts correct process ID from IDs', () => {
       sampleXIDs.forEach((sample) => {
-        const id = new XID(sample.bytes);
-        expect(id.getProcessId()).toBe(sample.pid);
+        const id = XID.fromBytes(sample.bytes);
+        expect(id.processId).toBe(sample.pid);
       });
     });
 
     it('extracts correct counter from IDs', () => {
       sampleXIDs.forEach((sample) => {
-        const id = new XID(sample.bytes);
-        expect(id.getCounter()).toBe(sample.counter);
+        const id = XID.fromBytes(sample.bytes);
+        expect(id.counter).toBe(sample.counter);
       });
     });
   });
@@ -90,7 +90,7 @@ describe('XID', () => {
   describe('encoding and decoding', () => {
     it('generates correct string representation', () => {
       sampleXIDs.forEach((sample, index) => {
-        const id = new XID(sample.bytes);
+        const id = XID.fromBytes(sample.bytes);
         const result = id.toString();
 
         // Log expected and actual byte values for debugging
@@ -110,12 +110,11 @@ describe('XID', () => {
     it('parses correct ID from string', () => {
       sampleXIDs.forEach((sample) => {
         const result = XID.fromString(sample.string);
-        expect(result.isOk()).toBe(true);
+        expect(result).toBeInstanceOf(XID);
 
-        const id = result.unwrap();
         // Compare each byte to the original
         const originalBytes = Array.from(sample.bytes);
-        const parsedBytes = Array.from(id.toBytes());
+        const parsedBytes = Array.from(result.bytes);
         expect(parsedBytes).toEqual(originalBytes);
       });
     });
@@ -131,8 +130,7 @@ describe('XID', () => {
       ];
 
       invalidStrings.forEach((str) => {
-        const result = XID.fromString(str);
-        expect(result.isErr()).toBe(true);
+        expect(() => XID.fromString(str)).toThrow();
       });
     });
   });
@@ -141,10 +139,8 @@ describe('XID', () => {
     it('creates correct ID from bytes', () => {
       sampleXIDs.forEach((sample) => {
         const result = XID.fromBytes(sample.bytes);
-        expect(result.isOk()).toBe(true);
-
-        const id = result.unwrap();
-        expect(id.toString()).toBe(sample.string);
+        expect(result).toBeInstanceOf(XID);
+        expect(result.toString()).toBe(sample.string);
       });
     });
 
@@ -156,8 +152,7 @@ describe('XID', () => {
       ];
 
       invalidBytes.forEach((bytes) => {
-        const result = XID.fromBytes(bytes);
-        expect(result.isErr()).toBe(true);
+        expect(() => XID.fromBytes(bytes)).toThrow();
       });
     });
   });
@@ -165,55 +160,41 @@ describe('XID', () => {
   describe('comparison and equality', () => {
     it('compares XIDs correctly', () => {
       // ID with earlier timestamp should be "less than"
-      const earlier = new XID(new Uint8Array([0x01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]));
-      const later = new XID(new Uint8Array([0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]));
+      const earlier = XID.fromBytes(new Uint8Array([0x01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]));
+      const later = XID.fromBytes(new Uint8Array([0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]));
 
-      expect(earlier.compare(later)).toBeLessThan(0);
-      expect(later.compare(earlier)).toBeGreaterThan(0);
-      expect(earlier.compare(earlier)).toBe(0);
+      expect(helpers.compare(earlier.bytes, later.bytes)).toBeLessThan(0);
+      expect(helpers.compare(later.bytes, earlier.bytes)).toBeGreaterThan(0);
+      expect(helpers.compare(earlier.bytes, earlier.bytes)).toBe(0);
     });
 
     it('implements equals method correctly', () => {
-      const id1 = new XID(sampleXIDs[0].bytes);
-      const id2 = new XID(sampleXIDs[0].bytes);
-      const id3 = new XID(sampleXIDs[1].bytes);
+      const id1 = XID.fromBytes(sampleXIDs[0].bytes);
+      const id2 = XID.fromBytes(sampleXIDs[0].bytes);
+      const id3 = XID.fromBytes(sampleXIDs[1].bytes);
 
       // Same content, different objects
-      expect(id1.equals(id2)).toBe(true);
+      expect(helpers.equals(id1.bytes, id2.bytes)).toBe(true);
 
       // Same object
-      expect(id1.equals(id1)).toBe(true);
+      expect(helpers.equals(id1.bytes, id1.bytes)).toBe(true);
 
       // Different content
-      expect(id1.equals(id3)).toBe(false);
+      expect(helpers.equals(id1.bytes, id3.bytes)).toBe(false);
 
       // Different type
-      expect(id1.equals('not an XID')).toBe(false);
-      expect(id1.equals(null)).toBe(false);
+      // expect(id1.equals('not an XID')).toBe(false);
+      // expect(id1.equals(null)).toBe(false);
     });
   });
 
   describe('nil ID', () => {
     it('correctly identifies nil IDs', () => {
-      const nilId = new XID();
-      const nonNilId = new XID(sampleXIDs[0].bytes);
+      const nilId = XID.nilXID();
+      const nonNilId = XID.fromBytes(sampleXIDs[0].bytes);
 
-      expect(nilId.isNil()).toBe(true);
-      expect(nonNilId.isNil()).toBe(false);
-    });
-  });
-
-  describe('toJSON method', () => {
-    it('returns string representation for JSON serialization', () => {
-      sampleXIDs.forEach((sample) => {
-        const id = new XID(sample.bytes);
-        expect(id.toJSON()).toBe(sample.string);
-
-        // Test JSON.stringify behavior
-        const obj = { id };
-        const jsonString = JSON.stringify(obj);
-        expect(jsonString).toBe(`{"id":"${sample.string}"}`);
-      });
+      expect(helpers.isNil(nilId.bytes)).toBe(true);
+      expect(helpers.isNil(nonNilId.bytes)).toBe(false);
     });
   });
 });

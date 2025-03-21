@@ -1,16 +1,12 @@
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { XID } from '../../src/core/xid';
-import { XIDGenerator } from '../../src/core/xid-generator';
+import { XIDGenerator, XIDGeneratorBuilder } from '../../src/core/xid-generator';
 
 const MACHINE_ID_SIZE = 3;
 
-describe('XIDGenerator', () => {
+describe('XIDGenerator', async () => {
   // Set up a default generator for tests
-  let generator: XIDGenerator;
-
-  beforeAll(async () => {
-    generator = await XIDGenerator.build();
-  });
+  const generator: XIDGenerator = await new XIDGeneratorBuilder().build();
 
   afterEach(() => {
     vi.restoreAllMocks();
@@ -18,24 +14,25 @@ describe('XIDGenerator', () => {
 
   describe('build method', () => {
     it('creates a default generator with valid components', async () => {
-      const gen = await XIDGenerator.build();
+      const gen = await new XIDGeneratorBuilder().build();
+      const info = gen.info();
 
       // Check machine ID
-      expect(gen.machineId).toBeInstanceOf(Uint8Array);
-      expect(gen.machineId.length).toBe(MACHINE_ID_SIZE);
+      expect(info.machineId).toBeInstanceOf(Uint8Array);
+      expect(info.machineId.length).toBe(MACHINE_ID_SIZE);
 
       // Check process ID
-      expect(typeof gen.pid).toBe('number');
-      expect(gen.pid).toBeGreaterThanOrEqual(0);
-      expect(gen.pid).toBeLessThanOrEqual(0xffff); // 16-bit value
+      expect(typeof info.pid).toBe('number');
+      expect(info.pid).toBeGreaterThanOrEqual(0);
+      expect(info.pid).toBeLessThanOrEqual(0xffff); // 16-bit value
     });
 
     it('accepts custom process ID', async () => {
       const customProcessId = 0x1234;
-      const gen = await XIDGenerator.build({ processId: customProcessId });
+      const gen = await new XIDGeneratorBuilder().withProcessId(customProcessId).build();
 
       // Check that the custom process ID was used
-      expect(gen.pid).toBe(customProcessId);
+      expect(gen.info().pid).toBe(customProcessId);
     });
 
     it('accepts custom random source', async () => {
@@ -43,8 +40,7 @@ describe('XIDGenerator', () => {
       const mockRandomSource = (size: number): Uint8Array => {
         return new Uint8Array(size).fill(0x42);
       };
-
-      const gen = await XIDGenerator.build({ randomSource: mockRandomSource });
+      const gen = await new XIDGeneratorBuilder().withRandomSource(mockRandomSource).build();
 
       // Generate an ID and verify the counter part has the expected pattern
       // based on our mock random source
@@ -58,11 +54,12 @@ describe('XIDGenerator', () => {
     it('rejects invalid machine ID', async () => {
       // Machine ID that's too short
       // We expect build to still succeed but use a default machine ID instead
-      const gen = await XIDGenerator.build({ machineId: '' });
+      const gen = await new XIDGeneratorBuilder().withMachineId('').build();
+      const machineId = gen.info().machineId;
 
       // The machine ID should not be our invalid one
-      expect(gen.machineId.length).toBe(MACHINE_ID_SIZE);
-      expect(Array.from(gen.machineId)).not.toEqual([0xaa, 0xbb]);
+      expect(machineId.length).toBe(MACHINE_ID_SIZE);
+      expect(Array.from(machineId)).not.toEqual([0xaa, 0xbb]);
     });
 
     it('rejects invalid process ID', async () => {
@@ -70,11 +67,12 @@ describe('XIDGenerator', () => {
       const invalidProcessId = 0x10000; // 17 bits set
 
       // We expect build to still succeed but use a default process ID instead
-      const gen = await XIDGenerator.build({ processId: invalidProcessId });
+      const gen = await new XIDGeneratorBuilder().withProcessId(invalidProcessId).build();
+      const pid = gen.info().pid;
 
       // The process ID should be a 16-bit value, not our invalid one
-      expect(gen.pid).toBeLessThanOrEqual(0xffff);
-      expect(gen.pid).not.toBe(invalidProcessId);
+      expect(pid).toBeLessThanOrEqual(0xffff);
+      expect(pid).not.toBe(invalidProcessId);
     });
   });
 
@@ -98,8 +96,8 @@ describe('XIDGenerator', () => {
 
       // IDs generated in sequence should have sequential counter values
       // if they are in the same timestamp second
-      if (id1.getTime().getTime() === id2.getTime().getTime()) {
-        expect(id2.getCounter() - id1.getCounter()).toBe(1);
+      if (id1.time.getTime() === id2.time.getTime()) {
+        expect(id2.counter - id1.counter).toBe(1);
       }
     });
 
@@ -108,15 +106,15 @@ describe('XIDGenerator', () => {
       const id = generator.newId(testDate);
 
       // The ID should have the timestamp we provided
-      expect(id.getTime().getTime()).toBe(testDate.getTime());
+      expect(id.time.getTime()).toBe(testDate.getTime());
     });
 
     it('uses correct machine ID and process ID', () => {
       const id = generator.newId();
 
       // The ID should have the generator's machine ID and process ID
-      expect(Array.from(id.getMachineId())).toEqual(Array.from(generator.machineId));
-      expect(id.getProcessId()).toBe(generator.pid);
+      expect(Array.from(id.machineId)).toEqual(Array.from(generator.info().machineId));
+      expect(id.processId).toBe(generator.info().pid);
     });
   });
 
