@@ -47,19 +47,14 @@
     </div>
 
     <!-- Load the XID library -->
-    <script src="../dist/cjs/index.js"></script>
+    <script src="../bin/nexid-web.js"></script>
     <script async>
       (async () => {
-        // await NeXID.init();
+        const generator = await NeXID.init();
+        window.generator = generator;
         document.getElementById('generateButton').addEventListener('click', () => {
           try {
-            const machineId = new Uint8Array([1, 2, 3]); // Example machine ID
-            const processId = Math.floor(Math.random() * 65536); // Random process ID
-
-            // Use the builder to create an XID
-            const xid = new XIDBuilder().setMachineId(machineId).setProcessId(processId).build();
-
-            const result = xid.toString();
+            const result = generator.fastId();
             document.getElementById('output').innerText = `Generated XID: ${result}`;
           } catch (error) {
             console.error('Error generating XID:', error);

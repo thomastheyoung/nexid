@@ -1,7 +1,6 @@
 import crypto from 'node:crypto';
 import os from 'node:os';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { XIDGeneratorBuilder } from '../../src/core/xid-generator';
 
 describe('Environment Failover', () => {
   beforeEach(() => {

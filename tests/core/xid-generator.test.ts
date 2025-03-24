@@ -1,12 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { XID } from '../../src/core/xid';
 import { XIDGenerator, XIDGeneratorBuilder } from '../../src/core/xid-generator';
+import NeXID from '../../src/index';
 
 const MACHINE_ID_SIZE = 3;
 
 describe('XIDGenerator', async () => {
   // Set up a default generator for tests
-  const generator: XIDGenerator = await new XIDGeneratorBuilder().build();
+  const generator: XIDGenerator = await NeXID.init();
 
   afterEach(() => {
     vi.restoreAllMocks();
@@ -14,7 +15,7 @@ describe('XIDGenerator', async () => {
 
   describe('build method', () => {
     it('creates a default generator with valid components', async () => {
-      const gen = await new XIDGeneratorBuilder().build();
+      const gen = await NeXID.init();
       const info = gen.info();
 
       // Check machine ID

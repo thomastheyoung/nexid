@@ -1,6 +1,5 @@
-import { RAW_LEN } from './constants';
 import { encode } from './encoding';
-import { XIDBytes } from './xid';
+import { XID } from './xid';
 
 /**
  * Converts an XID to its 20-character string representation using base32-hex encoding.
@@ -8,8 +7,8 @@ import { XIDBytes } from './xid';
  * @param id - The XID to convert to string
  * @returns A 20-character string representation of the ID
  */
-export function toString(id: XIDBytes): string {
-  return encode(id);
+export function toString(id: XID): string {
+  return encode(id.bytes);
 }
 
 // ============================================================================
@@ -55,8 +54,8 @@ export function compareBytes(a: Uint8Array, b: Uint8Array): number {
  * @param b - Second XID to compare
  * @returns Negative number if a is smaller (older), 0 if equal, positive if a is greater (newer)
  */
-export function compare(a: XIDBytes, b: XIDBytes): number {
-  return compareBytes(a, b);
+export function compare(a: XID, b: XID): number {
+  return compareBytes(a.bytes, b.bytes);
 }
 
 /**
@@ -67,17 +66,9 @@ export function compare(a: XIDBytes, b: XIDBytes): number {
  * @param b - Second XID to compare
  * @returns True if the XIDs contain identical bytes, false otherwise
  */
-export function equals(a: XIDBytes, b: XIDBytes): boolean {
+export function equals(a: XID, b: XID): boolean {
   if (a === b) return true;
-
-  // Compare all bytes
-  for (let i = 0; i < RAW_LEN; i++) {
-    if (a[i] !== b[i]) {
-      return false;
-    }
-  }
-
-  return true;
+  return a.bytes.every((byte, i) => byte === b.bytes[i]);
 }
 
 /**
@@ -87,14 +78,8 @@ export function equals(a: XIDBytes, b: XIDBytes): boolean {
  * @param id - The XID to check
  * @returns True if this is a nil ID, false otherwise
  */
-export function isNil(id: XIDBytes): boolean {
-  for (let i = 0; i < RAW_LEN; i++) {
-    if (id[i] !== 0) {
-      return false;
-    }
-  }
-
-  return true;
+export function isNil(id: XID): boolean {
+  return id.bytes.every((byte) => byte === 0);
 }
 
 // ============================================================================
@@ -107,7 +92,7 @@ export function isNil(id: XIDBytes): boolean {
  * @param ids - Array of XIDs to sort
  * @returns A new array containing the sorted XIDs
  */
-export function sortIds(ids: readonly XIDBytes[]): XIDBytes[] {
+export function sortIds(ids: readonly XID[]): XID[] {
   return [...ids].sort(compare);
 }
 

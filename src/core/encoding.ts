@@ -14,8 +14,8 @@
  * performance in both Node.js and browser environments.
  */
 
-import { ENCODED_LEN, ENCODING, RAW_LEN } from './constants';
-import { XIDBytes } from './xid';
+import { ENCODED_LEN, ENCODING, RAW_LEN } from 'nexid/common/constants';
+import { XIDBytes } from 'nexid/types/xid';
 
 // ============================================================================
 // Constants
@@ -194,41 +194,4 @@ export function decode(str: string): Uint8Array {
     // Otherwise, wrap the original error
     throw new Error(`XID decoding error: ${e instanceof Error ? e.message : String(e)}`);
   }
-}
-
-/**
- * Compares two byte arrays lexicographically.
- *
- * This comparison function enables XIDs to be naturally sortable in databases
- * and binary searches. Since the timestamp is the first component in the ID,
- * lexicographical sorting also results in chronological sorting.
- *
- * The comparison algorithm works by:
- * 1. Comparing each byte pair in sequence
- * 2. Returning the difference when a non-matching pair is found
- * 3. If all shared bytes match, comparing the lengths
- *
- * @param a - First byte array to compare
- * @param b - Second byte array to compare
- * @returns Negative if a < b, 0 if a === b, positive if a > b
- * @example
- * ```typescript
- * const id1 = new Uint8Array([1, 2, 3]);
- * const id2 = new Uint8Array([1, 2, 4]);
- * const result = compareBytes(id1, id2); // Returns -1
- * ```
- */
-export function compareBytes(a: Uint8Array, b: Uint8Array): number {
-  const length = Math.min(a.length, b.length);
-
-  // Compare bytes one by one
-  for (let i = 0; i < length; i++) {
-    const diff = a[i] - b[i];
-    if (diff !== 0) {
-      return diff;
-    }
-  }
-
-  // If one is a prefix of the other, the shorter one comes first
-  return a.length - b.length;
 }

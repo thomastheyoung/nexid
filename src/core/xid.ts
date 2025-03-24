@@ -20,42 +20,9 @@
  * - Type safety: Comprehensive type definitions with exhaustive checks
  */
 
-import { ENCODED_LEN, RAW_LEN } from './constants';
+import { ENCODED_LEN, RAW_LEN } from 'nexid/common/constants';
+import { XIDBytes } from 'nexid/types/xid';
 import { decode, encode } from './encoding';
-import { helpers } from './helpers';
-
-// ============================================================================
-// Custom Error Types
-// ============================================================================
-
-/**
- * Error thrown when an invalid XID is provided or constructed.
- */
-export class InvalidXIDError extends Error {
-  constructor(message: string) {
-    super(`[NeXID] ${message}`);
-    this.name = 'InvalidXIDError';
-  }
-}
-
-// ============================================================================
-// Definitions
-// ============================================================================
-
-/**
- * XID opaque type representing a globally unique, lexicographically sortable ID.
- *
- * This type provides:
- * 1. Nominal typing (cannot pass arbitrary Uint8Arrays as XIDs)
- * 2. Array-like indexed access for performance
- * 3. Runtime immutability guarantees
- *
- * @remarks
- * XIDs should never be modified after creation. A copy-on-read strategy
- * protects against modification of internal data, but direct array indexing
- * is still provided for performance in read operations.
- */
-export type XIDBytes = Readonly<Uint8Array> & { readonly __xid: unique symbol };
 
 // ============================================================================
 // Factory Functions
@@ -74,9 +41,12 @@ export class XID {
    * @param bytes - The 12-byte array to create the ID from
    * @returns A Result containing either the new XID or an error message
    */
-  public static fromBytes(bytes: Uint8Array) {
+  public static fromBytes(bytes: Uint8Array): XID {
+    if (!(bytes instanceof Uint8Array)) {
+      throw new Error('ID is not a Uint8Array');
+    }
     if (bytes.length !== RAW_LEN) {
-      throw new InvalidXIDError('Invalid id length');
+      throw new Error('Invalid id length');
     }
     return new XID(bytes as XIDBytes);
   }
@@ -87,9 +57,9 @@ export class XID {
    * @param idString - The string to parse (expected to be 20 characters in base32-hex format)
    * @returns A Result containing either the parsed XID or an error message
    */
-  public static fromString(str: string) {
+  public static fromString(str: string): XID {
     if (str.length !== ENCODED_LEN) {
-      throw new InvalidXIDError('Invalid id length');
+      throw new Error('Invalid id length');
     }
     return new XID(decode(str) as XIDBytes);
   }
@@ -99,21 +69,13 @@ export class XID {
    *
    * @returns A nil XID (all bytes set to zero)
    */
-  public static nilXID(): XID {
+  public static nilID(): XID {
     return new XID(new Uint8Array(RAW_LEN) as XIDBytes);
   }
 
   // ============================================================================
-  // Instance methods
+  // Component getters
   // ============================================================================
-
-  toString(): string {
-    return encode(this.bytes);
-  }
-
-  isNil(): boolean {
-    return helpers.isNil(this.bytes);
-  }
 
   /**
    * Extracts the timestamp portion of an XID as a JavaScript Date object.
@@ -162,5 +124,35 @@ export class XID {
   get counter(): number {
     const id = this.bytes;
     return (id[9] << 16) | (id[10] << 8) | id[11];
+  }
+
+  // ============================================================================
+  // Instance methods
+  // ============================================================================
+
+  toString(): string {
+    return encode(this.bytes);
+  }
+
+  /**
+   * Checks if an XID is a nil (zero) ID.
+   * A nil ID has all bytes set to zero and is typically used as a placeholder or default value.
+   *
+   * @returns True if this is a nil ID, false otherwise
+   */
+  isNil(): boolean {
+    return this.bytes.every((byte) => byte === 0);
+  }
+
+  /**
+   * Checks if two XIDs are equal.
+   * Two XIDs are equal if they contain the same bytes in the same order.
+   *
+   * @param other - Second XID to compare
+   * @returns True if the XIDs contain identical bytes, false otherwise
+   */
+  equals(other: XID): boolean {
+    if (this === other) return true;
+    return this.bytes.every((byte, i) => byte === other.bytes[i]);
   }
 }

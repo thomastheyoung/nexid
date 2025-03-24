@@ -39,7 +39,7 @@ describe('XID', () => {
 
   describe('constructor', () => {
     it('creates a nil ID when no bytes are provided', () => {
-      const id = XID.nilXID();
+      const id = XID.nilID();
       expect(helpers.isNil(id.bytes)).toBe(true);
     });
 
@@ -190,7 +190,7 @@ describe('XID', () => {
 
   describe('nil ID', () => {
     it('correctly identifies nil IDs', () => {
-      const nilId = XID.nilXID();
+      const nilId = XID.nilID();
       const nonNilId = XID.fromBytes(sampleXIDs[0].bytes);
 
       expect(helpers.isNil(nilId.bytes)).toBe(true);

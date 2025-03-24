@@ -36,6 +36,7 @@
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
 
+    "lib": ["dom", "webworker"],
     /* Node.js Types */
     "types": ["node", "vitest/globals", "deno"],
     "paths": {

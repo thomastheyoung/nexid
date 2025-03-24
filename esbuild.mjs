@@ -1,48 +1,56 @@
 import * as esbuild from 'esbuild';
 
 const sharedOptions = {
-  entryPoints: ['./src/index.ts'],
   bundle: true,
   logLevel: 'info',
   color: true,
 };
 
+function minify(options) {
+  return {
+    ...options,
+    minify: true,
+    outfile: options.outfile.replace('.js', '.min.js'),
+  };
+}
+
 // ================================
-// Node (import)
+// Default
 // ================================
 
-// Non-minified bundle
-await esbuild.build({
+const defaultBuild = {
   ...sharedOptions,
+  entryPoints: ['./src/index.ts'],
   platform: 'node',
   outfile: './bin/nexid.js',
-});
+};
+await esbuild.build(defaultBuild);
+await esbuild.build(minify(defaultBuild));
 
-// Minified bundle
-await esbuild.build({
+// ================================
+// Node
+// ================================
+
+const nodeBuild = {
   ...sharedOptions,
+  entryPoints: ['./src/index-node.ts'],
   platform: 'node',
-  outfile: './bin/nexid-min.js',
-  minify: true,
+  outfile: './bin/nexid-node.js',
+};
+await esbuild.build(nodeBuild);
+await esbuild.build(minify(nodeBuild));
+
+// ================================
+// Web
+// ================================
+
+const webBuild = {
+  ...sharedOptions,
+  entryPoints: ['./src/index-web.ts'],
+  platform: 'browser',
+  outfile: './bin/nexid-web.js',
+  globalName: 'NeXID',
   sourcemap: true,
-});
-
-// ================================
-// CJS (require)
-// ================================
-
-// // Non-minified bundle
-// await esbuild.build({
-//   ...sharedOptions,
-//   platform: 'browser',
-//   outfile: './bin/nexid-web.js',
-// });
-
-// // Minified bundle
-// await esbuild.build({
-//   ...sharedOptions,
-//   platform: 'browser',
-//   outfile: './bin/nexid-web-min.js',
-//   minify: true,
-//   sourcemap: true,
-// });
+};
+await esbuild.build(webBuild);
+await esbuild.build(minify(webBuild));

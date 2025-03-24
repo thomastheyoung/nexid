@@ -17,8 +17,8 @@ export const ENCODED_LEN = 20;
  */
 export const RAW_LEN = 12;
 
-/** 16-bit mask for process ID */
-export const PROCESS_ID_MASK = 0xffff;
-
-/** 8-bit mask for byte operations */
+/** 8-bit (1 byte) mask for byte operations */
 export const BYTE_MASK = 0xff;
+
+/** 16-bit (2 bytes) mask for process ID */
+export const PROCESS_ID_MASK = 0xffff;

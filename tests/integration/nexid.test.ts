@@ -1,7 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { helpers } from '../../src/core/helpers';
 import { XID } from '../../src/core/xid';
-import NeXID, { XIDGenerator, XIDGeneratorBuilder } from '../../src/index';
 
 function toNS(ms: number, decimals: number = 2): string {
   return (ms * 100_000).toFixed(decimals);
@@ -92,7 +90,7 @@ describe('NeXID Integration', () => {
 
   describe('Nil ID', () => {
     it('provides a nil ID', () => {
-      const nilId = XID.nilXID();
+      const nilId = XID.nilID();
 
       expect(nilId).toBeInstanceOf(XID);
       expect(nilId.isNil()).toBe(true);

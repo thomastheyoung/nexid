@@ -14,7 +14,7 @@ const hyperid = require('hyperid');
 const shortid = require('shortid');
 
 // Import our NeXID implementation (from the compiled JS)
-const NeXID = require('../bin/nexid.js');
+const NeXID = require('../bin/nexid-node.js');
 
 // Constants
 const NUM_IDS = 1_000_000; // 1 million IDs for reporting
