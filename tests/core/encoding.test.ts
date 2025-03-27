@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { RAW_LEN } from '../../src/core/constants';
-import { compareBytes, decode, encode } from '../../src/core/encoding';
-import { XIDBytes } from '../../src/core/xid';
+import { RAW_LEN } from '../../src/common/constants';
+import { decode, encode } from '../../src/core/encoding';
+import { compareBytes } from '../../src/core/helpers';
+import { XIDBytes } from '../../src/types/xid';
 
 describe('Encoding Functions', () => {
   describe('encode function', () => {

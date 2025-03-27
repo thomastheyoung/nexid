@@ -1,5 +1,8 @@
 import { beforeAll, describe, expect, it } from 'vitest';
+import { helpers } from '../../src/core/helpers';
 import { XID } from '../../src/core/xid';
+import NeXID from '../../src/index-node';
+import { Generator } from '../../src/types/xid-generator';
 
 function toNS(ms: number, decimals: number = 2): string {
   return (ms * 100_000).toFixed(decimals);
@@ -7,7 +10,7 @@ function toNS(ms: number, decimals: number = 2): string {
 
 describe('NeXID Integration', () => {
   // Set up a default generator for tests
-  let nexid: XIDGenerator;
+  let nexid: Generator.API;
 
   beforeAll(async () => {
     // Initialize NeXID
@@ -60,7 +63,7 @@ describe('NeXID Integration', () => {
 
       expect(parsed).toBeInstanceOf(XID);
       expect(parsed.toString()).toBe(idString);
-      expect(helpers.equals(parsed.bytes, original.bytes)).toBe(true);
+      expect(helpers.equals(parsed, original)).toBe(true);
     });
 
     it('returns error for invalid strings', () => {
@@ -71,20 +74,18 @@ describe('NeXID Integration', () => {
 
   describe('Custom initialization', () => {
     it('accepts custom options', async () => {
+      const customMachineId = 'custom-machine-id';
       const customProcessId = 0x1234;
 
       // Create custom generator with options
-      const nexid = await new XIDGeneratorBuilder()
-        .withMachineId('custom-machine-id')
-        .withProcessId(customProcessId)
-        .build();
+      const nexid = await NeXID.init({
+        machineId: customMachineId,
+        processId: customProcessId,
+      });
 
       // Generate an ID
-      const id = nexid.newId();
-
-      // Check that it uses our custom values
-      expect(id.machineId).toEqual(nexid.info().machineId);
-      expect(id.processId).toBe(customProcessId);
+      expect(customMachineId).toBe(nexid.machineId);
+      expect(customProcessId).toBe(nexid.processId);
     });
   });
 
@@ -107,15 +108,15 @@ describe('NeXID Integration', () => {
       const id3 = nexid.newId(new Date(now)); // now
 
       // Shuffle the IDs
-      const shuffled = [id3.bytes, id1.bytes, id2.bytes];
+      const shuffled = [id3, id1, id2];
 
       // Sort them
       const sorted = helpers.sortIds(shuffled);
 
       // Should be in chronological order
-      expect(helpers.equals(sorted[0], id1.bytes)).toBe(true);
-      expect(helpers.equals(sorted[1], id2.bytes)).toBe(true);
-      expect(helpers.equals(sorted[2], id3.bytes)).toBe(true);
+      expect(helpers.equals(sorted[0], id1)).toBe(true);
+      expect(helpers.equals(sorted[1], id2)).toBe(true);
+      expect(helpers.equals(sorted[2], id3)).toBe(true);
     });
   });
 

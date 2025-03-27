@@ -9,4 +9,4 @@ async function createXIDGenerator(options?: Generator.Options): Promise<Generato
 
 export { XID };
 export const init: () => Promise<Generator.API> = createXIDGenerator;
-export default init;
+export default { init: createXIDGenerator };

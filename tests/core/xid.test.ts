@@ -40,14 +40,14 @@ describe('XID', () => {
   describe('constructor', () => {
     it('creates a nil ID when no bytes are provided', () => {
       const id = XID.nilID();
-      expect(helpers.isNil(id.bytes)).toBe(true);
+      expect(helpers.isNil(id)).toBe(true);
     });
 
     it('creates an ID from valid bytes', () => {
       const bytes = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
       const id = XID.fromBytes(bytes);
       expect(id.toString()).not.toBe('000000000000000000000');
-      expect(helpers.isNil(id.bytes)).toBe(false);
+      expect(helpers.isNil(id)).toBe(false);
     });
 
     it('throws error when invalid bytes are provided', () => {
@@ -163,9 +163,9 @@ describe('XID', () => {
       const earlier = XID.fromBytes(new Uint8Array([0x01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]));
       const later = XID.fromBytes(new Uint8Array([0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]));
 
-      expect(helpers.compare(earlier.bytes, later.bytes)).toBeLessThan(0);
-      expect(helpers.compare(later.bytes, earlier.bytes)).toBeGreaterThan(0);
-      expect(helpers.compare(earlier.bytes, earlier.bytes)).toBe(0);
+      expect(helpers.compare(earlier, later)).toBeLessThan(0);
+      expect(helpers.compare(later, earlier)).toBeGreaterThan(0);
+      expect(helpers.compare(earlier, earlier)).toBe(0);
     });
 
     it('implements equals method correctly', () => {
@@ -174,17 +174,13 @@ describe('XID', () => {
       const id3 = XID.fromBytes(sampleXIDs[1].bytes);
 
       // Same content, different objects
-      expect(helpers.equals(id1.bytes, id2.bytes)).toBe(true);
+      expect(helpers.equals(id1, id2)).toBe(true);
 
       // Same object
-      expect(helpers.equals(id1.bytes, id1.bytes)).toBe(true);
+      expect(helpers.equals(id1, id1)).toBe(true);
 
       // Different content
-      expect(helpers.equals(id1.bytes, id3.bytes)).toBe(false);
-
-      // Different type
-      // expect(id1.equals('not an XID')).toBe(false);
-      // expect(id1.equals(null)).toBe(false);
+      expect(helpers.equals(id1, id3)).toBe(false);
     });
   });
 
@@ -193,8 +189,8 @@ describe('XID', () => {
       const nilId = XID.nilID();
       const nonNilId = XID.fromBytes(sampleXIDs[0].bytes);
 
-      expect(helpers.isNil(nilId.bytes)).toBe(true);
-      expect(helpers.isNil(nonNilId.bytes)).toBe(false);
+      expect(helpers.isNil(nilId)).toBe(true);
+      expect(helpers.isNil(nonNilId)).toBe(false);
     });
   });
 });

@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { validateRandomBytesFunction } from '../../src/core/validators';
+import { FeatureDefinition } from '../../src/env/registry';
 
-describe('Validator.randomBytes', () => {
+describe('Validator.randomBytes', async () => {
+  const validator: FeatureDefinition<'RandomBytes'> = (
+    await import('../../src/env/lib/random-bytes/@definition')
+  ).RandomBytesDefinition;
+
   it('accepts valid random byte functions', () => {
     const validRandomFunctions = [
       (size: number) => new Uint8Array(size),
@@ -13,14 +17,13 @@ describe('Validator.randomBytes', () => {
       },
     ];
 
-    validRandomFunctions.forEach((fn) => {
-      const result = validateRandomBytesFunction(fn);
-      expect(result.isOk()).toBe(true);
+    validRandomFunctions.forEach(async (impl) => {
+      const result = await validator.test(impl);
+      expect(result).toBe(true);
 
       // Test that the returned function works correctly
-      const validatedFn = result.unwrap();
       const size = 10;
-      const randomBytes = validatedFn(size);
+      const randomBytes = impl(size);
 
       expect(randomBytes).toBeInstanceOf(Uint8Array);
       expect(randomBytes.length).toBe(size);
@@ -41,25 +44,19 @@ describe('Validator.randomBytes', () => {
       (size: number) => new Uint8Array(size + 1),
     ];
 
-    invalidFunctions.forEach((fn) => {
-      const result = validateRandomBytesFunction(fn);
-      expect(result.isErr()).toBe(true); // Our new validator should detect bad functions at validation time
-
-      // Error message should explain the issue
-      expect((result.unwrapErr() as Error).message).toContain('Invalid random source');
-
-      // The function should not be usable
-      expect(() => result.unwrap()(5)).toThrow();
+    invalidFunctions.forEach(async (impl) => {
+      const result = await validator.test(impl);
+      expect(result).toBe(false); // Our new validator should detect bad functions at validation time
     });
   });
 
   it('rejects non-function values', () => {
     const invalidValues = [null, undefined, 123, 'string', [], {}];
 
-    invalidValues.forEach((value) => {
+    invalidValues.forEach(async (value) => {
       // @ts-ignore - Deliberately testing invalid types
-      const result = validateRandomBytesFunction(value);
-      expect(result.isErr()).toBe(true);
+      const result = await validator.test(value);
+      expect(result).toBe(false);
     });
   });
 });

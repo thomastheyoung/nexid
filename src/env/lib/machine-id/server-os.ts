@@ -2,7 +2,10 @@ import { detectOperatingSystem, OperatingSystem } from '../detect-os';
 import { execCommand, readFile } from '../utils';
 
 export const getOSMachineId = async (): Promise<string> => {
-  switch (detectOperatingSystem().unwrap()) {
+  const currentOS = detectOperatingSystem();
+  if (!currentOS.isOk()) return '';
+
+  switch (currentOS.unwrap()) {
     case OperatingSystem.FreeBSD:
     case OperatingSystem.NetBSD:
     case OperatingSystem.OpenBSD: {

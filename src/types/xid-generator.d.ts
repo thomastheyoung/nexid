@@ -5,7 +5,7 @@ export namespace Generator {
   export interface API {
     readonly machineId: string;
     readonly processId: number;
-    newId(): XID;
+    newId(timestamp?: Date): XID;
     fastId(): string;
   }
 
