@@ -103,16 +103,14 @@ const generator = await init();
 | Method | Description | Return Type |
 |--------|-------------|-------------|
 | `newId(timestamp?: Date)` | Creates a new XID, optionally with the specified timestamp | `XID` |
-| `fastId(timestamp?: Date)` | Creates a new XID and returns its string representation (faster) | `string` |
-| `next(timestamp?: Date)` | Low-level method to generate the next raw XID bytes | `Uint8Array` |
+| `fastId()` | Creates a new XID and returns its string representation (faster) | `string` |
 
 ### Generator Properties
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `machineId` | `Uint8Array` | The 3-byte machine ID used by this generator |
-| `processId` | `number` | The process ID used by this generator |
-| `counter` | `number` | The current counter value (read-only) |
+| `machineId` | `string` | The original machine ID used by this generator |
+| `processId` | `number` | The original process ID used by this generator |
 
 ## XID Class API
 
