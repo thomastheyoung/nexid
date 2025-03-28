@@ -27,34 +27,64 @@ npm install nexid
 ## Quick Start
 
 ```typescript
+// Universal auto-detection import
 import NeXID, { XID } from 'nexid';
 
-// Initialize the generator (required before generating IDs)
+// Node.js optimized import (smaller bundle, faster init)
+// import NeXID, { XID } from 'nexid/index-node';
+
+// Web/browser optimized import (smaller bundle, faster init)
+// import NeXID, { XID } from 'nexid/index-web';
+
+// Initialize the generator
 const generator = await NeXID.init();
 
 // Generate a new ID
 const id = generator.newId();
 console.log(id.toString()); // e.g. "cv37img5tppgl4002kb0"
 
-// Generate a string ID directly (fast path in v1.0)
+// Generate a string ID directly (fast path)
 const idString = generator.fastId();
 
-// Extract the timestamp
-const timestamp = id.time;
-console.log(timestamp.toISOString()); // e.g. "2025-03-07T12:34:56.000Z"
-
-// Parse from an existing string
-try {
-  const parsedId = XID.fromString('cv37img5tppgl4002kb0');
-  console.log(parsedId.time);
-} catch (error) {
-  console.error('Invalid ID format');
-}
+// Create with custom options (if needed)
+const customGenerator = await NeXID.init({
+  machineId: 'custom-machine-id',
+  processId: 12345
+});
 ```
 
-## Structure
+## Architecture
 
-Each NeXID consists of 12 bytes (96 bits), encoded as 20 characters:
+NeXID is built with a modular architecture that separates core logic from environment-specific implementations:
+
+### Core Components
+
+- **XID**: Immutable value object representing a unique identifier
+- **XIDGenerator**: Factory for creating new unique identifiers
+- **Encoding**: Base32-hex encoding/decoding optimized for performance
+- **Counter**: Thread-safe atomic counter with random seed
+
+### Environment Layer
+
+- **Adapters**: Platform-specific implementations (Node.js, Web)
+- **Registry**: Environment feature registry for capability discovery
+- **Detection**: Runtime environment detection system
+
+### Entry Points
+
+NeXID provides multiple entry points for optimized tree-shaking and bundle size:
+
+- **Universal**: `import from 'nexid'` - Auto-detects environment
+- **Node.js**: `import from 'nexid/index-node'` - Node.js optimized bundle
+- **Web**: `import from 'nexid/index-web'` - Browser optimized bundle
+
+The architecture ensures only the code needed for the target platform is included in the final bundle.
+
+## Technical Details
+
+### XID Structure
+
+Each XID consists of 12 bytes (96 bits), encoded as 20 characters:
 
 ```
   ╔═══════════════════════════════════════════════════════════════╗
@@ -70,137 +100,19 @@ Each NeXID consists of 12 bytes (96 bits), encoded as 20 characters:
 - **Process ID**: 2 bytes (process ID or tab/window unique identifier)
 - **Counter**: 3 bytes (atomic counter, initialized with random seed)
 
-This is encoded using base32-hex (characters 0-9 and a-v) for a 20-character string.
+### Runtime Environment Adaptation
 
-## API Reference
-
-### Generator
-
-```typescript
-import NeXID, { XID } from 'nexid';
-
-// Initialize with default settings
-const generator = await NeXID.init();
-
-// Generate a new ID
-const id = generator.newId();
-
-// Generate with a specific timestamp
-const pastId = generator.newId(new Date('2025-01-01'));
-
-// Generate a string ID directly
-const idString = generator.fastId();
-
-// Access generator properties
-console.log(generator.machineId); // The machine ID used by this generator
-console.log(generator.processId); // The process ID used by this generator
-```
-
-### Custom Generator
-
-```typescript
-import { init } from 'nexid';
-
-// Create a custom generator with options
-const generator = await init({
-  // Optional: Custom machine ID (string)
-  machineId: 'custom-machine-id',
-
-  // Optional: Specific process ID (number)
-  processId: 12345,
-
-  // Optional: Custom random source function
-  randomBytes: (size) => {
-    // Your custom secure random implementation
-    const bytes = new Uint8Array(size);
-    // Fill with random values...
-    return bytes;
-  },
-});
-```
-
-### XID Class
-
-```typescript
-import { XID } from 'nexid';
-
-// Create from string (throws on invalid input)
-const id = XID.fromString('cv37img5tppgl4002kb0');
-
-// Create from byte array (throws on invalid input)
-const bytes = new Uint8Array(12); // Must be exactly 12 bytes
-const idFromBytes = XID.fromBytes(bytes);
-
-// Create a nil (zero) ID
-const nilID = XID.nilID();
-
-// Get string representation
-const str = id.toString();
-
-// Get Date object from the timestamp portion
-const date = id.time;
-
-// Get the machine ID component (3 bytes)
-const machineId = id.machineId;
-
-// Get the process ID number
-const pid = id.processId;
-
-// Get the counter value
-const counter = id.counter;
-
-// Compare two IDs
-if (id1.equals(id2)) {
-  console.log('IDs are identical');
-}
-
-// Check if this is a nil (zero) ID
-if (id.isNil()) {
-  console.log('This is a nil ID');
-}
-
-// JSON serialization (automatically converts to string)
-const json = JSON.stringify({ id });
-```
-
-### Helper Functions
-
-The package includes several helper functions for working with XIDs:
-
-```typescript
-import { helpers } from 'nexid/core/helpers';
-
-// Sort an array of XIDs chronologically
-const sorted = helpers.sortIds([id3, id1, id2]);
-
-// Compare two XIDs
-const comparison = helpers.compare(id1, id2);
-// Returns: -1 if id1 < id2, 0 if equal, 1 if id1 > id2
-
-// Check if two XIDs are equal
-const areEqual = helpers.equals(id1, id2);
-```
-
-## Runtime Environment Adaptation
-
-NeXID 1.0 includes an environment detection system that selects the optimal implementation for different runtimes:
+NeXID includes an environment detection system that selects the optimal implementation for different runtimes:
 
 - **Server Environments (Node.js)**
-
   - Hardware machine ID detection
   - Process ID integration
   - Native crypto for secure randomness
 
 - **Browser Environment**
-
   - Privacy-preserving device fingerprinting
   - Tab/window context isolation
   - Web Crypto API for random generation
-
-- **Deno Runtime**
-
-  - Deno-specific API support
-  - Process ID integration
 
 - **Edge/Serverless**
   - Container detection in serverless environments
@@ -209,40 +121,23 @@ NeXID 1.0 includes an environment detection system that selects the optimal impl
 
 ## Performance
 
-NeXID 1.0 delivers performance on par with or exceeding Node's native `randomUUID`:
+NeXID 1.0 delivers high performance on par with or exceeding Node's native `randomUUID`:
 
-| Library            | Speed (IDs/sec) | Time-based | URL-safe | Fixed length | Size (chars) |
-| ------------------ | --------------: | :--------: | :------: | :----------: | :----------: |
-| hyperid            |      55,692,941 |     ❌     |    ❌    |      ❌      |      24      |
-| **NeXID.fastId()** |  **10,702,629** |   **✅**   |  **✅**  |    **✅**    |    **20**    |
-| **NeXID.newId()**  |  **10,495,276** |   **✅**   |  **✅**  |    **✅**    |    **20**    |
-| node randomUUID    |       9,652,435 |     ❌     |    ❌    |      ✅      |      36      |
-| uuid v4            |       9,266,366 |     ❌     |    ❌    |      ✅      |      36      |
-| nanoid             |       7,019,649 |     ❌     |    ✅    |      ✅      |      21      |
-| uuid v1            |       3,326,415 |     ✅     |    ❌    |      ✅      |      36      |
-| shortid            |         719,862 |     ❌     |    ✅    |      ❌      |   variable   |
-| ksuid              |          80,120 |     ✅     |    ✅    |      ✅      |      27      |
-| ulid               |          57,568 |     ✅     |    ✅    |      ✅      |      26      |
+| Library            | Speed (IDs/sec) | Time-based | URL-safe | Fixed length |
+| ------------------ | --------------: | :--------: | :------: | :----------: |
+| **NeXID.fastId()** |  **10,702,629** |   **✅**   |  **✅**  |    **✅**    |
+| **NeXID.newId()**  |  **10,495,276** |   **✅**   |  **✅**  |    **✅**    |
+| node randomUUID    |       9,652,435 |     ❌     |    ❌    |      ✅      |
+| nanoid             |       7,019,649 |     ❌     |    ✅    |      ✅      |
+| uuid v1            |       3,326,415 |     ✅     |    ❌    |      ✅      |
+| ksuid              |          80,120 |     ✅     |    ✅    |      ✅      |
+| ulid               |          57,568 |     ✅     |    ✅    |      ✅      |
 
 _Note: Benchmarks on Node.js v22 on Apple Silicon. Results may vary by environment._
 
-## What's New in 1.0
+## Documentation
 
-- **Architecture**: Clear separation between core logic and platform-specific code
-- **Environment Feature Registry**: Automatic detection of optimal implementations
-- **Performance**: Improved algorithms and encoding
-- **Type Safety**: Branded TypeScript types for compile-time checking
-- **Container Support**: Special handling for containerized environments
-- **Security**: Platform-specific optimizations for random generation
-
-## Browser Support
-
-NeXID works in all modern browsers with environment-specific optimizations:
-
-- Uses Web Crypto API for secure random generation
-- Privacy-respecting browser fingerprinting for consistent machine IDs
-- Tab/window-specific process IDs
-- Fallbacks for constrained environments
+For complete API documentation and advanced usage, see [API Reference](docs/api.md).
 
 ## Development
 
@@ -253,20 +148,12 @@ npm install
 # Build the library
 npm run build
 
-# Bundle the library
-npm run bundle
-
 # Run tests
 npm test
 
 # Run benchmarks
 npm run benchmark
 ```
-
-## Credits
-
-- Original [XID specification](https://github.com/rs/xid) by Olivier Poitrey
-- Inspired by MongoDB's ObjectID and Twitter's Snowflake
 
 ## License
 
