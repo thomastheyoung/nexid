@@ -35,7 +35,7 @@ This entry point automatically detects the current runtime environment and loads
 ### 2. Node.js Optimized Entry Point
 
 ```typescript
-import NeXID, { XID } from 'nexid/index-node';
+import NeXID, { XID } from 'nexid/node';
 ```
 
 Use this entry point for Node.js applications. It:
@@ -47,7 +47,7 @@ Use this entry point for Node.js applications. It:
 ### 3. Web/Browser Optimized Entry Point
 
 ```typescript
-import NeXID, { XID } from 'nexid/index-web';
+import NeXID, { XID } from 'nexid/web';
 ```
 
 Use this entry point for browser applications. It:
