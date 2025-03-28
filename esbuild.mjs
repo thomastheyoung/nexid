@@ -33,7 +33,7 @@ await esbuild.build(minify(defaultBuild));
 
 const nodeBuild = {
   ...sharedOptions,
-  entryPoints: ['./src/index-node.ts'],
+  entryPoints: ['./src/node.ts'],
   platform: 'node',
   outfile: './bin/nexid-node.js',
 };
@@ -41,12 +41,25 @@ await esbuild.build(nodeBuild);
 await esbuild.build(minify(nodeBuild));
 
 // ================================
+// Deno
+// ================================
+
+const denoBuild = {
+  ...sharedOptions,
+  entryPoints: ['./src/deno.ts'],
+  platform: 'node',
+  outfile: './bin/nexid-deno.js',
+};
+await esbuild.build(denoBuild);
+await esbuild.build(minify(denoBuild));
+
+// ================================
 // Web
 // ================================
 
 const webBuild = {
   ...sharedOptions,
-  entryPoints: ['./src/index-web.ts'],
+  entryPoints: ['./src/web.ts'],
   platform: 'browser',
   outfile: './bin/nexid-web.js',
   globalName: 'NeXID',

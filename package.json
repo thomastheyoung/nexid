@@ -1,6 +1,6 @@
 {
   "name": "nexid",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "Thomas LE JEUNE <thomastheyoung@gmail.com>",
   "license": "MIT",
   "description": "Fast, time-sortable unique identifiers for the JavaScript ecosystem. Port of the original Go library github/rs/xid.",
@@ -11,16 +11,32 @@
   "bin": {
     "nexid": "bin/nexid.js"
   },
-  "module": "./dist/esm/index.js",
-  "main": "./dist/cjs/index.js",
-  "types": "./dist/cjs/index.d.ts",
-  "unpkg": "./dist/esm/index.js",
+  "module": "./dist/index.mjs",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "sideEffects": false,
   "exports": {
-    ".": "./dist/index.js",
-    "./browser": "./dist/browser.js",
-    "./node": "./dist/node.js",
-    "./deno": "./dist/deno.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "import": "./dist/node.mjs",
+      "require": "./dist/node.js"
+    },
+    "./browser": {
+      "types": "./dist/browser.d.ts",
+      "import": "./dist/browser.mjs",
+      "require": "./dist/browser.js"
+    },
+    "./deno": {
+      "types": "./dist/deno.d.ts",
+      "import": "./dist/deno.mjs",
+      "require": "./dist/deno.js"
+    },
+    "./package.json": "./package.json"
   },
   "scripts": {
     "preversion": "npm test",

@@ -12,8 +12,8 @@
  */
 
 import { XID } from './core/xid';
-import { XIDGenerator } from './core/xid-generator';
-import { getAdapter } from './env/adapters';
+import { detectRuntimeEnvironment, RuntimeEnvironment } from './env/lib/detect-runtime';
+import { initNeXID } from './types/api';
 import { Generator } from './types/xid-generator';
 
 /**
@@ -27,10 +27,26 @@ import { Generator } from './types/xid-generator';
  * @returns Promise resolving to a fully configured XID generator
  */
 async function createXIDGenerator(options?: Generator.Options): Promise<Generator.API> {
-  const [runtime, adapter] = await getAdapter();
-  return XIDGenerator(adapter, options);
+  const runtime: RuntimeEnvironment | null = detectRuntimeEnvironment();
+  if (!runtime) throw new Error('Error while trying to identify environment.');
+
+  switch (runtime) {
+    case RuntimeEnvironment.Browser:
+    case RuntimeEnvironment.ServiceWorker:
+    case RuntimeEnvironment.WebWorker:
+      const webAdapter = await import('./web.js');
+      return webAdapter.init(options);
+
+    case RuntimeEnvironment.Deno:
+      const denoAdapter = await import('./deno.js');
+      return denoAdapter.init(options);
+
+    default:
+      const nodeAdapter = await import('./node.js');
+      return nodeAdapter.init(options);
+  }
 }
 
 export { XID };
-export const init: () => Promise<Generator.API> = createXIDGenerator;
+export const init: initNeXID = createXIDGenerator;
 export default { init: createXIDGenerator };
