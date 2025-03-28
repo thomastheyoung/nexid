@@ -126,6 +126,7 @@ NeXID 1.0 delivers high performance on par with or exceeding Node's native `rand
 
 | Library            | Speed (IDs/sec) | Time-based | URL-safe | Fixed length |
 | ------------------ | --------------: | :--------: | :------: | :----------: |
+| hyperid            |      55,773,818 |     ❌     |    ❌    |      ❌      |
 | **NeXID.fastId()** |  **10,702,629** |   **✅**   |  **✅**  |    **✅**    |
 | **NeXID.newId()**  |  **10,495,276** |   **✅**   |  **✅**  |    **✅**    |
 | node randomUUID    |       9,652,435 |     ❌     |    ❌    |      ✅      |
