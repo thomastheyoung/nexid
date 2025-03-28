@@ -36,9 +36,13 @@
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
 
+    "lib": ["dom", "webworker"],
     /* Node.js Types */
-    "types": ["node"]
+    "types": ["node", "vitest/globals", "deno"],
+    "paths": {
+      "nexid/*": ["./src/*"]
+    }
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["src/**/*.test.ts", "node_modules", "dist", "docs"]
+  "exclude": ["src/**/*.test.ts", "node_modules", "dist", "bin", "docs", "source", "archive"]
 }
