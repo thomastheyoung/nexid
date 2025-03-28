@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import os from 'node:os';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import NeXID, { XID } from '../../src/index-node';
+import NeXID, { XID } from '../../src/node';
 
 describe('Environment Failover', () => {
   beforeEach(() => {

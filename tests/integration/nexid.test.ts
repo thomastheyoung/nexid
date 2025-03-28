@@ -1,8 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { helpers } from '../../src/core/helpers';
 import { XID } from '../../src/core/xid';
-import NeXID from '../../src/index-node';
-import { Generator } from '../../src/types/xid-generator';
+import NeXID, { XIDGenerator } from '../../src/node';
 
 function toNS(ms: number, decimals: number = 2): string {
   return (ms * 100_000).toFixed(decimals);
@@ -10,7 +9,7 @@ function toNS(ms: number, decimals: number = 2): string {
 
 describe('NeXID Integration', () => {
   // Set up a default generator for tests
-  let nexid: Generator.API;
+  let nexid: XIDGenerator;
 
   beforeAll(async () => {
     // Initialize NeXID

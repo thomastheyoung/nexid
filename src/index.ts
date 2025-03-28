@@ -48,5 +48,6 @@ async function createXIDGenerator(options?: Generator.Options): Promise<Generato
 }
 
 export { XID };
+export type XIDGenerator = Generator.API;
 export const init: initNeXID = createXIDGenerator;
 export default { init: createXIDGenerator };

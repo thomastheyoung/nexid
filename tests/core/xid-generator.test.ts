@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { XID } from '../../src/core/xid';
-import NeXID from '../../src/index-node';
+import NeXID from '../../src/node';
 
 const MACHINE_ID_SIZE = 3;
 
