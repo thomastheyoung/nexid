@@ -31,10 +31,10 @@ npm install nexid
 import NeXID, { XID } from 'nexid';
 
 // Node.js optimized import (smaller bundle, faster init)
-// import NeXID, { XID } from 'nexid/index-node';
+// import NeXID, { XID } from 'nexid/node';
 
 // Web/browser optimized import (smaller bundle, faster init)
-// import NeXID, { XID } from 'nexid/index-web';
+// import NeXID, { XID } from 'nexid/web';
 
 // Initialize the generator
 const generator = await NeXID.init();
@@ -75,8 +75,9 @@ NeXID is built with a modular architecture that separates core logic from enviro
 NeXID provides multiple entry points for optimized tree-shaking and bundle size:
 
 - **Universal**: `import from 'nexid'` - Auto-detects environment
-- **Node.js**: `import from 'nexid/index-node'` - Node.js optimized bundle
-- **Web**: `import from 'nexid/index-web'` - Browser optimized bundle
+- **Node.js**: `import from 'nexid/node'` - Node.js optimized bundle
+- **Deno**: `import from 'nexid/deno'` - Node.js optimized bundle
+- **Web**: `import from 'nexid/web'` - Browser optimized bundle
 
 The architecture ensures only the code needed for the target platform is included in the final bundle.
 
