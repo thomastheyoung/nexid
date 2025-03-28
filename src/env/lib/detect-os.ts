@@ -1,11 +1,24 @@
+/**
+ * @module nexid/env/lib/detect-os
+ * 
+ * Operating system detection for server environments.
+ * 
+ * ARCHITECTURE:
+ * This module provides functionality to detect the current operating system
+ * in Node.js, Deno, Bun, and Electron environments. Accurate OS detection
+ * is important for NeXID because different operating systems store machine
+ * identifiers in different locations and have different APIs for accessing
+ * system information.
+ * 
+ * The module uses the Result pattern for error handling to ensure graceful 
+ * degradation when OS detection fails.
+ */
+
 import { Result } from 'nexid/common/result';
 import { detectRuntimeEnvironment, RuntimeEnvironment } from './detect-runtime';
 
 /**
  * Enumeration of operating systems that can be detected.
- *
- * This enum includes all major operating systems supported by Node.js and Deno
- * environments, allowing for OS-specific adaptations when necessary.
  */
 export enum OperatingSystem {
   /**
@@ -81,10 +94,6 @@ export enum OperatingSystem {
  * This function uses platform-specific APIs to identify the OS.
  * The operating system information is used for platform-specific
  * machine ID generation strategies.
- *
- * Different operating systems store machine identifiers in different
- * locations, so accurate OS detection helps optimize the machine ID
- * generation process.
  *
  * @returns A Result containing the detected OperatingSystem enum value
  *          or an Error if detection fails or isn't in a supported environment

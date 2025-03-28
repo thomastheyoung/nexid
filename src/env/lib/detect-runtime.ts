@@ -1,9 +1,22 @@
 /**
+ * @module nexid/env/lib/detect-runtime
+ * 
+ * JavaScript runtime environment detection.
+ * 
+ * ARCHITECTURE:
+ * This module provides a comprehensive system for detecting the current JavaScript
+ * runtime environment. It uses feature detection to identify the execution context
+ * across the entire spectrum of modern JavaScript environments, from traditional
+ * (Node.js, browsers) to specialized runtimes (Deno, Bun) and embedded contexts
+ * (Electron, React Native).
+ * 
+ * This detection is critical for the NeXID library as it enables environment-specific
+ * optimizations for machine ID generation, process ID assignment, and cryptographic
+ * operations.
+ */
+
+/**
  * Enumeration of various JavaScript runtimes that can be detected.
- *
- * This enum covers the full spectrum of modern JavaScript environments,
- * from traditional (Node.js, browsers) to specialized runtimes (Deno, Bun)
- * and embedded contexts (Electron, React Native).
  */
 export enum RuntimeEnvironment {
   /**
@@ -75,20 +88,11 @@ export enum RuntimeEnvironment {
 
 /**
  * Detects the current JavaScript runtime environment using feature detection.
- *
- * This function determines whether the code is running in:
- * - Node.js: Detected by checking for the 'process' global with Node.js version
- * - Browser: Detected by checking for 'window' and 'document' globals
- * - Deno: Detected by checking for the 'Deno' object in globalThis
- * - Bun: Detected by checking for the 'Bun' object in globalThis
- * - Web Worker: Detected by checking for 'self' and 'importScripts'
- * - Service Worker: Detected by checking for 'self', 'clients', and 'registration'
- * - Edge Runtime: Detected by checking for edge-specific objects
- * - React Native: Detected by checking for React Native-specific properties
- * - Unknown: When none of the above environments are detected
- *
- * The runtime environment affects how machine IDs, process IDs, and random sources
- * are obtained, as each environment has different APIs and capabilities.
+ * 
+ * This function determines the execution context by checking for environment-specific
+ * global objects and properties. Each environment provides different APIs for
+ * essential operations like random number generation, machine identification,
+ * and process tracking.
  *
  * @returns The detected runtime environment enum value
  */

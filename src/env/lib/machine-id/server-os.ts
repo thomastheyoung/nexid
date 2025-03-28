@@ -1,6 +1,36 @@
+/**
+ * @module nexid/env/lib/machine-id/server-os
+ * 
+ * Operating system machine ID retrieval for server environments.
+ * 
+ * ARCHITECTURE:
+ * This module provides platform-specific implementations for retrieving machine IDs
+ * from various operating systems. It uses a combination of system files and commands
+ * to identify the machine, with different strategies for each supported OS.
+ * 
+ * The machine ID is a critical component of the XID structure, ensuring that
+ * IDs generated on different machines don't collide even if they have the same
+ * timestamp and process ID.
+ * 
+ * SECURITY:
+ * - All retrieved IDs are later hashed before use in XIDs for privacy
+ * - Error handling ensures failed ID retrieval doesn't crash the application
+ * - Multiple fallback mechanisms ensure some value is always available
+ */
+
 import { detectOperatingSystem, OperatingSystem } from '../detect-os';
 import { execCommand, readFile } from '../utils';
 
+/**
+ * Retrieves a machine identifier from the operating system.
+ * Uses different strategies depending on the detected OS:
+ * - Linux: /etc/machine-id or product_uuid
+ * - macOS: IOPlatformUUID from ioreg
+ * - BSD variants: kern.hostuuid sysctl
+ * - Windows: MachineGuid from registry
+ * 
+ * @returns Promise resolving to a machine identifier string or empty string on failure
+ */
 export const getOSMachineId = async (): Promise<string> => {
   const currentOS = detectOperatingSystem();
   if (!currentOS.isOk()) return '';

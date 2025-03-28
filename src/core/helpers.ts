@@ -1,3 +1,15 @@
+/**
+ * @module nexid/core/helpers
+ * 
+ * XID utility functions for common operations.
+ * 
+ * ARCHITECTURE:
+ * This module provides helper functions that operate on XID objects
+ * but don't belong in the core XID class implementation. These are
+ * typically higher-level operations, comparison functions, and utility
+ * methods that enhance the usability of the library.
+ */
+
 import { encode } from './encoding';
 import { XID } from './xid';
 
@@ -100,4 +112,7 @@ export function sortIds(ids: readonly XID[]): XID[] {
 // Main export
 // ============================================================================
 
+/**
+ * Collection of XID utility functions.
+ */
 export const helpers = { compareBytes, compare, equals, isNil, sortIds };

@@ -4,17 +4,19 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-blue)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
-A TypeScript implementation of globally unique identifiers that are lexicographically sortable, following the [XID specification](https://github.com/rs/xid). This library provides a high-performance, secure solution for generating and working with XIDs in both Node.js and browser environments.
+A TypeScript implementation of globally unique identifiers that are lexicographically sortable, following the [XID specification](https://github.com/rs/xid). This library provides a high-performance solution for generating and working with XIDs across JavaScript runtimes.
 
 ## Features
 
-- **🔤 Lexicographically Sortable**: Natural sorting in databases, binary searches, and indexes
-- **🕒 Time-Ordered**: Built-in chronological ordering (timestamp is the first component)
-- **📦 Compact**: 20 characters vs 36 for UUID (44% smaller)
-- **🔗 URL-Safe**: Alphanumeric only (0-9 and a-v), no special characters to escape
-- **🌐 Universal**: Works in any JavaScript runtime (Node.js, browsers, Deno)
-- **⚡️ Fast**: Generates ~9 million IDs per second
-- **🔒 Secure**: Cryptographically strong random values with environment-specific optimizations
+- **Lexicographically Sortable**: Natural sorting in databases, binary searches, and indexes
+- **Time-Ordered**: Built-in chronological ordering (timestamp is the first component)
+- **Compact**: 20 characters vs 36 for UUID (44% smaller)
+- **URL-Safe**: Alphanumeric only (0-9 and a-v), no special characters to escape
+- **Universal**: Works in Node.js, browsers, Deno, and edge runtimes
+- **Fast**: Generates 10+ million IDs per second
+- **Secure**: Uses platform-specific cryptographic random number generation
+- **Adaptive**: Runtime environment detection with appropriate optimizations
+- **Type-Safe**: Branded types for compile-time safety
 
 ## Installation
 
@@ -25,33 +27,29 @@ npm install nexid
 ## Quick Start
 
 ```typescript
-import NeXID from 'nexid';
+import NeXID, { XID } from 'nexid';
 
-// First, initialize the global generator
-// This is an async operation that sets up environment-specific components
-const nexid = await NeXID.init();
+// Initialize the generator (required before generating IDs)
+const generator = await NeXID.init();
 
 // Generate a new ID
-const id = nexid.newId();
+const id = generator.newId();
 console.log(id.toString()); // e.g. "cv37img5tppgl4002kb0"
 
-// For maximum performance, use fastId(). This only outputs a string,
-// instead of a complete XID object.
-const fastId = nexid.fastId(); // ~30% faster than newId()
+// Generate a string ID directly (fast path in v1.0)
+const idString = generator.fastId();
 
 // Extract the timestamp
-const timestamp = id.getTime();
+const timestamp = id.time;
 console.log(timestamp.toISOString()); // e.g. "2025-03-07T12:34:56.000Z"
 
 // Parse from an existing string
-const parsedIdResult = nexid.fromString('cv37img5tppgl4002kb0');
-if (parsedIdResult.isOk()) {
-  const parsedId = parsedIdResult.unwrap();
-  console.log(parsedId.getTime());
+try {
+  const parsedId = XID.fromString('cv37img5tppgl4002kb0');
+  console.log(parsedId.time);
+} catch (error) {
+  console.error('Invalid ID format');
 }
-
-// Sort IDs chronologically (oldest to newest)
-const sortedIds = nexid.sortIds([id3, id1, id2]);
 ```
 
 ## Structure
@@ -74,66 +72,37 @@ Each NeXID consists of 12 bytes (96 bits), encoded as 20 characters:
 
 This is encoded using base32-hex (characters 0-9 and a-v) for a 20-character string.
 
-## Comprehensive API
+## API Reference
 
-### Basic Usage
+### Generator
 
 ```typescript
-import NeXID from 'nexid';
+import NeXID, { XID } from 'nexid';
 
-// Initialize (must be called before using newId)
-const nexid = await NeXID.init();
+// Initialize with default settings
+const generator = await NeXID.init();
 
 // Generate a new ID
-const id = nexid.newId();
+const id = generator.newId();
 
 // Generate with a specific timestamp
-const pastId = nexid.newId(new Date('2025-01-01'));
+const pastId = generator.newId(new Date('2025-01-01'));
 
-// Parse a string ID (returns a Result)
-const parsedResult = nexid.fromString('cv37img5tppgl4002kb0');
-const parsedId = parsedResult.unwrap(); // or use .isOk() to check first
+// Generate a string ID directly
+const idString = generator.fastId();
 
-// Create from raw bytes (returns a Result)
-const bytes = new Uint8Array(12); // Must be exactly 12 bytes
-const fromBytesResult = nexid.fromBytes(bytes);
-
-// Get a nil (zero) ID
-const nilID = nexid.nilId;
-
-// Sort an array of IDs chronologically
-const sorted = nexid.sortIds([id3, id1, id2]);
-```
-
-### Result Pattern for Error Handling
-
-```typescript
-import NeXID from 'nexid';
-
-// Parse an ID from string using Result pattern
-const result = NeXID.fromString('cv37img5tppgl4002kb0');
-
-// Check if parsing succeeded
-if (result.isOk()) {
-  // Get the successfully parsed ID
-  const id = result.unwrap();
-  console.log('Timestamp:', id.getTime());
-} else {
-  // Handle the error
-  console.error('Failed to parse ID:', result.unwrapErr());
-}
-
-// Alternative pattern with unwrapOr() for defaults
-const id = NeXID.fromString('potentially-invalid-id').unwrapOr(NeXID.nilId);
+// Access generator properties
+console.log(generator.machineId); // The machine ID used by this generator
+console.log(generator.processId); // The process ID used by this generator
 ```
 
 ### Custom Generator
 
 ```typescript
-import { createXIDGenerator } from 'nexid';
+import { init } from 'nexid';
 
 // Create a custom generator with options
-const generator = await createXIDGenerator({
+const generator = await init({
   // Optional: Custom machine ID (string)
   machineId: 'custom-machine-id',
 
@@ -141,52 +110,46 @@ const generator = await createXIDGenerator({
   processId: 12345,
 
   // Optional: Custom random source function
-  randomSource: (size) => {
+  randomBytes: (size) => {
     // Your custom secure random implementation
     const bytes = new Uint8Array(size);
     // Fill with random values...
     return bytes;
   },
-
-  // Optional: Security policy for environments without secure random
-  allowInsecureRandomFallback: false,
 });
-
-// Generate IDs with the custom generator
-const id = generator.newId();
-const idWithTime = generator.newId(new Date());
-
-// Fast, string-only generation (no XID object created)
-const fastIdString = generator.fastId();
 ```
 
-### XID Instance Methods
+### XID Class
 
 ```typescript
+import { XID } from 'nexid';
+
+// Create from string (throws on invalid input)
+const id = XID.fromString('cv37img5tppgl4002kb0');
+
+// Create from byte array (throws on invalid input)
+const bytes = new Uint8Array(12); // Must be exactly 12 bytes
+const idFromBytes = XID.fromBytes(bytes);
+
+// Create a nil (zero) ID
+const nilID = XID.nilID();
+
 // Get string representation
 const str = id.toString();
 
 // Get Date object from the timestamp portion
-const date = id.getTime();
+const date = id.time;
 
 // Get the machine ID component (3 bytes)
-const machineId = id.getMachineId();
+const machineId = id.machineId;
 
 // Get the process ID number
-const pid = id.getProcessId();
+const pid = id.processId;
 
 // Get the counter value
-const counter = id.getCounter();
+const counter = id.counter;
 
-// Get a copy of the raw bytes
-const bytes = id.toBytes();
-
-// Compare two IDs lexicographically
-if (id1.compare(id2) > 0) {
-  console.log('id1 is newer than id2');
-}
-
-// Check if two IDs are equal
+// Compare two IDs
 if (id1.equals(id2)) {
   console.log('IDs are identical');
 }
@@ -200,33 +163,85 @@ if (id.isNil()) {
 const json = JSON.stringify({ id });
 ```
 
+### Helper Functions
+
+The package includes several helper functions for working with XIDs:
+
+```typescript
+import { helpers } from 'nexid/core/helpers';
+
+// Sort an array of XIDs chronologically
+const sorted = helpers.sortIds([id3, id1, id2]);
+
+// Compare two XIDs
+const comparison = helpers.compare(id1, id2);
+// Returns: -1 if id1 < id2, 0 if equal, 1 if id1 > id2
+
+// Check if two XIDs are equal
+const areEqual = helpers.equals(id1, id2);
+```
+
+## Runtime Environment Adaptation
+
+NeXID 1.0 includes an environment detection system that selects the optimal implementation for different runtimes:
+
+- **Server Environments (Node.js)**
+
+  - Hardware machine ID detection
+  - Process ID integration
+  - Native crypto for secure randomness
+
+- **Browser Environment**
+
+  - Privacy-preserving device fingerprinting
+  - Tab/window context isolation
+  - Web Crypto API for random generation
+
+- **Deno Runtime**
+
+  - Deno-specific API support
+  - Process ID integration
+
+- **Edge/Serverless**
+  - Container detection in serverless environments
+  - Minimal fingerprinting for edge functions
+  - Graceful fallbacks for restricted environments
+
 ## Performance
 
-NeXID delivers a performance on-par with Node's native `randomUUID`, while maintaining its robust feature set:
+NeXID 1.0 delivers performance on par with or exceeding Node's native `randomUUID`:
 
 | Library            | Speed (IDs/sec) | Time-based | URL-safe | Fixed length | Size (chars) |
 | ------------------ | --------------: | :--------: | :------: | :----------: | :----------: |
-| hyperid            |      55,773,818 |     ❌     |    ❌    |      ❌      |      24      |
-| **NeXID.fastId()** |  **10,058,602** |   **✅**   |  **✅**  |    **✅**    |    **20**    |
-| node randomUUID    |       9,695,432 |     ❌     |    ❌    |      ✅      |      36      |
-| uuid v4            |       9,346,232 |     ❌     |    ❌    |      ✅      |      36      |
-| **NeXID.newId()**  |   **8,358,104** |   **✅**   |  **✅**  |    **✅**    |    **20**    |
-| nanoid             |       7,045,816 |     ❌     |    ✅    |      ✅      |      21      |
-| uuid v1            |       3,251,316 |     ✅     |    ❌    |      ✅      |      36      |
-| shortid            |         720,500 |     ❌     |    ✅    |      ❌      |   variable   |
-| ksuid              |          81,854 |     ✅     |    ✅    |      ✅      |      27      |
-| ulid               |          56,139 |     ✅     |    ✅    |      ✅      |      26      |
+| hyperid            |      55,692,941 |     ❌     |    ❌    |      ❌      |      24      |
+| **NeXID.fastId()** |  **10,702,629** |   **✅**   |  **✅**  |    **✅**    |    **20**    |
+| **NeXID.newId()**  |  **10,495,276** |   **✅**   |  **✅**  |    **✅**    |    **20**    |
+| node randomUUID    |       9,652,435 |     ❌     |    ❌    |      ✅      |      36      |
+| uuid v4            |       9,266,366 |     ❌     |    ❌    |      ✅      |      36      |
+| nanoid             |       7,019,649 |     ❌     |    ✅    |      ✅      |      21      |
+| uuid v1            |       3,326,415 |     ✅     |    ❌    |      ✅      |      36      |
+| shortid            |         719,862 |     ❌     |    ✅    |      ❌      |   variable   |
+| ksuid              |          80,120 |     ✅     |    ✅    |      ✅      |      27      |
+| ulid               |          57,568 |     ✅     |    ✅    |      ✅      |      26      |
 
 _Note: Benchmarks on Node.js v22 on Apple Silicon. Results may vary by environment._
 
+## What's New in 1.0
+
+- **Architecture**: Clear separation between core logic and platform-specific code
+- **Environment Feature Registry**: Automatic detection of optimal implementations
+- **Performance**: Improved algorithms and encoding
+- **Type Safety**: Branded TypeScript types for compile-time checking
+- **Container Support**: Special handling for containerized environments
+- **Security**: Platform-specific optimizations for random generation
+
 ## Browser Support
 
-NeXID works in all modern browsers with enhanced environment-specific optimizations:
+NeXID works in all modern browsers with environment-specific optimizations:
 
-- Uses Web Crypto API (`crypto.getRandomValues()`) for secure random generation
+- Uses Web Crypto API for secure random generation
 - Privacy-respecting browser fingerprinting for consistent machine IDs
 - Tab/window-specific process IDs
-- Persistent storage when available
 - Fallbacks for constrained environments
 
 ## Development
@@ -238,7 +253,7 @@ npm install
 # Build the library
 npm run build
 
-# Bundle the library (used by the benchmark test)
+# Bundle the library
 npm run bundle
 
 # Run tests

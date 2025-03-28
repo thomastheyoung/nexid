@@ -1,6 +1,37 @@
+/**
+ * @module nexid/env/lib/hash-function
+ * 
+ * Cryptographic hash function feature definition and fallback implementation.
+ * 
+ * ARCHITECTURE:
+ * This module defines the interface and validation for the HashFunction feature,
+ * which provides a secure way to hash identifiers before using them in XIDs.
+ * Hashing machine IDs and other inputs helps protect sensitive information
+ * while still maintaining uniqueness.
+ * 
+ * The hash function should ideally be cryptographically secure whenever possible:
+ * - Node.js uses the crypto module's SHA-256 implementation
+ * - Browsers use the SubtleCrypto API's SHA-256 implementation
+ * - Fallback uses a simple but sufficient non-cryptographic hash function
+ * 
+ * SECURITY:
+ * - All platform-specific implementations should use SHA-256 when available
+ * - The fallback implementation (FNV-1a) is only used when secure APIs aren't available
+ * - Appropriate warnings are displayed when falling back to less secure alternatives
+ */
+
 import { FeatureDefinition } from 'nexid/env/registry';
 
+/**
+ * Definition of the HashFunction feature including validation and fallback.
+ */
 export const HashFunctionDefinition: FeatureDefinition<'HashFunction'> = {
+  /**
+   * Tests if the provided implementation is a valid HashFunction function.
+   * 
+   * @param impl - The implementation to test
+   * @returns Promise resolving to true if the implementation is valid
+   */
   async test(impl: unknown): Promise<boolean> {
     if (typeof impl !== 'function') return false;
     try {
@@ -12,16 +43,16 @@ export const HashFunctionDefinition: FeatureDefinition<'HashFunction'> = {
   },
 
   /**
-   * Simple fallback hash function when Web Crypto API is unavailable.
+   * Simple fallback hash function when cryptographic APIs are unavailable.
    * Uses FNV-1a (Fowler–Noll–Vo) hash algorithm which is fast and has
    * good distribution properties. While not cryptographically secure,
    * it's sufficient for generating machine IDs.
    *
    * SECURITY NOTE: This hash function is NOT cryptographically secure
-   * and should not be used for any security-critical purposes.
+   * and should only be used when no secure alternatives are available.
    *
-   * @param data String to hash.
-   * @returns 3-byte hash as Uint8Array.
+   * @param data - String or byte array to hash
+   * @returns A 32-byte hash as a Uint8Array
    */
   async fallback(data: string | Uint8Array): Promise<Uint8Array> {
     console.warn('Using non-secure fallback (hash)');

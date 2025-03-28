@@ -1,6 +1,30 @@
 /**
- * Generates an pseudo fingerprint that includes an environment discriminator.
- * Note: This is NOT cryptographically secure.
+ * @module nexid/env/lib/machine-id/web-fingerprint
+ * 
+ * Browser fingerprinting implementation for machine ID generation.
+ * 
+ * ARCHITECTURE:
+ * This module provides a privacy-respecting browser fingerprinting solution
+ * for generating stable machine IDs in web environments. It collects various
+ * browser characteristics that together can uniquely identify a device while
+ * avoiding collection of personally identifiable information.
+ * 
+ * The approach produces a reasonably consistent identifier across browser
+ * sessions, which is then cryptographically hashed before use in XIDs.
+ * 
+ * PRIVACY:
+ * - No persistent storage is used (no cookies, localStorage, etc.)
+ * - No canvas fingerprinting or other invasive techniques
+ * - Does not collect personally identifiable information
+ * - Only uses available browser APIs that don't require special permissions
+ */
+
+/**
+ * Generates a pseudo-fingerprint that includes an environment discriminator.
+ * This produces a string containing various browser/device characteristics
+ * that collectively provide a reasonably stable device identifier.
+ * 
+ * @returns Promise resolving to a string containing fingerprint components
  */
 export async function getFingerprint(): Promise<string> {
   const components: string[] = [];
@@ -46,10 +70,17 @@ export async function getFingerprint(): Promise<string> {
 
   // Timezone offset.
   components.push(`tz:${new Date().getTimezoneOffset()}`);
-  // return tinyHash(components.filter(Boolean).join('||'));
+  
   return components.filter(Boolean).join('||');
 }
 
+/**
+ * Detects the current JavaScript execution context in a web environment.
+ * This helps differentiate between various browser contexts (main thread,
+ * workers, etc.) for more accurate fingerprinting.
+ * 
+ * @returns String identifying the execution context
+ */
 function detectContext(): string {
   // Traditional browser (window & document exist)
   if (exists(window) && exists(document)) {
@@ -72,10 +103,23 @@ function detectContext(): string {
   return 'unknown';
 }
 
+/**
+ * Type guard to check if an object exists (is not undefined).
+ * 
+ * @param object - The object to check
+ * @returns True if the object exists, false otherwise
+ */
 function exists<T>(object: unknown): object is T {
   return typeof object !== 'undefined';
 }
 
+/**
+ * Type guard to check if an object is an instance of a specified type.
+ * 
+ * @param object - The object to check
+ * @param type - The type to check against
+ * @returns True if the object is an instance of the specified type
+ */
 function isInstance<T>(object: unknown, type: T): object is T {
   return typeof type !== 'undefined' && object instanceof (type as any);
 }
