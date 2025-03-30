@@ -16,7 +16,7 @@
  */
 
 import { hash as cryptoHash } from 'nexid/env/lib/hash-function/node-crypto';
-import { getOSMachineId } from 'nexid/env/lib/machine-id/server-os';
+import { getOSMachineId } from 'nexid/env/lib/machine-id/os-hostid';
 import { getProcessId as getNodePID } from 'nexid/env/lib/process-id/node-pid';
 import { randomBytes as cryptoRandomBytes } from 'nexid/env/lib/random-bytes/node-crypto';
 import { XID } from './core/xid';
