@@ -16,13 +16,13 @@
  *   ╚═══════════════════════════════════════════════════════════════╝
  *
  * DESIGN PRINCIPLES:
- * - Immutability: All XID values and operations are immutable
- * - Functional composition: Pure operations on value objects
- * - Type safety: Comprehensive type definitions with exhaustive checks
- * 
+ * - Immutability: all XID values and operations are immutable
+ * - Functional composition: pure operations on value objects
+ * - Type safety: comprehensive type definitions with exhaustive checks
+ *
  * SECURITY:
  * - Copy-on-read for component extraction to prevent tampering
- * - Strict validation for all inputs with detailed error messages
+ * - Strict validation for all inputs
  * - No mutation methods provided on XID instances
  */
 
@@ -32,16 +32,16 @@ import { decode, encode } from './encoding';
 
 /**
  * Immutable XID class representing a globally unique identifier.
- * 
+ *
  * An XID is a 12-byte value with a specific structure that ensures
- * both uniqueness and lexicographical sortability. XIDs can be 
+ * both uniqueness and lexicographical sortability. XIDs can be
  * serialized to a compact 20-character URL-safe string representation.
  */
 export class XID {
   /**
    * Private constructor to ensure XIDs are only created through factory methods.
    * This enforces proper validation of all XID instances.
-   * 
+   *
    * @param bytes - The underlying byte array for the XID
    * @private
    */
@@ -78,6 +78,9 @@ export class XID {
   public static fromString(str: string): XID {
     if (str.length !== ENCODED_LEN) {
       throw new Error('Invalid id length');
+    }
+    if (!/[0-9a-v]{20}/.test(str)) {
+      throw new Error('Invalid string id (must be 20 chars, 0-9 a-v');
     }
     return new XID(decode(str) as XIDBytes);
   }
@@ -119,7 +122,7 @@ export class XID {
 
   /**
    * Extracts the process ID component from the XID.
-   * This is a 2-byte value representing the process that generated the ID.
+   * This is a 2-byte value of the process that generated the ID.
    *
    * @returns A number representing the process ID
    */
@@ -147,7 +150,7 @@ export class XID {
   /**
    * Converts the XID to its 20-character base32-hex string representation.
    * This string is URL-safe, compact, and maintains lexicographical ordering.
-   * 
+   *
    * @returns A 20-character string representation of the XID
    */
   toString(): string {

@@ -3,18 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>XID Generator Test</title>
+    <title>XID Generator Test with Workers</title>
     <style>
       body {
         font-family: Arial, sans-serif;
         padding: 20px;
         background-color: #f4f4f9;
+        max-width: 1200px;
+        margin: 0 auto;
       }
       h1 {
         color: #333;
       }
-      .container {
+      h2 {
+        margin-top: 30px;
+        color: #444;
+      }
+      .section {
         margin-top: 20px;
+        padding: 20px;
+        border-radius: 5px;
+        background-color: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       }
       button {
         padding: 10px 20px;
@@ -24,43 +34,583 @@
         border-radius: 5px;
         cursor: pointer;
         font-size: 16px;
+        margin-right: 10px;
+        margin-bottom: 10px;
       }
       button:hover {
         background-color: #45a049;
       }
+      button:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+      }
       .output {
-        margin-top: 20px;
+        margin-top: 10px;
         padding: 10px;
         border: 1px solid #ccc;
-        background-color: #fff;
+        background-color: #f9f9f9;
         font-family: monospace;
         white-space: pre-wrap;
+        min-height: 40px;
+      }
+      .status {
+        font-size: 14px;
+        margin-top: 5px;
+        color: #666;
+      }
+      .worker-type {
+        font-weight: bold;
+        color: #333;
+      }
+      .performance {
+        margin-top: 15px;
+        font-size: 14px;
+        color: #555;
+      }
+      .error {
+        color: #d32f2f;
+      }
+      .success {
+        color: #388e3c;
+      }
+      .client-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-top: 20px;
+      }
+      .client {
+        flex: 1;
+        min-width: 300px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+      }
+      .client-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .client-id {
+        font-weight: bold;
+        color: #0066cc;
+        font-size: 1.1em;
+      }
+      .shared-state {
+        background-color: #e6f2ff;
+        padding: 15px;
+        border-radius: 5px;
+        margin-top: 20px;
+      }
+      .shared-state-history {
+        max-height: 300px;
+        overflow-y: auto;
+        font-family: monospace;
+        background-color: #fff;
+        padding: 10px;
+        border: 1px solid #ddd;
+        margin-top: 10px;
+      }
+      .history-item {
+        padding: 5px;
+        margin-bottom: 3px;
+        border-bottom: 1px solid #eee;
+      }
+      .history-item.highlight {
+        font-weight: bold;
+        background-color: #e6f7e6;
+      }
+      .controls {
+        margin: 10px 0;
       }
     </style>
   </head>
   <body>
-    <h1>XID Generator Test</h1>
+    <h1>XID Generator Test with Workers</h1>
 
-    <div class="container">
-      <button id="generateButton">Generate New XID</button>
-      <div class="output" id="output">Press the button to generate an XID...</div>
+    <div class="section">
+      <h2>Main Thread</h2>
+      <p>Generate XIDs directly in the main browser thread:</p>
+      <button id="generateMainButton">Generate New XID</button>
+      <button id="generateBulkMainButton">Generate 10,000 XIDs (Performance Test)</button>
+      <div class="output" id="mainOutput">Press the button to generate an XID...</div>
+      <div class="performance" id="mainPerformance"></div>
+    </div>
+
+    <div class="section">
+      <h2>Service Worker</h2>
+      <p>Generate XIDs using a background service worker (persists after page close):</p>
+      <div class="status" id="serviceWorkerStatus">Status: Checking service worker support...</div>
+      <button id="registerServiceWorkerButton">Register Service Worker</button>
+      <button id="generateServiceButton" disabled>Generate New XID</button>
+      <button id="generateBulkServiceButton" disabled>
+        Generate 10,000 XIDs (Performance Test)
+      </button>
+      <div class="output" id="serviceOutput">Service worker not registered yet...</div>
+      <div class="performance" id="servicePerformance"></div>
+    </div>
+
+    <div class="section">
+      <h2>Dedicated Worker</h2>
+      <p>Generate XIDs using a dedicated web worker (one per page):</p>
+      <div class="status" id="dedicatedWorkerStatus">
+        Status: Checking dedicated worker support...
+      </div>
+      <button id="startDedicatedWorkerButton">Start Dedicated Worker</button>
+      <button id="generateDedicatedButton" disabled>Generate New XID</button>
+      <button id="generateBulkDedicatedButton" disabled>
+        Generate 10,000 XIDs (Performance Test)
+      </button>
+      <div class="output" id="dedicatedOutput">Dedicated worker not started yet...</div>
+      <div class="performance" id="dedicatedPerformance"></div>
+    </div>
+
+    <div class="section">
+      <h2>Shared Worker Demo</h2>
+      <p>
+        This demo shows multiple clients communicating with the same shared worker instance. All
+        clients share the same XID generator and can see each other's activity.
+      </p>
+
+      <div class="status" id="sharedWorkerStatus">Status: Checking shared worker support...</div>
+
+      <div class="controls">
+        <button id="addClientButton">Add New Client</button>
+        <button id="removeClientButton">Remove Last Client</button>
+      </div>
+
+      <!-- Client containers will be added here -->
+      <div class="client-container" id="clientContainer"></div>
+
+      <!-- Shared state display -->
+      <div class="shared-state">
+        <h3>Shared Worker State</h3>
+        <p>This state is shared across all clients using the same worker:</p>
+        <div class="output" id="sharedStateOutput">Waiting for shared state...</div>
+        <div style="margin-top: 10px">
+          <h4>Recent Activity:</h4>
+          <div id="sharedStateHistory" class="shared-state-history">No activity yet...</div>
+        </div>
+      </div>
     </div>
 
     <!-- Load the XID library -->
-    <script src="../bin/nexid-web.js"></script>
-    <script async>
+    <script src="./nexid-web.js"></script>
+
+    <script>
+      // Utility function to measure performance
+      function runPerformanceTest(generateFn, count = 10000) {
+        const start = performance.now();
+        const ids = [];
+        for (let i = 0; i < count; i++) {
+          ids.push(generateFn());
+        }
+        const end = performance.now();
+        return {
+          time: end - start,
+          idsPerSecond: Math.round(count / ((end - start) / 1000)),
+          sampleIds: ids.slice(0, 3),
+        };
+      }
+
+      // Main Thread Implementation
       (async () => {
-        const generator = await NeXID.init();
-        window.generator = generator;
-        document.getElementById('generateButton').addEventListener('click', () => {
-          try {
-            const result = generator.fastId();
-            document.getElementById('output').innerText = `Generated XID: ${result}`;
-          } catch (error) {
-            console.error('Error generating XID:', error);
-            document.getElementById('output').innerText = `Error: ${error.message}`;
+        try {
+          // Initialize the generator
+          const generator = await NeXID.init();
+          window.generator = generator;
+
+          document.getElementById('generateMainButton').addEventListener('click', () => {
+            try {
+              const result = generator.fastId();
+              document.getElementById('mainOutput').innerText = `Generated XID: ${result}`;
+            } catch (error) {
+              console.error('Error generating XID:', error);
+              document.getElementById(
+                'mainOutput'
+              ).innerHTML = `<span class="error">Error: ${error.message}</span>`;
+            }
+          });
+
+          document.getElementById('generateBulkMainButton').addEventListener('click', () => {
+            try {
+              document.getElementById('mainOutput').innerText = 'Generating 10,000 XIDs...';
+
+              setTimeout(() => {
+                const result = runPerformanceTest(() => generator.fastId());
+                document.getElementById(
+                  'mainOutput'
+                ).innerText = `Generated 10,000 XIDs\nSample: ${result.sampleIds.join(', ')}`;
+                document.getElementById(
+                  'mainPerformance'
+                ).innerText = `Performance: ${result.time.toFixed(
+                  2
+                )}ms total, ${result.idsPerSecond.toLocaleString()} XIDs/second`;
+              }, 50);
+            } catch (error) {
+              console.error('Error in bulk generation:', error);
+              document.getElementById(
+                'mainOutput'
+              ).innerHTML = `<span class="error">Error: ${error.message}</span>`;
+            }
+          });
+        } catch (error) {
+          console.error('Error initializing NeXID:', error);
+          document.getElementById(
+            'mainOutput'
+          ).innerHTML = `<span class="error">Error initializing NeXID: ${error.message}</span>`;
+        }
+      })();
+
+      // Service Worker Implementation
+      (() => {
+        const statusEl = document.getElementById('serviceWorkerStatus');
+        const outputEl = document.getElementById('serviceOutput');
+        const perfEl = document.getElementById('servicePerformance');
+        const registerBtn = document.getElementById('registerServiceWorkerButton');
+        const generateBtn = document.getElementById('generateServiceButton');
+        const bulkBtn = document.getElementById('generateBulkServiceButton');
+
+        if ('serviceWorker' in navigator) {
+          statusEl.innerHTML = 'Status: <span class="success">Service Worker is supported</span>';
+
+          registerBtn.addEventListener('click', async () => {
+            try {
+              registerBtn.disabled = true;
+              statusEl.innerHTML = 'Status: Registering service worker...';
+
+              const registration = await navigator.serviceWorker.register('service-worker.js');
+              statusEl.innerHTML =
+                'Status: <span class="success">Service Worker registered!</span>';
+
+              if (registration.installing) {
+                registration.installing.addEventListener('statechange', (e) => {
+                  if (e.target.state === 'activated') {
+                    enableServiceWorkerButtons();
+                  }
+                });
+              } else {
+                enableServiceWorkerButtons();
+              }
+            } catch (error) {
+              console.error('Service worker registration failed:', error);
+              statusEl.innerHTML = `Status: <span class="error">Registration failed: ${error.message}</span>`;
+              registerBtn.disabled = false;
+            }
+          });
+
+          navigator.serviceWorker.addEventListener('message', (event) => {
+            const data = event.data;
+
+            if (data.type === 'xid-result') {
+              outputEl.innerText = `Generated XID: ${data.id}`;
+            } else if (data.type === 'xid-bulk-result') {
+              outputEl.innerText = `Generated ${data.count} XIDs\nSample: ${data.sample.join(
+                ', '
+              )}`;
+              perfEl.innerText = `Performance: ${data.time.toFixed(
+                2
+              )}ms total, ${data.idsPerSecond.toLocaleString()} XIDs/second`;
+            } else if (data.type === 'xid-error') {
+              outputEl.innerHTML = `<span class="error">Error: ${data.error}</span>`;
+            }
+          });
+
+          function enableServiceWorkerButtons() {
+            generateBtn.disabled = false;
+            bulkBtn.disabled = false;
+
+            generateBtn.addEventListener('click', () => {
+              const activeWorker = navigator.serviceWorker.controller;
+              if (activeWorker) {
+                activeWorker.postMessage({ command: 'generate-xid' });
+                outputEl.innerText = 'Requesting XID from service worker...';
+              } else {
+                outputEl.innerHTML =
+                  '<span class="error">Service worker not controlling this page yet. Reload the page.</span>';
+              }
+            });
+
+            bulkBtn.addEventListener('click', () => {
+              const activeWorker = navigator.serviceWorker.controller;
+              if (activeWorker) {
+                activeWorker.postMessage({ command: 'generate-bulk', count: 10000 });
+                outputEl.innerText = 'Requesting 10,000 XIDs from service worker...';
+              } else {
+                outputEl.innerHTML =
+                  '<span class="error">Service worker not controlling this page yet. Reload the page.</span>';
+              }
+            });
           }
-        });
+        } else {
+          statusEl.innerHTML =
+            'Status: <span class="error">Service Worker is not supported in this browser</span>';
+          registerBtn.disabled = true;
+        }
+      })();
+
+      // Dedicated Worker Implementation
+      (() => {
+        const statusEl = document.getElementById('dedicatedWorkerStatus');
+        const outputEl = document.getElementById('dedicatedOutput');
+        const perfEl = document.getElementById('dedicatedPerformance');
+        const startBtn = document.getElementById('startDedicatedWorkerButton');
+        const generateBtn = document.getElementById('generateDedicatedButton');
+        const bulkBtn = document.getElementById('generateBulkDedicatedButton');
+
+        let dedicatedWorker = null;
+
+        if (typeof Worker !== 'undefined') {
+          statusEl.innerHTML =
+            'Status: <span class="success">Dedicated Workers are supported</span>';
+
+          startBtn.addEventListener('click', () => {
+            try {
+              startBtn.disabled = true;
+              statusEl.innerHTML = 'Status: Starting dedicated worker...';
+
+              dedicatedWorker = new Worker('dedicated-worker.js');
+
+              dedicatedWorker.onmessage = (event) => {
+                const data = event.data;
+
+                if (data.type === 'worker-ready') {
+                  statusEl.innerHTML =
+                    'Status: <span class="success">Dedicated Worker is ready</span>';
+                  generateBtn.disabled = false;
+                  bulkBtn.disabled = false;
+                } else if (data.type === 'xid-result') {
+                  outputEl.innerText = `Generated XID: ${data.id}`;
+                } else if (data.type === 'xid-bulk-result') {
+                  outputEl.innerText = `Generated ${data.count} XIDs\nSample: ${data.sample.join(
+                    ', '
+                  )}`;
+                  perfEl.innerText = `Performance: ${data.time.toFixed(
+                    2
+                  )}ms total, ${data.idsPerSecond.toLocaleString()} XIDs/second`;
+                } else if (data.type === 'xid-error') {
+                  outputEl.innerHTML = `<span class="error">Error: ${data.error}</span>`;
+                  if (data.fatal) {
+                    statusEl.innerHTML =
+                      'Status: <span class="error">Dedicated Worker encountered a fatal error</span>';
+                    startBtn.disabled = false;
+                    generateBtn.disabled = true;
+                    bulkBtn.disabled = true;
+                  }
+                }
+              };
+
+              dedicatedWorker.onerror = (error) => {
+                console.error('Dedicated worker error:', error);
+                statusEl.innerHTML = `Status: <span class="error">Worker error: ${error.message}</span>`;
+                outputEl.innerHTML = `<span class="error">Worker failed: ${error.message}</span>`;
+                startBtn.disabled = false;
+                generateBtn.disabled = true;
+                bulkBtn.disabled = true;
+              };
+
+              generateBtn.addEventListener('click', () => {
+                if (dedicatedWorker) {
+                  dedicatedWorker.postMessage({ command: 'generate-xid' });
+                  outputEl.innerText = 'Requesting XID from dedicated worker...';
+                }
+              });
+
+              bulkBtn.addEventListener('click', () => {
+                if (dedicatedWorker) {
+                  dedicatedWorker.postMessage({ command: 'generate-bulk', count: 10000 });
+                  outputEl.innerText = 'Requesting 10,000 XIDs from dedicated worker...';
+                }
+              });
+            } catch (error) {
+              console.error('Failed to start dedicated worker:', error);
+              statusEl.innerHTML = `Status: <span class="error">Failed to start worker: ${error.message}</span>`;
+              startBtn.disabled = false;
+            }
+          });
+        } else {
+          statusEl.innerHTML =
+            'Status: <span class="error">Dedicated Workers are not supported in this browser</span>';
+          startBtn.disabled = true;
+        }
+      })();
+
+      // Multi-Client Shared Worker Implementation
+      (() => {
+        const statusEl = document.getElementById('sharedWorkerStatus');
+        const clientContainer = document.getElementById('clientContainer');
+        const addClientBtn = document.getElementById('addClientButton');
+        const removeClientBtn = document.getElementById('removeClientButton');
+        const sharedStateEl = document.getElementById('sharedStateOutput');
+        const sharedHistoryEl = document.getElementById('sharedStateHistory');
+
+        let sharedWorker = null;
+        const clients = [];
+        let nextClientId = 1;
+
+        // Format the shared state for display
+        function renderSharedState(state) {
+          if (!state) return;
+
+          // Format the basic state info
+          sharedStateEl.innerHTML = `
+            <strong>Total Clients Connected:</strong> ${state.clientCount}<br>
+            <strong>Total IDs Generated:</strong> ${state.totalGeneratedIds.toLocaleString()}<br>
+            <strong>Last Generated ID:</strong> ${state.lastGeneratedId || 'None yet'}
+          `;
+
+          // Format the activity history
+          if (state.history && state.history.length > 0) {
+            const clientIds = clients.map((c) => c.id);
+
+            const historyHtml = state.history
+              .map((item) => {
+                const isMyClient = clientIds.includes(item.clientId);
+                return `
+                <div class="history-item ${isMyClient ? 'highlight' : ''}">
+                  Client #${item.clientId} ${isMyClient ? '(this page)' : ''} generated: 
+                  <span style="color: #0066cc;">${item.id}</span>
+                  <span style="color: #777; font-size: 0.8em; float: right;">
+                    ${new Date(item.timestamp).toLocaleTimeString()}
+                  </span>
+                </div>
+              `;
+              })
+              .join('');
+
+            sharedHistoryEl.innerHTML = historyHtml;
+          } else {
+            sharedHistoryEl.innerText = 'No activity yet...';
+          }
+        }
+
+        // Create a client UI and connect to shared worker
+        function createClient() {
+          // Create a container for this client
+          const clientId = `client-${nextClientId++}`;
+          const clientEl = document.createElement('div');
+          clientEl.className = 'client';
+          clientEl.innerHTML = `
+            <div class="client-header">
+              <span class="client-id">Client #${clientId}</span>
+              <span class="status">Connecting...</span>
+            </div>
+            <div class="client-controls">
+              <button class="generate-btn" disabled>Generate XID</button>
+              <button class="bulk-btn" disabled>Generate 10,000 XIDs</button>
+            </div>
+            <div class="output">Connecting to shared worker...</div>
+          `;
+
+          clientContainer.appendChild(clientEl);
+
+          const statusEl = clientEl.querySelector('.status');
+          const generateBtn = clientEl.querySelector('.generate-btn');
+          const bulkBtn = clientEl.querySelector('.bulk-btn');
+          const outputEl = clientEl.querySelector('.output');
+
+          // Create or reuse the shared worker
+          if (!sharedWorker) {
+            try {
+              sharedWorker = new SharedWorker('shared-worker.js');
+            } catch (error) {
+              console.error('Failed to create shared worker:', error);
+              statusEl.innerHTML = `<span class="error">Failed to create worker: ${error.message}</span>`;
+              return null;
+            }
+          }
+
+          // Create a port for this client
+          const port = sharedWorker.port;
+
+          // Setup message handling
+          port.onmessage = (event) => {
+            const data = event.data;
+
+            if (data.type === 'worker-ready') {
+              statusEl.innerHTML = '<span class="success">Connected</span>';
+              generateBtn.disabled = false;
+              bulkBtn.disabled = false;
+            } else if (data.type === 'xid-result' && data.clientId === clientId) {
+              outputEl.innerHTML = `Generated: <span style="color: #0066cc;">${data.id}</span>`;
+            } else if (data.type === 'xid-bulk-result' && data.clientId === clientId) {
+              outputEl.innerHTML = `Generated ${data.count.toLocaleString()} XIDs<br/>Sample: <span style="color: #0066cc;">${
+                data.sample[0]
+              }</span>`;
+            } else if (data.type === 'shared-state-update') {
+              // Render shared state (handled globally)
+              renderSharedState(data.state);
+            } else if (data.type === 'xid-error') {
+              outputEl.innerHTML = `<span class="error">Error: ${data.error}</span>`;
+            }
+          };
+
+          // Add event listeners
+          generateBtn.addEventListener('click', () => {
+            port.postMessage({
+              command: 'generate-xid',
+              clientId: clientId,
+            });
+            outputEl.innerText = 'Requesting XID...';
+          });
+
+          bulkBtn.addEventListener('click', () => {
+            port.postMessage({
+              command: 'generate-bulk',
+              count: 10000,
+              clientId: clientId,
+            });
+            outputEl.innerText = 'Generating 10,000 XIDs...';
+          });
+
+          // Start the port
+          port.start();
+
+          // Request current state
+          port.postMessage({ command: 'register', clientId });
+
+          // Return client info
+          const client = {
+            id: clientId,
+            element: clientEl,
+            port: port,
+          };
+
+          clients.push(client);
+          return client;
+        }
+
+        // Remove a client
+        function removeClient() {
+          if (clients.length === 0) return;
+
+          const client = clients.pop();
+          clientContainer.removeChild(client.element);
+
+          // If no more clients, null the shared worker reference
+          if (clients.length === 0) {
+            sharedWorker = null;
+          }
+        }
+
+        // Check if shared workers are supported
+        if (typeof SharedWorker !== 'undefined') {
+          statusEl.innerHTML = 'Status: <span class="success">Shared Workers are supported</span>';
+
+          // Add listeners for the add/remove client buttons
+          addClientBtn.addEventListener('click', createClient);
+          removeClientBtn.addEventListener('click', removeClient);
+
+          // Create the first client automatically
+          createClient();
+        } else {
+          statusEl.innerHTML =
+            'Status: <span class="error">Shared Workers are not supported in this browser</span>';
+          addClientBtn.disabled = true;
+          removeClientBtn.disabled = true;
+        }
       })();
     </script>
   </body>

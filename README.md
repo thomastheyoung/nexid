@@ -22,6 +22,8 @@ A TypeScript implementation of globally unique identifiers that are lexicographi
 
 ```bash
 npm install nexid
+yarn add nexid
+pnpm add nexid
 ```
 
 ## Quick start
@@ -56,12 +58,12 @@ Multiple entry points for optimized tree-shaking and bundle size:
 Each XID consists of 12 bytes (96 bits), encoded as 20 characters:
 
 ```
-  ┌──────────────────────────────────────────────────────────────────────────────┐
-  │                          Binary Structure (12 bytes)                         |
-  ├────────────────────────┬──────────────────┬────────────┬─────────────────────┤
-  │        Timestamp       │     Machine ID   │ Process ID │       Counter       │
-  │        (4 bytes)       │     (3 bytes)    │ (2 bytes)  │      (3 bytes)      │
-  └────────────────────────┴──────────────────┴────────────┴─────────────────────┘
+  ┌───────────────────────────────────────────────────────────────────────────┐
+  │                          Binary Structure (12 bytes)                      |
+  ├────────────────────────┬──────────────────┬────────────┬──────────────────┤
+  │        Timestamp       │    Machine ID    │ Process ID │      Counter     │
+  │        (4 bytes)       │     (3 bytes)    │  (2 bytes) │     (3 bytes)    │
+  └────────────────────────┴──────────────────┴────────────┴──────────────────┘
 ```
 
 - **Timestamp**: 4 bytes (seconds since Unix epoch)
@@ -168,6 +170,11 @@ npm run bundle
 # Run benchmarks
 npm run benchmark
 ```
+
+## Credits
+
+- Original [XID specification](https://github.com/rs/xid) by Olivier Poitrey
+- Inspired by MongoDB's ObjectID and Twitter's Snowflake
 
 ## License
 

@@ -1,17 +1,17 @@
 /**
  * @module nexid/env/registry
- * 
+ *
  * Environment features registry and resolution system.
- * 
+ *
  * ARCHITECTURE:
  * This module implements a capability-based environment abstraction layer
  * that enables the library to adapt to different JavaScript runtimes while
  * providing a consistent API. The registry:
- * 
+ *
  * 1. Defines the core capabilities required by the ID generator
  * 2. Manages the validation and fallback mechanisms for these capabilities
  * 3. Implements a resolution system with caching for performance
- * 
+ *
  * This abstraction allows the core library code to remain platform-agnostic
  * while still utilizing environment-specific optimizations when available.
  */
@@ -31,13 +31,13 @@ import { RandomBytesDefinition } from './lib/random-bytes/@definition';
 export type FeatureSet = {
   /** Generates cryptographically secure random bytes */
   RandomBytes: (size: number) => Uint8Array;
-  
+
   /** Creates a cryptographic hash of input data */
   HashFunction: (data: string | Uint8Array) => Promise<Uint8Array>;
-  
+
   /** Provides a stable machine/device identifier */
   MachineId: () => Promise<string>;
-  
+
   /** Provides a process-specific identifier */
   ProcessId: () => Promise<number>;
 };
@@ -91,7 +91,7 @@ export class Environment {
    * 2. Previously cached implementation
    * 3. Adapter-provided implementation
    * 4. Fallback implementation as a last resort
-   * 
+   *
    * @param feature - The capability to resolve
    * @param candidate - Optional custom implementation to use if valid
    * @returns Promise resolving to the best available implementation
@@ -103,6 +103,7 @@ export class Environment {
     const featureDefinition = REGISTRY[feature];
 
     if (candidate && (await featureDefinition.test(candidate))) {
+      console.log(`NeXID: using user's provided ${feature}: ${candidate}`);
       this.cache.set(feature, candidate);
       return candidate;
     }
@@ -113,11 +114,13 @@ export class Environment {
 
     const adapterFeature = this.adapter[feature];
     if (await featureDefinition.test(adapterFeature)) {
+      console.log(`NeXID: using adapter's implementation of ${feature}`);
       this.cache.set(feature, adapterFeature);
       return adapterFeature;
     }
 
     // Fallback
+    console.log(`NeXID: using fallback ${feature}`);
     return featureDefinition.fallback;
   }
 }

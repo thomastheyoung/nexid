@@ -30,18 +30,23 @@ async function createXIDGenerator(options?: Generator.Options): Promise<Generato
   const runtime: RuntimeEnvironment | null = detectRuntimeEnvironment();
   if (!runtime) throw new Error('Error while trying to identify environment.');
 
+  console.log(`NeXID: environment detected: ${runtime}`);
+
   switch (runtime) {
     case RuntimeEnvironment.Browser:
     case RuntimeEnvironment.ServiceWorker:
     case RuntimeEnvironment.WebWorker:
+      console.log('NeXID: initializing with Web adapter');
       const webAdapter = await import('./web.js');
       return webAdapter.init(options);
 
     case RuntimeEnvironment.Deno:
+      console.log('NeXID: initializing with Deno adapter');
       const denoAdapter = await import('./deno.js');
       return denoAdapter.init(options);
 
     default:
+      console.log('NeXID: initializing with Node adapter');
       const nodeAdapter = await import('./node.js');
       return nodeAdapter.init(options);
   }

@@ -39,6 +39,7 @@ const WebAdapter = new Environment({
  * @returns Promise resolving to a fully configured XID generator
  */
 async function createXIDGenerator(options?: Generator.Options): Promise<Generator.API> {
+  console.log('NeXID: initializing with Web adapter');
   return XIDGenerator(WebAdapter, options);
 }
 

@@ -1,24 +1,24 @@
 /**
  * @module nexid/core/xid-generator
- * 
+ *
  * XID Generator - Core Implementation
- * 
+ *
  * ARCHITECTURE:
  * This module implements the central ID generation algorithm for NeXID,
  * following the XID specification with custom enhancements for performance
  * and cross-environment compatibility. The generator manages the creation
  * of unique identifiers by combining:
- * 
+ *
  * 1. Timestamp (4 bytes) - Current time in seconds
  * 2. Machine ID (3 bytes) - Environment-specific identifier
  * 3. Process ID (2 bytes) - Current process or context identifier
  * 4. Counter (3 bytes) - Thread-safe incrementing counter
- * 
+ *
  * SECURITY:
  * - Uses cryptographically secure random sources when available
  * - Machine IDs are cryptographically hashed to prevent system information disclosure
  * - Random counter initialization to prevent predictable sequences
- * 
+ *
  * PERFORMANCE:
  * - Pre-allocation of buffer template for minimal GC pressure
  * - Optimized byte manipulation for maximum throughput
@@ -35,7 +35,7 @@ import { XID } from './xid';
 
 /**
  * Creates an XID generator with the specified environment and options.
- * 
+ *
  * The generator ensures uniqueness through a combination of timestamp,
  * machine ID, process ID, and atomic counter components.
  *
@@ -72,34 +72,34 @@ export async function XIDGenerator(
   // ==========================================================================
   // Constructor
   // ==========================================================================
-  // ~~~~~~~~~~~~~~~~~~ Counter ~~~~~~~~~~~~~~~~~~
+  /**
+   * Preset constant bytes (machine id & process id) into a base buffer
+   * that will be reused for each XID generation.
+   */
+  const baseBuffer = new Uint8Array(RAW_LEN);
+
+  // Machine ID (3 bytes)
+  baseBuffer[4] = machineIdBytes[0] & BYTE_MASK;
+  baseBuffer[5] = machineIdBytes[1] & BYTE_MASK;
+  baseBuffer[6] = machineIdBytes[2] & BYTE_MASK;
+
+  // Process ID (2 bytes, big endian)
+  baseBuffer[7] = (processId >> 8) & BYTE_MASK;
+  baseBuffer[8] = processId & BYTE_MASK;
+
+  /** Setup atomic counter **/
   const b1 = randomBytes(3);
   const b2 = randomBytes(3);
   const b3 = randomBytes(3);
   const randomSeed = (b1[0] << 16) | (b2[1] << 8) | b3[2];
-
   const counter = createAtomicCounter(randomSeed);
 
-  // ~~~~~~~~~~~~~~~~~~ Base Buffer ~~~~~~~~~~~~~~~~~~
-  const buffer = new Uint8Array(RAW_LEN);
-
-  // Machine ID (3 bytes)
-  buffer[4] = machineIdBytes[0] & BYTE_MASK;
-  buffer[5] = machineIdBytes[1] & BYTE_MASK;
-  buffer[6] = machineIdBytes[2] & BYTE_MASK;
-
-  // Process ID (2 bytes, big endian)
-  buffer[7] = (processId >> 8) & BYTE_MASK;
-  buffer[8] = processId & BYTE_MASK;
-
-  const baseBuffer = buffer;
-
   // ==========================================================================
-  // ID generation
+  // XID generation
   // ==========================================================================
   /**
    * Builds a new XID byte array with the specified timestamp.
-   * 
+   *
    * @param timestamp - Timestamp in milliseconds since epoch
    * @returns Immutable XID byte array
    */
@@ -131,8 +131,8 @@ export async function XIDGenerator(
     machineId,
     processId,
     /**
-     * Generates a new XID with the specified timestamp or current time.
-     * 
+     * Generates a new XID with the specified timestamp (defaults to current time).
+     *
      * @param datetime - Optional date to use instead of current time
      * @returns A new XID object
      */
@@ -145,7 +145,7 @@ export async function XIDGenerator(
      * Generates a new XID string directly, bypassing object creation.
      * This is approximately 30% faster than newId() when only the string
      * representation is needed.
-     * 
+     *
      * @returns A string representation of a new XID
      */
     fastId() {

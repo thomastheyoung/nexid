@@ -1,6 +1,6 @@
 {
   "name": "nexid",
-  "version": "1.1.4",
+  "version": "1.2.0",
   "author": "Thomas LE JEUNE <thomastheyoung@gmail.com>",
   "license": "MIT",
   "description": "Fast, time-sortable unique identifiers for the JavaScript ecosystem. Port of the original Go library github/rs/xid.",
@@ -27,10 +27,10 @@
       "import": "./dist/node.mjs",
       "require": "./dist/node.js"
     },
-    "./browser": {
-      "types": "./dist/browser.d.ts",
-      "import": "./dist/browser.mjs",
-      "require": "./dist/browser.js"
+    "./web": {
+      "types": "./dist/web.d.ts",
+      "import": "./dist/web.mjs",
+      "require": "./dist/web.js"
     },
     "./deno": {
       "types": "./dist/deno.d.ts",
@@ -43,7 +43,7 @@
     "preversion": "npm test",
     "postversion": "npm publish",
     "prepublishOnly": "git push origin --follow-tags",
-    "build": "rm -rf dist/ && tsup src/index.ts src/node.ts src/browser.ts src/deno.ts --format cjs,esm --dts --out-dir dist",
+    "build": "rm -rf dist/ && tsup src/index.ts src/node.ts src/web.ts src/deno.ts --format cjs,esm --dts --out-dir dist",
     "bundle": "rm -rf bin/ && node esbuild.mjs",
     "benchmark": "node tests/benchmark.js",
     "test": "vitest"
