@@ -39,7 +39,6 @@ const NodeAdapter = new Environment({
  * @returns Promise resolving to a fully configured XID generator
  */
 async function createXIDGenerator(options?: Generator.Options): Promise<Generator.API> {
-  console.log('NeXID: initializing with Deno adapter');
   return XIDGenerator(NodeAdapter, options);
 }
 

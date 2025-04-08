@@ -103,7 +103,6 @@ export class Environment {
     const featureDefinition = REGISTRY[feature];
 
     if (candidate && (await featureDefinition.test(candidate))) {
-      console.log(`NeXID: using user's provided ${feature}: ${candidate}`);
       this.cache.set(feature, candidate);
       return candidate;
     }
@@ -114,13 +113,11 @@ export class Environment {
 
     const adapterFeature = this.adapter[feature];
     if (await featureDefinition.test(adapterFeature)) {
-      console.log(`NeXID: using adapter's implementation of ${feature}`);
       this.cache.set(feature, adapterFeature);
       return adapterFeature;
     }
 
     // Fallback
-    console.log(`NeXID: using fallback ${feature}`);
     return featureDefinition.fallback;
   }
 }
