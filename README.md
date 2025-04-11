@@ -48,10 +48,10 @@ const fastIdString = nexid.fastId();
 
 Multiple entry points for optimized tree-shaking and bundle size:
 
-- **Universal**: `import from 'nexid'` - Auto-detects environment
-- **Node.js**: `import from 'nexid/node'` - Node.js optimized bundle
-- **Deno**: `import from 'nexid/deno'` - Deno optimized bundle
-- **Web**: `import from 'nexid/web'` - Browser optimized bundle
+- **Universal**: `import NeXID from 'nexid'` - Auto-detects environment
+- **Node.js**: `import NeXID from 'nexid/node'` - Node.js optimized bundle
+- **Deno**: `import NeXID from 'nexid/deno'` - Deno optimized bundle
+- **Web**: `import NeXID from 'nexid/web'` - Browser optimized bundle
 
 ### XID structure
 
