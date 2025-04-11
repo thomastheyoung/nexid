@@ -63,7 +63,7 @@ async function createContent(title: string, body: string): Promise<Content> {
 
   // Each editor can see content in time order without round trips to a central server
   // Natural database indexing means fast retrieval of recent content
-  return { id: contentId.toString(), title, body, created: contentId.getTime() };
+  return { id: contentId.toString(), title, body, created: contentId.time };
 }
 ```
 
