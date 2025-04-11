@@ -128,8 +128,8 @@ class CollaborativeEditor {
       id: editId.toString(),
       position,
       content,
-      timestamp: editId.getTime(),
-      client: editId.getMachineId().toString('hex'),
+      timestamp: editId.time,
+      client: editId.machineId.toString('hex'),
     };
   }
 }
@@ -192,7 +192,7 @@ class StorageManager {
     const fileId = this.idGenerator.newId();
 
     // Machine ID component can be used to determine storage shard
-    const storageNode = determineNodeFromMachineId(fileId.getMachineId());
+    const storageNode = determineNodeFromMachineId(fileId.machineId);
     await storageNode.store(fileId.toString(), fileData, metadata);
 
     return fileId.toString();
@@ -229,8 +229,8 @@ class NotificationManager {
       id: id.toString(),
       userId,
       message,
-      created: id.getTime(),
-      routingKey: id.getMachineId().toString('hex'),
+      created: id.time,
+      routingKey: id.machineId.toString('hex'),
     };
   }
 }
@@ -332,7 +332,7 @@ class SessionManager {
     const session = {
       id: sessionId.toString(),
       userId,
-      created: sessionId.getTime(),
+      created: sessionId.time,
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
     };
 
@@ -380,12 +380,12 @@ class Logger {
 
     const logEntry = {
       id: logId.toString(),
-      timestamp: logId.getTime(),
+      timestamp: logId.time,
       level,
       message,
       source: {
-        machineId: logId.getMachineId().toString('hex'),
-        processId: logId.getProcessId(),
+        machineId: logId.machineId.toString('hex'),
+        processId: logId.processId,
       },
       metadata,
     };
