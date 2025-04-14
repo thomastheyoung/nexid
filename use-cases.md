@@ -33,7 +33,7 @@ import NeXID from 'nexid';
 const orderService = {
   async createOrder(userId: string, items: CartItem[]): Promise<Order> {
     const generator = await NeXID.init();
-    const orderId = generator.newId().toString();
+    const orderId = generator.fastId();
 
     // Order ID inherently encodes creation timestamp
     // Chronological sorting comes for free
@@ -121,7 +121,6 @@ class CollaborativeEditor {
 
   makeEdit(position: number, content: string) {
     const editId = this.idGenerator.newId();
-
     // Edits naturally sort by creation time
     // Helps with operational transform algorithms
     return {

@@ -39,6 +39,7 @@ import NeXID, { XID } from 'nexid/node';
 ```
 
 Use this entry point for Node.js applications. It:
+
 - Only includes Node.js-specific code
 - Pre-configures the generator with NodeAdapter
 - Skips environment detection for faster initialization
@@ -51,6 +52,7 @@ import NeXID, { XID } from 'nexid/web';
 ```
 
 Use this entry point for browser applications. It:
+
 - Only includes browser-specific code
 - Pre-configures the generator with WebAdapter
 - Skips environment detection for faster initialization
@@ -100,15 +102,15 @@ const generator = await init();
 
 ### Generator Methods
 
-| Method | Description | Return Type |
-|--------|-------------|-------------|
-| `newId(timestamp?: Date)` | Creates a new XID, optionally with the specified timestamp | `XID` |
-| `fastId()` | Creates a new XID and returns its string representation (faster) | `string` |
+| Method                    | Description                                                      | Return Type |
+| ------------------------- | ---------------------------------------------------------------- | ----------- |
+| `newId(timestamp?: Date)` | Creates a new XID, optionally with the specified timestamp       | `XID`       |
+| `fastId()`                | Creates a new XID and returns its string representation (faster) | `string`    |
 
 ### Generator Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
+| Property    | Type     | Description                                    |
+| ----------- | -------- | ---------------------------------------------- |
 | `machineId` | `string` | The original machine ID used by this generator |
 | `processId` | `number` | The original process ID used by this generator |
 
@@ -116,31 +118,31 @@ const generator = await init();
 
 ### Static Methods
 
-| Method | Description | Return Type |
-|--------|-------------|-------------|
-| `XID.fromString(str: string)` | Creates an XID from its string representation | `XID` |
-| `XID.fromBytes(bytes: Uint8Array)` | Creates an XID from a 12-byte array | `XID` |
-| `XID.nilID()` | Creates a nil (zero value) XID | `XID` |
-| `XID.isValid(str: string)` | Checks if a string is a valid XID format | `boolean` |
+| Method                             | Description                                   | Return Type |
+| ---------------------------------- | --------------------------------------------- | ----------- |
+| `XID.fromString(str: string)`      | Creates an XID from its string representation | `XID`       |
+| `XID.fromBytes(bytes: Uint8Array)` | Creates an XID from a 12-byte array           | `XID`       |
+| `XID.nilID()`                      | Creates a nil (zero value) XID                | `XID`       |
+| `XID.isValid(str: string)`         | Checks if a string is a valid XID format      | `boolean`   |
 
 ### Instance Methods
 
-| Method | Description | Return Type |
-|--------|-------------|-------------|
-| `toString()` | Converts the XID to its string representation | `string` |
-| `toJSON()` | Returns the string representation for JSON serialization | `string` |
-| `equals(other: XID)` | Compares this XID with another for equality | `boolean` |
-| `isNil()` | Checks if this is a nil (zero value) XID | `boolean` |
+| Method               | Description                                              | Return Type |
+| -------------------- | -------------------------------------------------------- | ----------- |
+| `toString()`         | Converts the XID to its string representation            | `string`    |
+| `toJSON()`           | Returns the string representation for JSON serialization | `string`    |
+| `equals(other: XID)` | Compares this XID with another for equality              | `boolean`   |
+| `isNil()`            | Checks if this is a nil (zero value) XID                 | `boolean`   |
 
 ### Instance Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `bytes` | `Uint8Array` | The 12-byte raw representation (read-only) |
-| `time` | `Date` | The timestamp extracted from the XID |
-| `machineId` | `Uint8Array` | The 3-byte machine ID component |
-| `processId` | `number` | The process ID component |
-| `counter` | `number` | The counter component |
+| Property    | Type         | Description                                |
+| ----------- | ------------ | ------------------------------------------ |
+| `bytes`     | `Uint8Array` | The 12-byte raw representation (read-only) |
+| `time`      | `Date`       | The timestamp extracted from the XID       |
+| `machineId` | `Uint8Array` | The 3-byte machine ID component            |
+| `processId` | `number`     | The process ID component                   |
+| `counter`   | `number`     | The counter component                      |
 
 ## Helper Functions
 
@@ -186,6 +188,7 @@ const generator = await init({
 ### Customizing Machine ID
 
 By default, NeXID uses platform-specific methods to generate a stable machine ID:
+
 - On servers: Hardware identifiers or filesystem information
 - In browsers: Privacy-respecting device fingerprinting
 
@@ -193,13 +196,14 @@ You can override this with a custom machine ID:
 
 ```typescript
 const generator = await init({
-  machineId: 'my-custom-machine-id'
+  machineId: 'my-custom-machine-id',
 });
 ```
 
 ### Customizing Process ID
 
 Process IDs help differentiate IDs generated from different processes on the same machine:
+
 - On Node.js: Uses the actual process ID
 - In browsers: Uses a tab/window identifier
 
@@ -207,7 +211,7 @@ Override with:
 
 ```typescript
 const generator = await init({
-  processId: 12345
+  processId: 12345,
 });
 ```
 
@@ -222,7 +226,7 @@ import { Generator } from 'nexid/types/xid-generator';
 const options: Generator.Options = {
   machineId: 'custom-id',
   processId: 1234,
-  randomBytes: (size) => new Uint8Array(size)
+  randomBytes: (size) => new Uint8Array(size),
 };
 
 // Generator API
