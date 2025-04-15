@@ -71,12 +71,46 @@ Each XID consists of 12 bytes (96 bits), encoded as 20 characters:
   └────────────────────────┴──────────────────┴────────────┴──────────────────┘
 ```
 
-- **Timestamp**: 4 bytes (seconds since Unix epoch)
-- **Machine ID**: 3 bytes (derived from hostname, os registries or fingerprinting)
-- **Process ID**: 2 bytes (process ID or tab/window unique identifier)
-- **Counter**: 3 bytes (atomic counter, initialized with random seed)
+### Timestamp Component (4 bytes)
 
-The timestamp's position ensures lexicographical comparison naturally sorts IDs by creation time.
+32-bit unsigned integer representing seconds since Unix epoch. Positioned first in the byte sequence to enable lexicographical sorting by time.
+
+Tradeoff: Second-level precision instead of milliseconds allows for 136 years of timestamp space within 4 bytes.
+
+### Machine ID (3 bytes)
+
+24-bit machine identifier. Implementation varies by environment:
+
+- **Node.js**: Hashed host UUID based on each major OS
+- **Browsers**: Stable fingerprint derived from hardware characteristics
+- **Edge**: Adaptive generation based on available platform features
+
+Values remain stable across restarts on the same machine.
+
+### Process ID (2 bytes)
+
+16-bit process identifier:
+
+- **Node.js**: Native `process.pid`
+- **Browsers**: Tab/window identifier combination
+- **Edge**: Context-based or pseudo-random value
+
+### Counter (3 bytes)
+
+24-bit atomic counter for sub-second uniqueness:
+
+- `SharedArrayBuffer` and `Atomics` for thread safety
+- CSPRNG-sourced initial value (when available)
+- 16,777,216 unique IDs per second per process
+- Automatic wrapping with 24-bit mask
+
+### Encoding
+
+Base32-hex (0-9a-v) encoding yields 20-character strings:
+
+- Direct byte-to-character mapping with no padding
+- Lexicographically preserves binary order
+- Implemented with lookup tables for performance
 
 ### Runtime adaptability
 
