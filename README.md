@@ -59,7 +59,7 @@ Each XID consists of 12 bytes (96 bits), encoded as 20 characters:
 
 ```
   ┌───────────────────────────────────────────────────────────────────────────┐
-  │                          Binary Structure (12 bytes)                      |
+  │                         Binary Structure (12 bytes)                       |
   ├────────────────────────┬──────────────────┬────────────┬──────────────────┤
   │        Timestamp       │    Machine ID    │ Process ID │      Counter     │
   │        (4 bytes)       │     (3 bytes)    │  (2 bytes) │     (3 bytes)    │
@@ -111,17 +111,17 @@ AND id <= 'cv37mogxxxxxxxxxxxxxxx'   -- End timestamp
 
 NeXID delivers high performance on par with or exceeding Node's native `randomUUID`:
 
-| Implementation     |     IDs/Second | Time-Ordered | URL-Safe | Fixed Length |
-| ------------------ | -------------: | :----------: | :------: | :----------: |
-| hyperid            |     55,975,228 |              |          |              |
-| **NeXID.fastId()** | **10,571,431** |    **✓**     |  **✓**   |    **✓**     |
-| node randomUUID    |      9,532,552 |              |          |      ✓       |
-| uuid v4            |      9,335,353 |              |          |      ✓       |
-| nanoid             |      6,953,336 |              |    ✓     |      ✓       |
-| uuid v7            |      3,480,979 |      ✓       |          |      ✓       |
-| uuid v1            |      3,328,294 |              |          |      ✓       |
-| ksuid              |         84,179 |      ✓       |    ✓     |      ✓       |
-| ulid               |         55,152 |      ✓       |    ✓     |      ✓       |
+| Implementation     |     IDs/Second | Time sortable | Collision resistance | URL-safe | Coordination-free | Compact |
+| ------------------ | -------------: | :-----------: | :------------------: | :------: | :---------------: | :-----: |
+| hyperid            |     55,975,228 |               |          ✓           |    ✓     |         ✓         |    ✓    |
+| **NeXID.fastId()** | **10,571,431** |     **✓**     |        **✓**         |  **✓**   |       **✓**       |  **✓**  |
+| node randomUUID    |      9,532,552 |               |          ✓           |          |         ✓         |         |
+| uuid v4            |      9,335,353 |               |          ✓           |          |         ✓         |         |
+| nanoid             |      6,953,336 |               |          ✓           |    ✓     |         ✓         |    ✓    |
+| uuid v7            |      3,480,979 |       ✓       |          ✓           |          |         ✓         |         |
+| uuid v1            |      3,328,294 |       ✓       |          ✓           |          |         ✓         |         |
+| ksuid              |         84,179 |       ✓       |          ✓           |    ✓     |         ✓         |    ✓    |
+| ulid               |         55,152 |       ✓       |          ✓           |    ✓     |         ✓         |    ✓    |
 
 _Benchmarks on Node.js v22 on Apple Silicon. Results may vary by environment._
 
@@ -129,16 +129,16 @@ _Benchmarks on Node.js v22 on Apple Silicon. Results may vary by environment._
 
 Different identifier systems offer distinct advantages:
 
-| System        | Strengths                                  | Best for                                  |
-| ------------- | ------------------------------------------ | ----------------------------------------- |
-| **NeXID**     | Time ordering, URL-safe, distributed       | Distributed systems needing time order    |
-| **UUID v1**   | Time-based with hardware address           | Time-sensitive global applications        |
-| **UUID v4**   | Pure randomness, standardization, adoption | Systems prioritizing collision resistance |
-| **UUID v7**   | Time-based with precision                  | Time-sensitive local applications         |
-| **ULID**      | Time ordering with millisecond precision   | Applications requiring finer time grain   |
-| **nanoid**    | Compact, high performance                  | URL shorteners, high-volume systems       |
-| **KSUID**     | Time ordering with additional entropy      | Security-focused distributed systems      |
-| **Snowflake** | Datacenter-aware, millisecond precision    | Large-scale internal infrastructure       |
+| System        | Strengths                                       | Best for                                           |
+| ------------- | ----------------------------------------------- | -------------------------------------------------- |
+| **NeXID**     | Time-ordered (sec), URL-safe, distributed       | Distributed systems needing time-ordered IDs       |
+| **UUID v1**   | Time-based (100ns), uses MAC address            | Legacy systems or specific hardware-tied needs     |
+| **UUID v4**   | Pure randomness, standardized, widely adopted   | Systems prioritizing collision resistance          |
+| **UUID v7**   | Time-ordered (ms), index locality, sortable     | Modern systems prioritizing time-based sorting     |
+| **ULID**      | Time-ordered (ms), URL-safe (Base32), monotonic | Apps needing sortable IDs with ms precision        |
+| **nanoid**    | Compact, URL-safe, high performance             | URL shorteners, high-volume generation             |
+| **KSUID**     | Time-ordered (sec), URL-safe (Base62), entropy  | Systems needing sortable IDs with sec precision    |
+| **Snowflake** | Time-ordered (ms), includes worker/DC IDs       | Large-scale coordinated distributed infrastructure |
 
 UUID v4 remains ideal for pure randomness, nanoid excels when string size is critical, and Snowflake IDs work well for controlled infrastructure.
 
