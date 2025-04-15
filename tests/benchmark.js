@@ -6,12 +6,11 @@
 
 const { Bench } = require('tinybench');
 const crypto = require('crypto');
-const { v1: uuidv1, v4: uuidv4 } = require('uuid');
+const { v1: uuidv1, v4: uuidv4, v7: uuidv7 } = require('uuid');
 const { ulid } = require('ulid');
 const KSUID = require('ksuid');
 const { nanoid } = require('nanoid');
 const hyperid = require('hyperid');
-const shortid = require('shortid');
 
 // Import our NeXID implementation (from the compiled JS)
 const NeXID = require('../bin/nexid-node.js');
@@ -35,6 +34,7 @@ async function runBenchmark() {
     'NeXID.fastId()': () => neXIDGenerator.fastId(),
     'uuid v1': () => uuidv1(),
     'uuid v4': () => uuidv4(),
+    'uuid v7': () => uuidv7(),
     'node randomUUID': () => crypto.randomUUID(),
     ulid: () => ulid(),
     nanoid: () => nanoid(),
