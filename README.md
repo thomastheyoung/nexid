@@ -113,13 +113,15 @@ NeXID delivers high performance on par with or exceeding Node's native `randomUU
 
 | Implementation     |     IDs/Second | Time-Ordered | URL-Safe | Fixed Length |
 | ------------------ | -------------: | :----------: | :------: | :----------: |
-| hyperid            |     55,773,818 |              |          |              |
-| **NeXID.fastId()** | **10,702,629** |    **✓**     |  **✓**   |    **✓**     |
-| node randomUUID    |      9,652,435 |              |          |      ✓       |
-| nanoid             |      7,019,649 |              |    ✓     |      ✓       |
-| uuid v1            |      3,326,415 |      ✓       |          |      ✓       |
-| ksuid              |         80,120 |      ✓       |    ✓     |      ✓       |
-| ulid               |         57,568 |      ✓       |    ✓     |      ✓       |
+| hyperid            |     55,975,228 |              |          |              |
+| **NeXID.fastId()** | **10,571,431** |    **✓**     |  **✓**   |    **✓**     |
+| node randomUUID    |      9,532,552 |              |          |      ✓       |
+| uuid v4            |      9,335,353 |              |          |      ✓       |
+| nanoid             |      6,953,336 |              |    ✓     |      ✓       |
+| uuid v7            |      3,480,979 |      ✓       |          |      ✓       |
+| uuid v1            |      3,328,294 |              |          |      ✓       |
+| ksuid              |         84,179 |      ✓       |    ✓     |      ✓       |
+| ulid               |         55,152 |      ✓       |    ✓     |      ✓       |
 
 _Benchmarks on Node.js v22 on Apple Silicon. Results may vary by environment._
 
