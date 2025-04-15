@@ -1,16 +1,16 @@
 /**
  * @module nexid/env/lib/detect-os
- * 
+ *
  * Operating system detection for server environments.
- * 
+ *
  * ARCHITECTURE:
  * This module provides functionality to detect the current operating system
  * in Node.js, Deno, Bun, and Electron environments. Accurate OS detection
  * is important for NeXID because different operating systems store machine
  * identifiers in different locations and have different APIs for accessing
  * system information.
- * 
- * The module uses the Result pattern for error handling to ensure graceful 
+ *
+ * The module uses the Result pattern for error handling to ensure graceful
  * degradation when OS detection fails.
  */
 

@@ -1,17 +1,17 @@
 /**
  * @module nexid/common/result
- * 
+ *
  * Result type implementation for functional error handling.
- * 
+ *
  * ARCHITECTURE:
  * This module implements a functional Result pattern inspired by Rust and functional
  * programming paradigms. The Result type provides a type-safe way to handle errors
  * without exceptions, supporting three variants:
- * 
+ *
  * 1. Ok<T> - Represents a successful result with a value
  * 2. None - Represents an absence of a value (like null, but type-safe)
  * 3. Err<E> - Represents an error condition with an error object
- * 
+ *
  * The implementation uses TypeScript's type system to its fullest to ensure
  * compile-time safety when working with potentially failing operations.
  */
@@ -38,7 +38,7 @@ abstract class BaseResult<T, E extends Error = Error> {
 
   /**
    * Transforms the contained value if Ok; passes through None or Err.
-   * 
+   *
    * @param fn - Function to apply to the contained value
    * @returns A new Result with the transformed value
    */
@@ -52,7 +52,7 @@ abstract class BaseResult<T, E extends Error = Error> {
 
   /**
    * Chains another operation that returns a Result.
-   * 
+   *
    * @param fn - Function that takes the current value and returns a new Result
    * @returns The result of applying the function
    */
@@ -242,12 +242,12 @@ export const Result = {
    * Creates an Ok result containing a value.
    */
   Ok: <T>(value: T): Result<T, never> => new Ok<T>(value),
-  
+
   /**
    * Creates a None result representing absence of a value.
    */
   None: (): Result<never, never> => None.instance(),
-  
+
   /**
    * Creates an Err result containing an error.
    * Automatically converts non-Error objects to Error instances.

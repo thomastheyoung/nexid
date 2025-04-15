@@ -5,14 +5,14 @@
  *
  * ARCHITECTURE:
  * This module provides highly optimized encoding and decoding functions for XID values,
- * converting between binary representation and string format. It uses a modified 
- * base32-hex encoding that is URL-safe, case-insensitive, and maintains lexicographical 
+ * converting between binary representation and string format. It uses a modified
+ * base32-hex encoding that is URL-safe, case-insensitive, and maintains lexicographical
  * sorting properties across all platforms.
  *
  * The encoding process transforms the 12-byte binary ID into a 20-character string,
  * where each character represents 5 bits of data (with the final character using
  * only 4 bits).
- * 
+ *
  * PERFORMANCE:
  * - Pre-computed lookup tables for both encoding and decoding
  * - Direct byte access and bit manipulation for minimal overhead

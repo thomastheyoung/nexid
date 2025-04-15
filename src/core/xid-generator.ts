@@ -88,10 +88,10 @@ export async function XIDGenerator(
   baseBuffer[8] = processId & BYTE_MASK;
 
   /** Setup atomic counter **/
-  const b1 = randomBytes(3);
-  const b2 = randomBytes(3);
-  const b3 = randomBytes(3);
-  const randomSeed = (b1[0] << 16) | (b2[1] << 8) | b3[2];
+  const seedBytes = randomBytes(4);
+  const randomSeed =
+    (seedBytes[0] << 24) | (seedBytes[1] << 16) | (seedBytes[2] << 8) | seedBytes[3];
+
   const counter = createAtomicCounter(randomSeed);
 
   // ==========================================================================

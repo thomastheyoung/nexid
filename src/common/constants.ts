@@ -1,10 +1,10 @@
 /**
  * @module nexid/common/constants
- * 
+ *
  * Core constants used throughout the NeXID library.
- * 
+ *
  * ARCHITECTURE:
- * This module centralizes all constant values used in XID encoding, 
+ * This module centralizes all constant values used in XID encoding,
  * generation, and manipulation. By isolating these values, we ensure
  * consistent behavior across all components and provide a single source
  * of truth for key parameters of the XID specification.

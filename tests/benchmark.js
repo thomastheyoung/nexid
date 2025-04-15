@@ -39,7 +39,6 @@ async function runBenchmark() {
     ulid: () => ulid(),
     nanoid: () => nanoid(),
     hyperid: () => hyperidInstance(),
-    shortid: () => shortid.generate(),
   };
 
   // Add KSUID (it's async)

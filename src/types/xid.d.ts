@@ -1,8 +1,8 @@
 /**
  * @module nexid/types/xid
- * 
+ *
  * XID core type definitions.
- * 
+ *
  * ARCHITECTURE:
  * This module defines the fundamental type-level representation of XIDs
  * using TypeScript's type system. It employs advanced TypeScript techniques
@@ -37,13 +37,13 @@ export type XIDString = Brand<string & { readonly __length: 20 }>;
 namespace XIDPart {
   /** Timestamp component type */
   export type Time = Brand<Date>;
-  
+
   /** Machine ID component type - branded 3-byte array */
   export type MachineID = Brand<Uint8Array & { readonly __length: 3 }>;
-  
+
   /** Process ID component type - branded number */
   export type ProcessID = Brand<number>;
-  
+
   /** Counter component type - branded number */
   export type Counter = Brand<number>;
 }

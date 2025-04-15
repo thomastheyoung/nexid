@@ -1,15 +1,15 @@
 /**
  * @module nexid/env/lib/detect-runtime
- * 
+ *
  * JavaScript runtime environment detection.
- * 
+ *
  * ARCHITECTURE:
  * This module provides a comprehensive system for detecting the current JavaScript
  * runtime environment. It uses feature detection to identify the execution context
  * across the entire spectrum of modern JavaScript environments, from traditional
  * (Node.js, browsers) to specialized runtimes (Deno, Bun) and embedded contexts
  * (Electron, React Native).
- * 
+ *
  * This detection is critical for the NeXID library as it enables environment-specific
  * optimizations for machine ID generation, process ID assignment, and cryptographic
  * operations.
@@ -88,7 +88,7 @@ export enum RuntimeEnvironment {
 
 /**
  * Detects the current JavaScript runtime environment using feature detection.
- * 
+ *
  * This function determines the execution context by checking for environment-specific
  * global objects and properties. Each environment provides different APIs for
  * essential operations like random number generation, machine identification,

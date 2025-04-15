@@ -1,8 +1,8 @@
 /**
  * @module nexid/core/helpers
- * 
+ *
  * XID utility functions for common operations.
- * 
+ *
  * ARCHITECTURE:
  * This module provides helper functions that operate on XID objects
  * but don't belong in the core XID class implementation. These are

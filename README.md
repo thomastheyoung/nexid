@@ -7,6 +7,7 @@
 A TypeScript implementation of globally unique identifiers that are lexicographically sortable, following the [XID specification](https://github.com/rs/xid), originally inspired by Mongo Object ID algorithm. NeXID provides a high-performance solution for generating and working with XIDs across JavaScript runtimes.
 
 > [!TIP]
+>
 > - For complete API documentation, advanced usage and real-world use cases, see [API reference](docs/api.md) and [Use cases](docs/use-cases.md).
 > - To see NeXID in action in a web environment, visit the [library's github page](https://thomastheyoung.github.io/nexid).
 

@@ -1,19 +1,19 @@
 /**
  * @module nexid/env/lib/hash-function
- * 
+ *
  * Cryptographic hash function feature definition and fallback implementation.
- * 
+ *
  * ARCHITECTURE:
  * This module defines the interface and validation for the HashFunction feature,
  * which provides a secure way to hash identifiers before using them in XIDs.
  * Hashing machine IDs and other inputs helps protect sensitive information
  * while still maintaining uniqueness.
- * 
+ *
  * The hash function should ideally be cryptographically secure whenever possible:
  * - Node.js uses the crypto module's SHA-256 implementation
  * - Browsers use the SubtleCrypto API's SHA-256 implementation
  * - Fallback uses a simple but sufficient non-cryptographic hash function
- * 
+ *
  * SECURITY:
  * - All platform-specific implementations should use SHA-256 when available
  * - The fallback implementation (FNV-1a) is only used when secure APIs aren't available
@@ -28,7 +28,7 @@ import { FeatureDefinition } from 'nexid/env/registry';
 export const HashFunctionDefinition: FeatureDefinition<'HashFunction'> = {
   /**
    * Tests if the provided implementation is a valid HashFunction function.
-   * 
+   *
    * @param impl - The implementation to test
    * @returns Promise resolving to true if the implementation is valid
    */

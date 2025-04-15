@@ -1,19 +1,19 @@
 /**
  * @module nexid/env/lib/machine-id
- * 
+ *
  * Machine ID feature definition and fallback implementation.
- * 
+ *
  * ARCHITECTURE:
  * This module defines the interface and validation for the MachineId feature,
  * which is responsible for generating a consistent identifier for the current
  * machine/device. This component is critical for ensuring ID uniqueness across
  * different devices in a distributed system.
- * 
+ *
  * Different platforms expose machine identification in different ways:
  * - Server environments may use MAC addresses, hostname, or OS-specific identifiers
  * - Browsers use fingerprinting techniques while respecting privacy
  * - Mobile devices have their own device identifiers
- * 
+ *
  * SECURITY:
  * - Machine IDs should be stable but not expose sensitive system information
  * - The machine ID is cryptographically hashed before use in XIDs
@@ -28,7 +28,7 @@ import { FeatureDefinition } from 'nexid/env/registry';
 export const MachineIdDefinition: FeatureDefinition<'MachineId'> = {
   /**
    * Tests if the provided implementation is a valid MachineId function.
-   * 
+   *
    * @param impl - The implementation to test
    * @returns Promise resolving to true if the implementation is valid
    */
