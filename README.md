@@ -137,9 +137,9 @@ Different identifier systems offer distinct advantages:
 | System        | Strengths                                       | Best for                                           |
 | ------------- | ----------------------------------------------- | -------------------------------------------------- |
 | **NeXID**     | Time-ordered (sec), URL-safe, distributed       | Distributed systems needing time-ordered IDs       |
-| **UUID v1**   | Time-based (100ns), uses MAC address            | Legacy systems or specific hardware-tied needs     |
+| **UUID v1**   | Time-based (100ns), uses MAC address            | System requiring ns precision with hardware ties   |
 | **UUID v4**   | Pure randomness, standardized, widely adopted   | Systems prioritizing collision resistance          |
-| **UUID v7**   | Time-ordered (ms), index locality, sortable     | Modern systems prioritizing time-based sorting     |
+| **UUID v7**   | Time-ordered (ms), index locality, sortable     | Systems prioritizing time-based sorting            |
 | **ULID**      | Time-ordered (ms), URL-safe (Base32), monotonic | Apps needing sortable IDs with ms precision        |
 | **nanoid**    | Compact, URL-safe, high performance             | URL shorteners, high-volume generation             |
 | **KSUID**     | Time-ordered (sec), URL-safe (Base62), entropy  | Systems needing sortable IDs with sec precision    |
