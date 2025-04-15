@@ -129,11 +129,12 @@ _Benchmarks on Node.js v22 on Apple Silicon. Results may vary by environment._
 
 Different identifier systems offer distinct advantages:
 
-| System        | Strengths                                  | Best For                                  |
+| System        | Strengths                                  | Best for                                  |
 | ------------- | ------------------------------------------ | ----------------------------------------- |
 | **NeXID**     | Time ordering, URL-safe, distributed       | Distributed systems needing time order    |
+| **UUID v1**   | Time-based with hardware address           | Time-sensitive global applications        |
 | **UUID v4**   | Pure randomness, standardization, adoption | Systems prioritizing collision resistance |
-| **UUID v1**   | Time-based with precision                  | Time-sensitive local applications         |
+| **UUID v7**   | Time-based with precision                  | Time-sensitive local applications         |
 | **ULID**      | Time ordering with millisecond precision   | Applications requiring finer time grain   |
 | **nanoid**    | Compact, high performance                  | URL shorteners, high-volume systems       |
 | **KSUID**     | Time ordering with additional entropy      | Security-focused distributed systems      |
