@@ -150,7 +150,7 @@ UUID v4 remains ideal for pure randomness, nanoid excels when string size is cri
 
 ## Documentation
 
-For complete API documentation, advanced usage and real-world use cases, see [API reference](api.md) and [Use cases](use-cases.md).
+For complete API documentation, advanced usage and real-world use cases, see [API reference](docs/api.md) and [Use cases](docs/use-cases.md).
 
 ## Development
 
