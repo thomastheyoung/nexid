@@ -29,6 +29,7 @@
 import { ENCODED_LEN, RAW_LEN } from 'nexid/common/constants';
 import { XIDBytes } from 'nexid/types/xid';
 import { decode, encode } from './encoding';
+import { compareBytes } from './helpers';
 
 /**
  * Immutable XID class representing a globally unique identifier.
@@ -48,7 +49,7 @@ export class XID {
   private constructor(public readonly bytes: XIDBytes) {}
 
   // ============================================================================
-  // Factory static methods
+  // Static class methods
   // ============================================================================
 
   /**
@@ -177,5 +178,16 @@ export class XID {
   equals(other: XID): boolean {
     if (this === other) return true;
     return this.bytes.every((byte, i) => byte === other.bytes[i]);
+  }
+
+  /**
+   * Compares the current XID with another, lexicographically.
+   * Since the timestamp is the first component, this also sorts chronologically.
+   *
+   * @param other - Second XID to compare
+   * @returns Negative number if a is smaller (older), 0 if equal, positive if a is greater (newer)
+   */
+  compare(other: XID): number {
+    return compareBytes(this.bytes, other.bytes);
   }
 }
