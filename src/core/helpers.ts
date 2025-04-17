@@ -10,18 +10,7 @@
  * methods that enhance the usability of the library.
  */
 
-import { encode } from './encoding';
 import { XID } from './xid';
-
-/**
- * Converts an XID to its 20-character string representation using base32-hex encoding.
- *
- * @param id - The XID to convert to string
- * @returns A 20-character string representation of the ID
- */
-export function toString(id: XID): string {
-  return encode(id.bytes);
-}
 
 // ============================================================================
 // Comparison Functions
