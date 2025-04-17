@@ -25,8 +25,8 @@
  * - Provides fast path for string-only ID generation
  */
 
-import { BYTE_MASK, RAW_LEN } from 'nexid/common/constants';
-import { Environment } from 'nexid/env/registry';
+import { BYTE_MASK, PROCESS_ID_MASK, RAW_LEN } from 'nexid/common/constants';
+import { Environment } from 'nexid/env/environment';
 import { XIDBytes } from 'nexid/types/xid';
 import { Generator } from 'nexid/types/xid-generator';
 import { createAtomicCounter } from './counter';
@@ -51,23 +51,16 @@ export async function XIDGenerator(
   // Setup components
   // ==========================================================================
   // Resolve capabilities
-  const randomBytes = await env.get('RandomBytes', options.randomBytes || null);
+  const randomBytes = await env.get('RandomBytes', options.randomBytes || undefined);
   const hashFunction = await env.get('HashFunction');
   const getMachineId = await env.get(
     'MachineId',
-    options.machineId ? async () => options.machineId as string : null
+    options.machineId ? async () => options.machineId as string : undefined
   );
-
-  // Use first 3 bytes of machineId hash
-  const machineId = await getMachineId();
-  const machineIdBytes = (await hashFunction(machineId)).subarray(0, 3);
-
-  // Process ID
   let getProcessId = await env.get(
     'ProcessId',
-    options.processId ? async () => options.processId as number : null
+    options.processId ? async () => options.processId as number : undefined
   );
-  const processId = (await getProcessId()) & 0xffff;
 
   // ==========================================================================
   // Constructor
@@ -79,20 +72,24 @@ export async function XIDGenerator(
   const baseBuffer = new Uint8Array(RAW_LEN);
 
   // Machine ID (3 bytes)
+  const machineId = await getMachineId();
+  const machineIdBytes = (await hashFunction(machineId)).subarray(0, 3);
   baseBuffer[4] = machineIdBytes[0] & BYTE_MASK;
   baseBuffer[5] = machineIdBytes[1] & BYTE_MASK;
   baseBuffer[6] = machineIdBytes[2] & BYTE_MASK;
 
   // Process ID (2 bytes, big endian)
+  const processId = (await getProcessId()) & PROCESS_ID_MASK;
   baseBuffer[7] = (processId >> 8) & BYTE_MASK;
   baseBuffer[8] = processId & BYTE_MASK;
 
-  /** Setup atomic counter **/
+  // Setup atomic counter
   const seedBytes = randomBytes(4);
   const randomSeed =
     (seedBytes[0] << 24) | (seedBytes[1] << 16) | (seedBytes[2] << 8) | seedBytes[3];
 
   const counter = createAtomicCounter(randomSeed);
+  let lastTimestamp = 0;
 
   // ==========================================================================
   // XID generation
@@ -108,6 +105,16 @@ export async function XIDGenerator(
 
     // Convert to seconds for the ID (XID spec uses seconds, not milliseconds)
     timestamp = Math.floor(timestamp / 1000);
+
+    // Reset counter if timestamp changed.
+    // This prevents wrapping to occur within the same second, in which case 2 successive XIDs
+    // would sort counter-wise as [S][0xFF FF FF] -> [S][0x00 00 00], making K-ordering moot.
+    // With this reset, we would need to generate 2^24 (~16.7M) XIDs/sec to incur a wrapping,
+    // which is above the current library performance (~10.5M/sec).
+    if (timestamp !== lastTimestamp) {
+      counter.reset();
+      lastTimestamp = timestamp;
+    }
 
     // Timestamp (4 bytes, big endian)
     buffer[0] = (timestamp >> 24) & BYTE_MASK;

@@ -26,6 +26,53 @@ export interface AtomicCounter {
    * @returns A unique counter value (0 to 16,777,215)
    */
   getNext(): CounterValue;
+  reset(): void;
+}
+
+/**
+ * Creates an atomic counter instance, automatically selecting the best available
+ * underlying buffer type for atomic operations based on environment capabilities.
+ *
+ * @param seed - Initial value for the internal 32-bit counter.
+ * @returns An AtomicCounter instance.
+ */
+export function createAtomicCounter(seed: number): AtomicCounter {
+  // Attempt strategies in order of preference: SAB -> WASM Shared -> ArrayBuffer fallback.
+  const buffer = trySharedArrayBuffer() ?? tryWasmSharedMemory() ?? new ArrayBuffer(4);
+
+  // Provide a warning if we had to fall back to the non-thread-safe option,
+  // as this indicates potential issues in multi-threaded scenarios.
+  const couldHaveUsedSharedMemory =
+    globalThis.SharedArrayBuffer || (globalThis.WebAssembly && globalThis.WebAssembly.Memory);
+  if (buffer.constructor === ArrayBuffer && couldHaveUsedSharedMemory) {
+    console.warn(
+      'NeXID: Could not initialize shared memory, falling back to ArrayBuffer. Atomicity is NOT guaranteed across threads/workers.'
+    );
+  }
+
+  const counter = new Uint32Array(buffer);
+  counter[0] = seed;
+
+  return {
+    getNext(): CounterValue {
+      // 1. Atomically increments the 32-bit value at index 0 by 1.
+      // 2. Returns the value *before* the increment occurred.
+      const beforeIncrement = Atomics.add(counter, 0, 1);
+
+      // 3. Applies a bitwise AND mask (0xffffff) to the value.
+      //    This effectively keeps only the lower 24 bits.
+      // 4. Casts the result to CounterValue (which should be number or a type alias for number).
+      //    This correctly handles the wrap-around:
+      //    - If beforeIncrement was 0xFFFFFF, it returns 0xFFFFFF.
+      //    - If beforeIncrement was 0x1000000 (after wrapping), it returns 0.
+      //    - If beforeIncrement was 0x1000001, it returns 1.
+      return (beforeIncrement & 0xffffff) as CounterValue;
+    },
+
+    reset() {
+      Atomics.store(counter, 0, 0);
+    },
+  };
 }
 
 /**
@@ -74,46 +121,4 @@ function tryWasmSharedMemory(): ArrayBuffer | null {
     console.warn('NeXID: WebAssembly shared memory availability check failed.', e);
     return null;
   }
-}
-
-/**
- * Creates an atomic counter instance, automatically selecting the best available
- * underlying buffer type for atomic operations based on environment capabilities.
- *
- * @param seed - Initial value for the internal 32-bit counter.
- * @returns An AtomicCounter instance.
- */
-export function createAtomicCounter(seed: number): AtomicCounter {
-  // Attempt strategies in order of preference: SAB -> WASM Shared -> ArrayBuffer fallback.
-  const buffer = trySharedArrayBuffer() ?? tryWasmSharedMemory() ?? new ArrayBuffer(4);
-
-  // Provide a warning if we had to fall back to the non-thread-safe option,
-  // as this indicates potential issues in multi-threaded scenarios.
-  const couldHaveUsedSharedMemory =
-    globalThis.SharedArrayBuffer || (globalThis.WebAssembly && globalThis.WebAssembly.Memory);
-  if (buffer.constructor === ArrayBuffer && couldHaveUsedSharedMemory) {
-    console.warn(
-      'NeXID: Could not initialize shared memory, falling back to ArrayBuffer. Atomicity is NOT guaranteed across threads/workers.'
-    );
-  }
-
-  const counter = new Uint32Array(buffer);
-  counter[0] = seed;
-
-  return {
-    getNext(): CounterValue {
-      // 1. Atomically increments the 32-bit value at index 0 by 1.
-      // 2. Returns the value *before* the increment occurred.
-      const beforeIncrement = Atomics.add(counter, 0, 1);
-
-      // 3. Applies a bitwise AND mask (0xffffff) to the value.
-      //    This effectively keeps only the lower 24 bits.
-      // 4. Casts the result to CounterValue (which should be number or a type alias for number).
-      //    This correctly handles the wrap-around:
-      //    - If beforeIncrement was 0xFFFFFF, it returns 0xFFFFFF.
-      //    - If beforeIncrement was 0x1000000 (after wrapping), it returns 0.
-      //    - If beforeIncrement was 0x1000001, it returns 1.
-      return (beforeIncrement & 0xffffff) as CounterValue;
-    },
-  };
 }
