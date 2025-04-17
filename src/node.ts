@@ -15,15 +15,15 @@
  * code in bundlers.
  */
 
-import { hash as cryptoHash } from 'nexid/env/lib/hash-function/node-crypto';
-import { getOSMachineId } from 'nexid/env/lib/machine-id/os-hostid';
-import { getProcessId as getNodePID } from 'nexid/env/lib/process-id/node-pid';
-import { randomBytes as cryptoRandomBytes } from 'nexid/env/lib/random-bytes/node-crypto';
-import { XID } from './core/xid';
-import { XIDGenerator } from './core/xid-generator';
-import { Environment, EnvironmentAdapter } from './env/registry';
-import { initNeXID } from './types/api';
-import { Generator } from './types/xid-generator';
+import { XID } from 'nexid/core/xid';
+import { XIDGenerator } from 'nexid/core/xid-generator';
+import { Environment, type EnvironmentAdapter } from 'nexid/env/environment';
+import { hash as cryptoHash } from 'nexid/env/features/hash-function/node-crypto';
+import { getOSMachineId } from 'nexid/env/features/machine-id/os-hostid';
+import { getProcessId as getNodePID } from 'nexid/env/features/process-id/node-pid';
+import { randomBytes as cryptoRandomBytes } from 'nexid/env/features/random-bytes/node-crypto';
+import { type initNeXID } from 'nexid/types/api';
+import { type Generator } from 'nexid/types/xid-generator';
 
 const NodeAdapter = new Environment({
   RandomBytes: cryptoRandomBytes,

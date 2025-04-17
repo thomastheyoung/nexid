@@ -15,15 +15,15 @@
  * code in bundlers.
  */
 
-import { hash as subtleCryptoHash } from 'nexid/env/lib/hash-function/subtle-crypto';
-import { getFingerprint } from 'nexid/env/lib/machine-id/web-fingerprint';
-import { getProcessId } from 'nexid/env/lib/process-id/web';
-import { randomBytes as webCryptoRandomBytes } from 'nexid/env/lib/random-bytes/web-crypto';
-import { XID } from './core/xid';
-import { XIDGenerator } from './core/xid-generator';
-import { Environment, EnvironmentAdapter } from './env/registry';
-import { initNeXID } from './types/api';
-import { Generator } from './types/xid-generator';
+import { XID } from 'nexid/core/xid';
+import { XIDGenerator } from 'nexid/core/xid-generator';
+import { Environment, type EnvironmentAdapter } from 'nexid/env/environment';
+import { hash as subtleCryptoHash } from 'nexid/env/features/hash-function/subtle-crypto';
+import { getFingerprint } from 'nexid/env/features/machine-id/web-fingerprint';
+import { getProcessId } from 'nexid/env/features/process-id/web';
+import { randomBytes as webCryptoRandomBytes } from 'nexid/env/features/random-bytes/web-crypto';
+import { type initNeXID } from 'nexid/types/api';
+import { type Generator } from 'nexid/types/xid-generator';
 
 const WebAdapter = new Environment({
   RandomBytes: webCryptoRandomBytes,

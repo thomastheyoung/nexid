@@ -36,7 +36,7 @@ export const MachineIdDefinition: FeatureDefinition<'MachineId'> = {
     if (typeof impl !== 'function') return false;
     try {
       const result = await impl();
-      return !!result && typeof result === 'string' && result.length > 0;
+      return typeof result === 'string' && result.length > 0;
     } catch {
       return false;
     }

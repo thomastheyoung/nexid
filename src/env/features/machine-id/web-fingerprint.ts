@@ -19,6 +19,15 @@
  * - Only uses available browser APIs that don't require special permissions
  */
 
+enum WebContext {
+  Browser = 'browser',
+  WebWorker = 'web-worker',
+  DedicatedWorker = 'dedicated-worker',
+  ServiceWorker = 'service-worker',
+  SharedWorker = 'shared-worker',
+  Unknown = 'unknown',
+}
+
 /**
  * Generates a pseudo-fingerprint that includes an environment discriminator.
  * This produces a string containing various browser/device characteristics
@@ -81,26 +90,26 @@ export async function getFingerprint(): Promise<string> {
  *
  * @returns String identifying the execution context
  */
-function detectContext(): string {
+function detectContext(): WebContext {
   // Traditional browser (window & document exist)
   if (exists(window) && exists(document)) {
-    return 'browser';
+    return WebContext.Browser;
   }
   // Web worker environments (no document, but importScripts is available)
   if (exists(self) && typeof importScripts === 'function') {
     // Check for a service worker context
     if (isInstance(self, ServiceWorkerGlobalScope)) {
-      return 'service-worker';
+      return WebContext.ServiceWorker;
     }
     if (isInstance(self, DedicatedWorkerGlobalScope)) {
-      return 'dedicated-worker';
+      return WebContext.DedicatedWorker;
     }
     if (isInstance(self, SharedWorkerGlobalScope)) {
-      return 'shared-worker';
+      return WebContext.SharedWorker;
     }
-    return 'web-worker';
+    return WebContext.WebWorker;
   }
-  return 'unknown';
+  return WebContext.Unknown;
 }
 
 /**

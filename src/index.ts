@@ -11,10 +11,10 @@
  * loaded at runtime.
  */
 
-import { XID } from './core/xid';
-import { detectRuntimeEnvironment, RuntimeEnvironment } from './env/lib/detect-runtime';
-import { initNeXID } from './types/api';
-import { Generator } from './types/xid-generator';
+import { XID } from 'nexid/core/xid';
+import { detectRuntimeEnvironment, RuntimeEnvironment } from 'nexid/env/features/detect-runtime';
+import { type initNeXID } from 'nexid/types/api';
+import { type Generator } from 'nexid/types/xid-generator';
 
 /**
  * Creates an XID generator with the specified options.

@@ -2,13 +2,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { XID } from '../../src/core/xid';
 import NeXID from '../../src/node';
 
-const MACHINE_ID_SIZE = 3;
-
 describe('XIDGenerator', async () => {
   // Set up a default generator for tests
-  const generator = await NeXID.init();
+  const defaultGenerator = await NeXID.init();
 
-  afterEach(() => {
+  afterEach(async () => {
     vi.restoreAllMocks();
   });
 
@@ -79,7 +77,7 @@ describe('XIDGenerator', async () => {
       const ids = new Set<string>();
 
       for (let i = 0; i < idCount; i++) {
-        const id = generator.newId();
+        const id = defaultGenerator.newId();
         ids.add(id.toString());
       }
 
@@ -88,8 +86,8 @@ describe('XIDGenerator', async () => {
     });
 
     it('generates IDs with increasing counter values', () => {
-      const id1 = generator.newId();
-      const id2 = generator.newId();
+      const id1 = defaultGenerator.newId();
+      const id2 = defaultGenerator.newId();
 
       // IDs generated in sequence should have sequential counter values
       // if they are in the same timestamp second
@@ -100,7 +98,7 @@ describe('XIDGenerator', async () => {
 
     it('uses provided timestamp when specified', () => {
       const testDate = new Date('2020-01-01T00:00:00Z');
-      const id = generator.newId(testDate);
+      const id = defaultGenerator.newId(testDate);
 
       // The ID should have the timestamp we provided
       expect(id.time.getTime()).toBe(testDate.getTime());
@@ -109,7 +107,7 @@ describe('XIDGenerator', async () => {
 
   describe('fastId method', () => {
     it('generates valid ID strings', () => {
-      const idString = generator.fastId();
+      const idString = defaultGenerator.fastId();
 
       // Check that the string is the correct length and format
       expect(idString.length).toBe(20);
@@ -122,7 +120,7 @@ describe('XIDGenerator', async () => {
       const ids = new Set<string>();
 
       for (let i = 0; i < idCount; i++) {
-        ids.add(generator.fastId());
+        ids.add(defaultGenerator.fastId());
       }
 
       // All IDs should be unique
@@ -137,7 +135,7 @@ describe('XIDGenerator', async () => {
 
       // Generate IDs in parallel
       for (let i = 0; i < parallelCount; i++) {
-        promises.push(Promise.resolve(generator.newId()));
+        promises.push(Promise.resolve(defaultGenerator.newId()));
       }
 
       const ids = await Promise.all(promises);

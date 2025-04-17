@@ -1,14 +1,10 @@
 import crypto from 'node:crypto';
 import os from 'node:os';
-import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import NeXID, { XID } from '../../src/node';
 
 describe('Environment Failover', () => {
   beforeEach(() => {
-    vi.restoreAllMocks();
-    vi.unstubAllGlobals();
-  });
-  afterAll(() => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });

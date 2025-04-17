@@ -20,7 +20,6 @@
  * this approach provides a good balance of performance and uniqueness.
  */
 
-import { PROCESS_ID_MASK } from 'nexid/common/constants';
 import { FeatureSet } from 'nexid/env/registry';
 
 /**
@@ -30,8 +29,9 @@ import { FeatureSet } from 'nexid/env/registry';
  * no native concept of process exists. The random value is limited
  * to the valid range for the process ID component of an XID.
  *
- * @returns Promise resolving to a random process ID between 0xff (255) and PROCESS_ID_MASK (65535)
+ * @returns Promise resolving to a random process ID between 0 and PROCESS_ID_MASK (65535)
  */
 export const getProcessId: FeatureSet['ProcessId'] = async (): Promise<number> => {
-  return Math.floor(Math.random() * (PROCESS_ID_MASK - 0xff + 1)) + 0xff;
+  // Generates a random 16-bit unsigned integer (0 to 65535)
+  return crypto.getRandomValues(new Uint16Array(1))[0];
 };

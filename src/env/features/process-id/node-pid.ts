@@ -22,6 +22,5 @@ import { FeatureSet } from 'nexid/env/registry';
  * @returns Promise resolving to the masked process ID
  */
 export const getProcessId: FeatureSet['ProcessId'] = async (): Promise<number> => {
-  if (!process?.pid || typeof process.pid !== 'number') return 0;
   return process.pid & PROCESS_ID_MASK;
 };

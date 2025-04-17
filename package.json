@@ -1,6 +1,6 @@
 {
   "name": "nexid",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "author": "Thomas LE JEUNE <thomastheyoung@gmail.com>",
   "license": "MIT",
   "description": "Fast, time-sortable unique identifiers for the JavaScript ecosystem. Port of the original Go library github/rs/xid.",
@@ -17,6 +17,12 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "sideEffects": false,
+  "imports": {
+    "#common/*": "./dist/common/*.js",
+    "#core/*": "./dist/core/*.js",
+    "#env/*": "./dist/env/*.js",
+    "#types/*": "./dist/types/*.js"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

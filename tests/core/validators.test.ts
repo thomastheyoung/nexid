@@ -3,7 +3,7 @@ import { FeatureDefinition } from '../../src/env/registry';
 
 describe('Validator.randomBytes', async () => {
   const validator: FeatureDefinition<'RandomBytes'> = (
-    await import('../../src/env/lib/random-bytes/@definition')
+    await import('../../src/env/features/random-bytes/@definition')
   ).RandomBytesDefinition;
 
   it('accepts valid random byte functions', () => {

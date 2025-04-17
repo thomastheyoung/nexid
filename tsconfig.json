@@ -38,10 +38,15 @@
     "lib": ["dom", "webworker"],
     /* Node.js Types */
     "types": ["node", "vitest/globals", "deno"],
+
     "paths": {
-      "nexid/*": ["./src/*"]
+      "nexid/*": ["./src/*"],
+      "#common/*": ["./src/common/*/"],
+      "#core/*": ["./src/core/*"],
+      "#env/*": ["./src/env/*"],
+      "#types/*": ["./src/types/*"]
     }
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["src/**/*.test.ts", "node_modules", "dist", "bin", "docs", "source", "archive"]
+  "exclude": ["src/**/*.test.ts", "node_modules", "dist", "bin", "docs"]
 }

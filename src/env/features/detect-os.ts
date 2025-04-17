@@ -9,12 +9,8 @@
  * is important for NeXID because different operating systems store machine
  * identifiers in different locations and have different APIs for accessing
  * system information.
- *
- * The module uses the Result pattern for error handling to ensure graceful
- * degradation when OS detection fails.
  */
 
-import { Result } from 'nexid/common/result';
 import { detectRuntimeEnvironment, RuntimeEnvironment } from './detect-runtime';
 
 /**
@@ -98,7 +94,7 @@ export enum OperatingSystem {
  * @returns A Result containing the detected OperatingSystem enum value
  *          or an Error if detection fails or isn't in a supported environment
  */
-export function detectOperatingSystem(): Result<OperatingSystem, Error> {
+export function detectOperatingSystem(): OperatingSystem | null {
   try {
     const env = detectRuntimeEnvironment();
 
@@ -110,7 +106,8 @@ export function detectOperatingSystem(): Result<OperatingSystem, Error> {
       env !== RuntimeEnvironment.Bun &&
       env !== RuntimeEnvironment.Deno
     ) {
-      return Result.Err(new Error('Operating system detection requires a Node-like environment'));
+      return null;
+      // return failure(new Error('Operating system detection requires a Node-like environment'));
     }
 
     let platform: string;
@@ -126,31 +123,32 @@ export function detectOperatingSystem(): Result<OperatingSystem, Error> {
     // Map the platform string to our OperatingSystem enum
     switch (platform) {
       case 'win32':
-        return Result.Ok(OperatingSystem.Windows);
+        return OperatingSystem.Windows;
       case 'darwin':
-        return Result.Ok(OperatingSystem.MacOS);
+        return OperatingSystem.MacOS;
       case 'linux':
-        return Result.Ok(OperatingSystem.Linux);
+        return OperatingSystem.Linux;
       case 'freebsd':
-        return Result.Ok(OperatingSystem.FreeBSD);
+        return OperatingSystem.FreeBSD;
       case 'openbsd':
-        return Result.Ok(OperatingSystem.OpenBSD);
+        return OperatingSystem.OpenBSD;
       case 'aix':
-        return Result.Ok(OperatingSystem.AIX);
+        return OperatingSystem.AIX;
       case 'sunos':
-        return Result.Ok(OperatingSystem.SunOS);
+        return OperatingSystem.SunOS;
       case 'android':
-        return Result.Ok(OperatingSystem.Android);
+        return OperatingSystem.Android;
       case 'haiku':
-        return Result.Ok(OperatingSystem.Haiku);
+        return OperatingSystem.Haiku;
       case 'netbsd':
-        return Result.Ok(OperatingSystem.NetBSD);
+        return OperatingSystem.NetBSD;
       default:
         // Any other platform is considered unknown
-        return Result.Ok(OperatingSystem.Unknown);
+        return OperatingSystem.Unknown;
     }
   } catch (error) {
     // Ensure we always return a proper Error object in the Result
-    return Result.Err(error instanceof Error ? error : new Error(String(error)));
+    // return failure(error instanceof Error ? error : new Error(String(error)));
   }
+  return null;
 }
