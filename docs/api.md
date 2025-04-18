@@ -232,28 +232,3 @@ const options: Generator.Options = {
 // Generator API
 const generator: Generator.API = await init(options);
 ```
-
-## Error Handling
-
-NeXID uses a custom `Result<T, E>` type for error handling in many internal operations:
-
-```typescript
-import { Result } from 'nexid/common/result';
-
-// Example of using Result type
-function parseXID(str: string): Result<XID, Error> {
-  try {
-    return Result.ok(XID.fromString(str));
-  } catch (error) {
-    return Result.err(new Error(`Invalid XID: ${str}`));
-  }
-}
-
-const result = parseXID('cv37img5tppgl4002kb0');
-if (result.isOk()) {
-  const id = result.value;
-  console.log(id.time);
-} else {
-  console.error(result.error.message);
-}
-```
