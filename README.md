@@ -194,9 +194,11 @@ UUID v4 remains ideal for pure randomness, nanoid excels when string size is cri
 
 ```bash
 npm install
+npm test # runs vitest dev mode
+
+# Building
 npm run build
-npm test
-npm run bundle # Needed to run the benchmarks
+npm run bundle # required before benchmark
 npm run benchmark
 ```
 
