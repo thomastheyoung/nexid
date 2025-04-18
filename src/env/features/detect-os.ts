@@ -1,5 +1,5 @@
 /**
- * @module nexid/env/lib/detect-os
+ * @module nexid/env/features/detect-os
  *
  * Operating system detection for server environments.
  *
@@ -146,9 +146,7 @@ export function detectOperatingSystem(): OperatingSystem | null {
         // Any other platform is considered unknown
         return OperatingSystem.Unknown;
     }
-  } catch (error) {
-    // Ensure we always return a proper Error object in the Result
-    // return failure(error instanceof Error ? error : new Error(String(error)));
-  }
+  } catch {}
+
   return null;
 }

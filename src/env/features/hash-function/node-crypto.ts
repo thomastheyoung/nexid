@@ -1,5 +1,5 @@
 /**
- * @module nexid/env/lib/hash-function/node-crypto
+ * @module nexid/env/features/hash-function/node-crypto
  *
  * Node.js crypto implementation of SHA-256 hashing.
  *

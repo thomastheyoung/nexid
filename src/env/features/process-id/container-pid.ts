@@ -1,5 +1,5 @@
 /**
- * @module nexid/env/lib/process-id/container-pid
+ * @module nexid/env/features/process-id/container-pid
  *
  * Derives a process identifier specifically for containerized environments.
  *
@@ -28,6 +28,7 @@
  * and avoid executing external commands, minimizing security risks.
  */
 
+import { readFile } from 'nexid/env/features/utils';
 import { FeatureSet } from 'nexid/env/registry';
 
 /**
@@ -41,13 +42,11 @@ import { FeatureSet } from 'nexid/env/registry';
  *          container's identifier, or 0 as a fallback.
  */
 export const getProcessId: FeatureSet['ProcessId'] = async (): Promise<number> => {
-  const containerIdString = detectContainerId();
-  if (containerIdString) {
+  const containerId = await detectContainerId();
+  if (containerId) {
     try {
       // Ensure it's treated as hex, remove potential '0x' prefix if present
-      const cleanedHex = containerIdString.startsWith('0x')
-        ? containerIdString.substring(2)
-        : containerIdString;
+      const cleanedHex = containerId.startsWith('0x') ? containerId.substring(2) : containerId;
 
       // Use BigInt for potentially large hex IDs, then mask and convert back to Number
       // Masking ensures the ID fits within the 16 bits allocated in the XID spec.
@@ -55,7 +54,7 @@ export const getProcessId: FeatureSet['ProcessId'] = async (): Promise<number> =
       return Number(maskedId);
     } catch (e) {
       // Handle cases where the detected string isn't valid hex
-      console.error(`Failed to parse container ID "${containerIdString}" as hex:`, e);
+      console.error(`Failed to parse container ID "${containerId}" as hex:`, e);
     }
   }
   // Fallback if no ID detected or parsing failed
@@ -73,49 +72,29 @@ export const getProcessId: FeatureSet['ProcessId'] = async (): Promise<number> =
  * @returns The detected container ID string (hex), or undefined if none found.
  * @internal
  */
-function detectContainerId(): string | undefined {
+async function detectContainerId(): Promise<string | null> {
   // A) Env‑var shortcut: HOSTNAME is a common and easy way container runtimes expose the ID.
-  if (
-    typeof process !== 'undefined' &&
-    typeof process.env === 'object' &&
-    process.env.HOSTNAME?.match(/^[0-9a-f]{12,64}$/i) // Match hex string, case-insensitive
-  ) {
-    return process.env.HOSTNAME;
-  }
-
-  // Lazy load file reading function based on environment
-  let read: ((path: string) => string) | undefined;
   try {
-    // Prefer Deno's built-in sync reader if available
-    if (typeof Deno !== 'undefined' && typeof Deno.readTextFileSync === 'function') {
-      read = (path: string) => Deno.readTextFileSync(path);
-    } else if (typeof require === 'function') {
-      // Fallback to Node/Bun's sync reader
-      const fs = require('node:fs');
-      if (typeof fs.readFileSync === 'function') {
-        read = (path: string) => fs.readFileSync(path, 'utf8');
-      }
+    if (process?.env?.HOSTNAME?.match(/^[0-9a-f]{12,64}$/i)) {
+      return process.env.HOSTNAME;
     }
-  } catch {} // ignore errors during reader setup (e.g., require not defined, permissions)
-
-  // Proceed only if a reading function is available
-  if (!read) return;
+  } catch {} // ignore errors (e.g. process.env missing or not an object)
 
   const containerIdRegex = /([0-9a-f]{12,64})/i; // Case-insensitive
 
   // B) /proc/self/cpuset: Often contains the container ID in its path.
   try {
-    const cpuset = read('/proc/self/cpuset').trim();
-    const match = cpuset?.match(containerIdRegex);
-    return match?.[1];
+    const cpuset = await readFile('/proc/self/cpuset');
+    const match = cpuset?.trim().match(containerIdRegex);
+    return match?.[1] || null;
   } catch {} // ignore errors (e.g. file not found, permissions)
 
   // C) /proc/self/cgroup: Another common location for the container ID (v1/v2 cgroups).
   try {
-    const cgroup = read('/proc/self/cgroup').trim();
-    const match = cgroup?.match(containerIdRegex);
-    return match?.[1];
+    const cgroup = await readFile('/proc/self/cgroup');
+    const match = cgroup?.trim().match(containerIdRegex);
+    return match?.[1] || null;
   } catch {} // ignore errors
 
-  return undefined; // No suitable ID found
+  return null; // No suitable ID found
 }

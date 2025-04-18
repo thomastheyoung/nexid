@@ -1,5 +1,5 @@
 /**
- * @module nexid/env/lib/machine-id/deno-hostid
+ * @module nexid/env/features/machine-id/deno-hostid
  */
 
 import { FeatureSet } from 'nexid/env/registry';

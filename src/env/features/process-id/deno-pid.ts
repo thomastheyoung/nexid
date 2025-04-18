@@ -1,5 +1,5 @@
 /**
- * @module nexid/env/lib/process-id/deno-pid
+ * @module nexid/env/features/process-id/deno-pid
  *
  * Process ID retrieval for Deno runtime environments.
  *

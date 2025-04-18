@@ -1,5 +1,5 @@
 /**
- * @module nexid/env/lib/hash-function
+ * @module nexid/env/features/hash-function
  *
  * Cryptographic hash function feature definition and fallback implementation.
  *

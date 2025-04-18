@@ -1,5 +1,5 @@
 /**
- * @module nexid/env/lib/machine-id/web-fingerprint
+ * @module nexid/env/features/machine-id/web-fingerprint
  *
  * Browser fingerprinting implementation for machine ID generation.
  *

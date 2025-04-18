@@ -1,14 +1,14 @@
 /**
- * @module nexid/env/lib/random-bytes
- * 
+ * @module nexid/env/features/random-bytes
+ *
  * Random bytes feature definition and fallback implementation.
- * 
+ *
  * ARCHITECTURE:
  * This module defines the interface and validation for the RandomBytes feature,
  * which is responsible for generating cryptographically secure random values.
  * The feature is critical for the security of generated IDs, as it provides
  * the unpredictable component that prevents ID collisions and guessing.
- * 
+ *
  * SECURITY:
  * - Defines test function to validate that implementations produce proper output
  * - Provides a non-secure fallback using Math.random() with appropriate warnings
@@ -23,7 +23,7 @@ import { FeatureDefinition } from 'nexid/env/registry';
 export const RandomBytesDefinition: FeatureDefinition<'RandomBytes'> = {
   /**
    * Tests if the provided implementation is a valid RandomBytes function.
-   * 
+   *
    * @param impl - The implementation to test
    * @returns Promise resolving to true if the implementation is valid
    */

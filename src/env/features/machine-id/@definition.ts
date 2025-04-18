@@ -1,5 +1,5 @@
 /**
- * @module nexid/env/lib/machine-id
+ * @module nexid/env/features/machine-id
  *
  * Machine ID feature definition and fallback implementation.
  *

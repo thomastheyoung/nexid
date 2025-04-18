@@ -1,5 +1,5 @@
 /**
- * @module nexid/env/lib/process-id/node-pid
+ * @module nexid/env/features/process-id/node-pid
  *
  * Process ID retrieval for Node.js environments.
  *

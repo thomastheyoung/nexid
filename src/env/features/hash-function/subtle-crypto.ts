@@ -1,5 +1,5 @@
 /**
- * @module nexid/env/lib/hash-function/subtle-crypto
+ * @module nexid/env/features/hash-function/subtle-crypto
  *
  * Web Crypto API implementation of SHA-256 hashing.
  *

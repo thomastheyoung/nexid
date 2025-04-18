@@ -1,5 +1,5 @@
 /**
- * @module nexid/env/lib/detect-runtime
+ * @module nexid/env/features/detect-runtime
  *
  * JavaScript runtime environment detection.
  *

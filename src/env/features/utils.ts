@@ -1,5 +1,5 @@
 /**
- * @module nexid/env/lib/utils
+ * @module nexid/env/features/utils
  *
  * Environment utility functions for Node.js environments.
  *
@@ -15,9 +15,6 @@
  * - Command execution is handled with proper sanitization
  */
 
-import { execSync } from 'node:child_process';
-import fs from 'node:fs/promises';
-
 /**
  * Reads a file from the filesystem, returning its contents as a string.
  * If the file cannot be read or is empty, returns null.
@@ -30,11 +27,22 @@ import fs from 'node:fs/promises';
  */
 export async function readFile(path: string): Promise<string | null> {
   try {
-    const res = (await fs.readFile(path, 'utf-8')).trim();
-    if (res && res.length > 0) {
-      return res;
+    let content: string;
+
+    // Prefer Deno's built-in sync reader if available
+    if (typeof Deno?.readTextFile === 'function') {
+      content = (await Deno.readTextFile(path)).trim();
+    } else {
+      // Fallback to Node/Bun's sync reader
+      const { readFile } = await import('node:fs/promises');
+      content = (await readFile(path, 'utf8')).trim();
+    }
+
+    if (content && content.length > 0) {
+      return content;
     }
   } catch {}
+
   return null;
 }
 
@@ -50,10 +58,23 @@ export async function readFile(path: string): Promise<string | null> {
  */
 export async function execCommand(cmd: string): Promise<string | null> {
   try {
-    const stdout = execSync(cmd).toString().trim();
-    if (stdout && stdout.length > 0) {
-      return stdout;
+    let output: string;
+
+    // Prefer Deno's built-in child process if available
+    if (typeof Deno?.Command === 'function') {
+      const command = new Deno.Command(Deno.execPath(), { args: [cmd] });
+      const { stdout } = await command.output();
+      output = new TextDecoder().decode(stdout).trim();
+    } else {
+      // Fallback to Node/Bun's child process
+      const { execSync } = await import('node:child_process');
+      output = execSync?.(cmd).toString().trim();
+    }
+
+    if (output && output.length > 0) {
+      return output;
     }
   } catch {}
+
   return null;
 }

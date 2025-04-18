@@ -1,5 +1,5 @@
 /**
- * @module nexid/env/lib/process-id/web
+ * @module nexid/env/features/process-id/web
  *
  * Process ID generation for web browser environments.
  *

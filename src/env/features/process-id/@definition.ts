@@ -1,5 +1,5 @@
 /**
- * @module nexid/env/lib/process-id
+ * @module nexid/env/features/process-id
  *
  * Process ID feature definition and fallback implementation.
  *
