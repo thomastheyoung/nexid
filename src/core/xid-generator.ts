@@ -53,14 +53,12 @@ export async function XIDGenerator(
   // Resolve capabilities
   const randomBytes = await env.get('RandomBytes', options.randomBytes || undefined);
   const hashFunction = await env.get('HashFunction');
-  const getMachineId = await env.get(
-    'MachineId',
-    options.machineId ? async () => options.machineId as string : undefined
-  );
-  let getProcessId = await env.get(
-    'ProcessId',
-    options.processId ? async () => options.processId as number : undefined
-  );
+
+  const userMachineId = options.machineId && (async () => options.machineId as string);
+  const getMachineId = await env.get('MachineId', userMachineId || undefined);
+
+  const userProcessId = options.processId && (async () => options.processId as number);
+  let getProcessId = await env.get('ProcessId', userProcessId || undefined);
 
   // ==========================================================================
   // Constructor
