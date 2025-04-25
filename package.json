@@ -87,12 +87,15 @@
   "homepage": "https://github.com/thomastheyoung/nexid#readme",
   "keywords": [
     "id",
+    "guid",
     "uuid",
     "nexid",
     "identifier",
     "unique",
     "typescript",
-    "global",
-    "sortable"
+    "globally",
+    "sortable",
+    "k-ordered",
+    "bson"
   ]
 }
