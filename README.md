@@ -193,19 +193,10 @@ UUID v4 remains ideal for pure randomness, nanoid excels when string size is cri
 ## Development
 
 ```bash
-# Install dependencies
 npm install
-
-# Build the library
 npm run build
-
-# Run tests
 npm test
-
-# Create the bundles
-npm run bundle
-
-# Run benchmarks
+npm run bundle # Needed to run the benchmarks
 npm run benchmark
 ```
 
@@ -213,6 +204,10 @@ npm run benchmark
 
 - Original [XID specification](https://github.com/rs/xid) by Olivier Poitrey
 - Inspired by MongoDB's ObjectID and Twitter's Snowflake
+
+## Good reads
+
+- Great and comprehensive [overview of unique ID generation systems](https://bool.dev/blog/detail/unique-id-generation) from bool.dev blog
 
 ## License
 
