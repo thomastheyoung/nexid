@@ -87,7 +87,7 @@ export async function XIDGenerator(
     (seedBytes[0] << 24) | (seedBytes[1] << 16) | (seedBytes[2] << 8) | seedBytes[3];
 
   const counter = createAtomicCounter(randomSeed);
-  let lastTimestamp = 0;
+  let lastTimestamp: number;
 
   // ==========================================================================
   // XID generation
@@ -103,6 +103,8 @@ export async function XIDGenerator(
 
     // Convert to seconds for the ID (XID spec uses seconds, not milliseconds)
     timestamp = Math.floor(timestamp / 1000);
+    // If the last timestamp is undefined, initialize it with current
+    lastTimestamp ??= timestamp;
 
     // Reset counter if timestamp changed.
     // This prevents wrapping to occur within the same second, in which case 2 successive XIDs
