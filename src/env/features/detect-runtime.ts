@@ -77,7 +77,7 @@ export enum RuntimeEnvironment {
    * Electron renderer process (browser context within Electron).
    * Identified by process.versions.electron with window.
    */
-  Electron_Renderer = 'electron_renderer',
+  ElectronRenderer = 'electron_renderer',
 
   /**
    * Edge functions/workers runtime (e.g. Cloudflare Workers, Vercel Edge).
@@ -103,7 +103,7 @@ export function detectRuntimeEnvironment(): RuntimeEnvironment {
     if (typeof process?.versions?.electron === 'string') {
       // In Electron's renderer process, window is also defined
       return typeof window !== 'undefined' && typeof window?.process === 'object'
-        ? RuntimeEnvironment.Electron_Renderer
+        ? RuntimeEnvironment.ElectronRenderer
         : RuntimeEnvironment.Electron;
     }
 
@@ -116,10 +116,7 @@ export function detectRuntimeEnvironment(): RuntimeEnvironment {
   }
 
   // Check for Deno environment
-  if (
-    typeof globalThis !== 'undefined' &&
-    typeof (globalThis as any).Deno?.version?.deno === 'string'
-  ) {
+  if (typeof globalThis !== 'undefined' && typeof (globalThis as any).Deno?.version?.deno === 'string') {
     return RuntimeEnvironment.Deno;
   }
 
@@ -163,8 +160,7 @@ export function detectRuntimeEnvironment(): RuntimeEnvironment {
       typeof navigator.product === 'string' &&
       navigator.product === 'ReactNative') ||
     // More reliable check for newer React Native versions
-    (typeof global !== 'undefined' &&
-      typeof (global as any).__fbBatchedBridgeConfig !== 'undefined') ||
+    (typeof global !== 'undefined' && typeof (global as any).__fbBatchedBridgeConfig !== 'undefined') ||
     typeof (globalThis as any).nativeFabricUIManager !== 'undefined'
   ) {
     return RuntimeEnvironment.ReactNative;

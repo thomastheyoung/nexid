@@ -1,6 +1,6 @@
 {
   "name": "nexid",
-  "version": "1.2.5",
+  "version": "2.0.0",
   "author": "Thomas LE JEUNE <thomastheyoung@gmail.com>",
   "license": "MIT",
   "description": "Fast, time-sortable unique identifiers for the JavaScript ecosystem. Port of the original Go library github/rs/xid.",
@@ -52,23 +52,27 @@
     "build": "rm -rf dist/ && tsup src/index.ts src/node.ts src/web.ts src/deno.ts --format cjs,esm --dts --out-dir dist",
     "bundle": "rm -rf bin/ && node esbuild.mjs",
     "benchmark": "node tests/benchmark.js",
-    "test": "vitest"
+    "test": "vitest run",
+    "serve": "python3 -m http.server 3000"
   },
   "devDependencies": {
-    "@types/deno": "^2.2.0",
-    "@types/node": "^22.13.9",
-    "esbuild": "0.25.0",
+    "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
+    "@paralleldrive/cuid2": "^3.3.0",
+    "@types/deno": "^2.5.0",
+    "@types/node": "^25.3.3",
+    "esbuild": "0.27.3",
     "hyperid": "^3.3.0",
     "ksuid": "^3.0.0",
-    "nanoid": "^5.1.2",
-    "tinybench": "^3.1.1",
+    "nanoid": "^5.1.6",
+    "prettier": "^3.8.1",
+    "tinybench": "^6.0.0",
     "tslib": "^2.8.1",
-    "tsup": "^8.4.0",
-    "typescript": "^5.8.2",
-    "ulid": "^2.3.0",
-    "uuid": "^11.1.0",
-    "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.0.8"
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "ulid": "^3.0.2",
+    "uuid": "^13.0.0",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^4.0.18"
   },
   "engines": {
     "node": "20 || >=22"
@@ -87,12 +91,15 @@
   "homepage": "https://github.com/thomastheyoung/nexid#readme",
   "keywords": [
     "id",
+    "guid",
     "uuid",
     "nexid",
     "identifier",
     "unique",
     "typescript",
-    "global",
-    "sortable"
+    "globally",
+    "sortable",
+    "k-ordered",
+    "bson"
   ]
 }

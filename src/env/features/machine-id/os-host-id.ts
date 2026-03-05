@@ -1,5 +1,5 @@
 /**
- * @module nexid/env/features/machine-id/os-hostid
+ * @module nexid/env/features/machine-id/os-host-id
  *
  * Operating system machine ID retrieval for server environments.
  *
@@ -18,8 +18,34 @@
  * - Multiple fallback mechanisms ensure some value is always available
  */
 
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+
 import { detectOperatingSystem, OperatingSystem } from 'nexid/env/features/detect-os';
-import { execCommand, readFile } from 'nexid/env/features/utils';
+
+/**
+ * Reads a file synchronously, returning its trimmed contents or null.
+ */
+function readFileSafe(path: string): string | null {
+  try {
+    const content = readFileSync(path, 'utf8').trim();
+    return content.length > 0 ? content : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Executes a command synchronously, returning its trimmed stdout or null.
+ */
+function execCommandSafe(cmd: string, args: string[]): string | null {
+  try {
+    const output = execFileSync(cmd, args, { timeout: 500 }).toString().trim();
+    return output.length > 0 ? output : null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Retrieves a machine identifier from the operating system.
@@ -29,9 +55,9 @@ import { execCommand, readFile } from 'nexid/env/features/utils';
  * - BSD variants: kern.hostuuid or hw.uuid sysctl
  * - Windows: MachineGuid from registry
  *
- * @returns Promise resolving to a machine identifier string or empty string on failure
+ * @returns A machine identifier string or null on failure
  */
-export const getOSMachineId = async (): Promise<string | null> => {
+export const getOSMachineId = (): string | null => {
   const currentOS = detectOperatingSystem();
   if (!currentOS) return null;
 
@@ -45,12 +71,12 @@ export const getOSMachineId = async (): Promise<string | null> => {
       case OperatingSystem.FreeBSD:
       case OperatingSystem.NetBSD:
         {
-          osMachineId = await execCommand('sysctl -n kern.hostuuid');
+          osMachineId = execCommandSafe('sysctl', ['-n', 'kern.hostuuid']);
         }
         break;
       case OperatingSystem.OpenBSD:
         {
-          osMachineId = await execCommand('sysctl -n hw.uuid');
+          osMachineId = execCommandSafe('sysctl', ['-n', 'hw.uuid']);
         }
         break;
 
@@ -59,9 +85,7 @@ export const getOSMachineId = async (): Promise<string | null> => {
       // -----------------
       case OperatingSystem.MacOS:
         {
-          const stdout = await execCommand(
-            'ioreg -rd1 -c IOPlatformExpertDevice | grep IOPlatformUUID'
-          );
+          const stdout = execCommandSafe('ioreg', ['-rd1', '-c', 'IOPlatformExpertDevice']);
           // Extract UUID from command output. Typical format is:
           // "IOPlatformUUID" = "85B57EC4-E57F-5645-B158-8D0F49991E49"
           const match = stdout?.match(/IOPlatformUUID\"\s+=\s+\"([^\"]+)\"/);
@@ -76,9 +100,7 @@ export const getOSMachineId = async (): Promise<string | null> => {
       // -----------------
       case OperatingSystem.Linux:
         {
-          osMachineId =
-            (await readFile('/etc/machine-id')) ||
-            (await readFile('/sys/class/dmi/id/product_uuid'));
+          osMachineId = readFileSafe('/etc/machine-id') || readFileSafe('/sys/class/dmi/id/product_uuid');
         }
         break;
 
@@ -87,13 +109,16 @@ export const getOSMachineId = async (): Promise<string | null> => {
       // -----------------
       case OperatingSystem.Windows:
         {
-          const stdout = await execCommand(
-            'reg query "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Cryptography" /v MachineGuid'
-          );
+          const stdout = execCommandSafe('reg', [
+            'query',
+            'HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Cryptography',
+            '/v',
+            'MachineGuid',
+          ]);
           // Extract GUID from reg query output. Typical format is:
           // HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography
           //     MachineGuid    REG_SZ    8107A438-A7E4-4CEC-A207-2C63A1C0BD14
-          const match = stdout?.match(/MachineGuid\s+REG_SZ\s+([[:alnum:]-]+)/);
+          const match = stdout?.match(/MachineGuid\s+REG_SZ\s+([\da-fA-F-]+)/);
           if (match && match.length && match[1].trim().length === 36) {
             osMachineId = match[1];
           }

@@ -33,15 +33,10 @@ enum WebContext {
  * This produces a string containing various browser/device characteristics
  * that collectively provide a reasonably stable device identifier.
  *
- * @returns Promise resolving to a string containing fingerprint components
+ * @returns A deterministic string containing fingerprint components
  */
-export async function getFingerprint(): Promise<string> {
+export function getFingerprint(): string {
   const components: string[] = [];
-
-  // Pseudo random salt
-  const salt = ((Math.random() * 0xffff) | 0).toString(16).padStart(2, '0');
-  const timestamp = Date.now().toString(36);
-  components.push(`salt: ${salt}:${timestamp}`);
 
   // Environment discriminator
   components.push(`env:${detectContext()}`);

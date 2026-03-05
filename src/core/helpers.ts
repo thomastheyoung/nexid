@@ -80,7 +80,7 @@ export function equals(a: XID, b: XID): boolean {
  * @returns True if this is a nil ID, false otherwise
  */
 export function isNil(id: XID): boolean {
-  return id.bytes.every((byte) => byte === 0);
+  return id.bytes.every(byte => byte === 0);
 }
 
 // ============================================================================
