@@ -43,11 +43,12 @@
 
 import { BYTE_MASK, PROCESS_ID_MASK, RAW_LEN } from 'nexid/common/constants';
 import { Environment } from 'nexid/env/environment';
-import { XIDBytes } from 'nexid/types/xid';
+import { XIDBytes, XIDString } from 'nexid/types/xid';
 import { Generator } from 'nexid/types/xid-generator';
 
 import { createAtomicCounter } from './counter';
 import { encode } from './encoding';
+import type { WordFilterFn } from './word-filter';
 import { XID } from './xid';
 
 export type HashFn = (data: string | Uint8Array) => Uint8Array;
@@ -67,6 +68,10 @@ export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: G
   // ==========================================================================
   // Setup components
   // ==========================================================================
+  // Word filter (opt-in)
+  const wordFilter: WordFilterFn | null = options.wordFilter ?? null;
+  const maxFilterRetries = Math.max(0, Math.floor(options.maxFilterRetries ?? 10));
+
   // Resolve capabilities
   const randomBytes = env.get('RandomBytes', options.randomBytes ?? undefined);
 
@@ -150,6 +155,34 @@ export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: G
   }
 
   // ==========================================================================
+  // Word filter retry helper
+  // ==========================================================================
+  /**
+   * Encodes and checks the filter, retrying with a new counter value on
+   * rejection. Returns the encoded string that passed (or the last attempt
+   * after exhausting retries).
+   *
+   * Each retry consumes one counter value via buildXIDBytes → counter.getNext().
+   */
+  function encodeFiltered(timestamp: number): { bytes: Readonly<XIDBytes>; encoded: XIDString } {
+    let bytes: Readonly<XIDBytes>;
+    let encoded: XIDString;
+
+    for (let attempt = 0; attempt <= maxFilterRetries; attempt++) {
+      bytes = buildXIDBytes(timestamp);
+      encoded = encode(bytes);
+      if (!wordFilter!(encoded as string)) {
+        return { bytes: bytes!, encoded: encoded! };
+      }
+    }
+
+    // Exhausted retries — return the last generated ID.
+    // With ~50 blocked words of 3-5 chars in a 20-char base-32 string,
+    // reaching this point is astronomically unlikely.
+    return { bytes: bytes!, encoded: encoded! };
+  }
+
+  // ==========================================================================
   // Export API
   // ==========================================================================
   // Expose hashed machine ID bytes (hex) rather than raw system identifier
@@ -173,6 +206,9 @@ export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: G
       } else {
         timestamp = Date.now();
       }
+      if (wordFilter) {
+        return XID.fromBytes(encodeFiltered(timestamp).bytes);
+      }
       return XID.fromBytes(buildXIDBytes(timestamp));
     },
 
@@ -184,6 +220,9 @@ export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: G
      * @returns A string representation of a new XID
      */
     fastId() {
+      if (wordFilter) {
+        return encodeFiltered(Date.now()).encoded;
+      }
       return encode(buildXIDBytes(Date.now()));
     },
   };

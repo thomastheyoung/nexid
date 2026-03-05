@@ -11,6 +11,7 @@
  */
 
 import { XID } from 'nexid/core/xid';
+import { WordFilterFn } from 'nexid/core/word-filter';
 import { FeatureSet } from 'nexid/env/registry';
 import { XIDString } from 'nexid/types/xid';
 
@@ -67,5 +68,22 @@ export namespace Generator {
      * cannot be resolved.
      */
     allowInsecure: boolean;
+
+    /**
+     * Predicate that returns true if an encoded ID string should be rejected.
+     * When set, the generator retries (incrementing the counter) until the
+     * predicate returns false or maxFilterRetries is reached.
+     *
+     * Use `defaultWordFilter` for the built-in offensive word blocklist,
+     * or supply a custom predicate via `createWordFilter()`.
+     */
+    wordFilter: WordFilterFn;
+
+    /**
+     * Maximum retry attempts when wordFilter rejects an ID.
+     * Each retry consumes one counter value.
+     * @default 10
+     */
+    maxFilterRetries: number;
   }>;
 }
