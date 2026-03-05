@@ -55,7 +55,7 @@ export function XIDGenerator(
   // Setup components
   // ==========================================================================
   // Resolve capabilities
-  const randomBytes = env.get('RandomBytes', options.randomBytes || undefined);
+  const randomBytes = env.get('RandomBytes', options.randomBytes ?? undefined);
 
   const mid = options.machineId;
   const getMachineId = env.get('MachineId', mid ? () => mid : undefined);
@@ -147,7 +147,7 @@ export function XIDGenerator(
   return {
     machineId: machineIdHex,
     processId,
-    get degraded() { return env.degraded; },
+    degraded: env.degraded,
     /**
      * Generates a new XID with the specified timestamp (defaults to current time).
      *
@@ -155,7 +155,13 @@ export function XIDGenerator(
      * @returns A new XID object
      */
     newId(datetime?: Date) {
-      const timestamp = datetime instanceof Date ? +datetime : Date.now();
+      let timestamp: number;
+      if (datetime instanceof Date) {
+        timestamp = +datetime;
+        if (Number.isNaN(timestamp)) throw new Error('Invalid Date passed to newId()');
+      } else {
+        timestamp = Date.now();
+      }
       return XID.fromBytes(buildXIDBytes(timestamp));
     },
 

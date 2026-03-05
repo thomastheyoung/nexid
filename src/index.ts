@@ -47,6 +47,7 @@ async function createXIDGenerator(options?: Generator.Options): Promise<Generato
       const denoAdapter = await import('./deno.js');
       return denoAdapter.init(options);
 
+    // Node, Bun, Electron, ElectronRenderer, EdgeWorker — all use the Node adapter
     default:
       const nodeAdapter = await import('./node.js');
       return nodeAdapter.init(options);

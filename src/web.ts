@@ -35,7 +35,9 @@ const fnv1aHash: HashFn = (data: string | Uint8Array): Uint8Array => {
   if (typeof data === 'string') {
     str = data;
   } else {
-    str = String.fromCharCode(...data);
+    let s = '';
+    for (let i = 0; i < data.length; i++) s += String.fromCharCode(data[i]);
+    str = s;
   }
   let h = 0x811c9dc5;
   for (let i = 0; i < str.length; i++) {
