@@ -155,32 +155,27 @@ export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: G
   }
 
   // ==========================================================================
-  // Word filter retry helper
+  // Generation strategies (bound once at construction time)
   // ==========================================================================
-  /**
-   * Encodes and checks the filter, retrying with a new counter value on
-   * rejection. Returns the encoded string that passed (or the last attempt
-   * after exhausting retries).
-   *
-   * Each retry consumes one counter value via buildXIDBytes → counter.getNext().
-   */
-  function encodeFiltered(timestamp: number): { bytes: Readonly<XIDBytes>; encoded: XIDString } {
-    let bytes: Readonly<XIDBytes>;
-    let encoded: XIDString;
-
-    for (let attempt = 0; attempt <= maxFilterRetries; attempt++) {
-      bytes = buildXIDBytes(timestamp);
-      encoded = encode(bytes);
-      if (!wordFilter!(encoded as string)) {
-        return { bytes: bytes!, encoded: encoded! };
+  const generateBytes: (timestamp: number) => Readonly<XIDBytes> = wordFilter
+    ? (timestamp) => {
+        for (let attempt = 0; attempt <= maxFilterRetries; attempt++) {
+          const bytes = buildXIDBytes(timestamp);
+          if (!wordFilter(encode(bytes) as string)) return bytes;
+        }
+        return buildXIDBytes(timestamp);
       }
-    }
+    : buildXIDBytes;
 
-    // Exhausted retries — return the last generated ID.
-    // With ~50 blocked words of 3-5 chars in a 20-char base-32 string,
-    // reaching this point is astronomically unlikely.
-    return { bytes: bytes!, encoded: encoded! };
-  }
+  const generateString: (timestamp: number) => XIDString = wordFilter
+    ? (timestamp) => {
+        for (let attempt = 0; attempt <= maxFilterRetries; attempt++) {
+          const encoded = encode(buildXIDBytes(timestamp));
+          if (!wordFilter(encoded as string)) return encoded;
+        }
+        return encode(buildXIDBytes(timestamp));
+      }
+    : (timestamp) => encode(buildXIDBytes(timestamp));
 
   // ==========================================================================
   // Export API
@@ -206,10 +201,7 @@ export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: G
       } else {
         timestamp = Date.now();
       }
-      if (wordFilter) {
-        return XID.fromBytes(encodeFiltered(timestamp).bytes);
-      }
-      return XID.fromBytes(buildXIDBytes(timestamp));
+      return XID.fromBytes(generateBytes(timestamp));
     },
 
     /**
@@ -220,10 +212,7 @@ export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: G
      * @returns A string representation of a new XID
      */
     fastId() {
-      if (wordFilter) {
-        return encodeFiltered(Date.now()).encoded;
-      }
-      return encode(buildXIDBytes(Date.now()));
+      return generateString(Date.now());
     },
   };
 }
