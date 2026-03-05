@@ -15,7 +15,7 @@
  * - Platform-specific implementations should use the best available source of entropy
  */
 
-import { type FeatureSet, type FeatureDefinition } from 'nexid/env/registry';
+import { type FeatureDefinition, type FeatureSet } from 'nexid/env/registry';
 
 /**
  * Definition of the RandomBytes feature including validation and fallback.

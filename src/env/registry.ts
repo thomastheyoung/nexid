@@ -16,9 +16,9 @@
  * while still utilizing environment-specific optimizations when available.
  */
 
-import { MachineIdDefinition } from "./features/machine-id/@definition";
-import { ProcessIdDefinition } from "./features/process-id/@definition";
-import { RandomBytesDefinition } from "./features/random-bytes/@definition";
+import { MachineIdDefinition } from './features/machine-id/@definition';
+import { ProcessIdDefinition } from './features/process-id/@definition';
+import { RandomBytesDefinition } from './features/random-bytes/@definition';
 
 // ============================================================================
 // Types

@@ -1,6 +1,8 @@
 import crypto from 'node:crypto';
 import os from 'node:os';
+
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import NeXID, { XID } from '../../src/node';
 
 describe('Environment Failover', () => {
@@ -85,10 +87,7 @@ describe('Environment Failover', () => {
       const timestampBytes = bytes.slice(0, 4);
       const expectedTimestamp = Math.floor(timestamp.getTime() / 1000);
       const actualTimestamp =
-        (timestampBytes[0] << 24) |
-        (timestampBytes[1] << 16) |
-        (timestampBytes[2] << 8) |
-        timestampBytes[3];
+        (timestampBytes[0] << 24) | (timestampBytes[1] << 16) | (timestampBytes[2] << 8) | timestampBytes[3];
       expect(actualTimestamp).toBe(expectedTimestamp);
 
       // Check machine ID (next 3 bytes) — nexid.machineId is hashed hex

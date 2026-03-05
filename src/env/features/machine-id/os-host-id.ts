@@ -18,8 +18,9 @@
  * - Multiple fallback mechanisms ensure some value is always available
  */
 
-import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+
 import { detectOperatingSystem, OperatingSystem } from 'nexid/env/features/detect-os';
 
 /**
@@ -99,9 +100,7 @@ export const getOSMachineId = (): string | null => {
       // -----------------
       case OperatingSystem.Linux:
         {
-          osMachineId =
-            readFileSafe('/etc/machine-id') ||
-            readFileSafe('/sys/class/dmi/id/product_uuid');
+          osMachineId = readFileSafe('/etc/machine-id') || readFileSafe('/sys/class/dmi/id/product_uuid');
         }
         break;
 

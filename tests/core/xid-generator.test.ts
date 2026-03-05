@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import { XID } from '../../src/core/xid';
 import NeXID from '../../src/node';
 
@@ -139,7 +140,7 @@ describe('XIDGenerator', () => {
       }
 
       const ids = await Promise.all(promises);
-      const uniqueIds = new Set(ids.map((id) => id.toString()));
+      const uniqueIds = new Set(ids.map(id => id.toString()));
 
       // All IDs should be unique even when generated in parallel
       expect(uniqueIds.size).toBe(parallelCount);

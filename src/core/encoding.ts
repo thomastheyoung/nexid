@@ -32,7 +32,7 @@ import { XIDBytes, XIDString } from 'nexid/types/xid';
  * Pre-computed array of character codes for the encoding alphabet.
  * This optimizes encoding by avoiding repeated character code lookups.
  */
-const ENCODING_CHARS: Uint8Array = new Uint8Array(Array.from(ENCODING).map((c) => c.charCodeAt(0)));
+const ENCODING_CHARS: Uint8Array = new Uint8Array(Array.from(ENCODING).map(c => c.charCodeAt(0)));
 
 /**
  * Lookup table for decoding base32-hex characters to their 5-bit values.

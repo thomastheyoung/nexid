@@ -58,7 +58,9 @@ export class Environment {
           this.cache.set(feature, candidate);
           return candidate;
         }
-      } catch { /* candidate invalid, continue */ }
+      } catch {
+        /* candidate invalid, continue */
+      }
     }
 
     // 2. Check the cache
@@ -68,7 +70,9 @@ export class Environment {
         if (def.test(cached)) {
           return cached as FeatureSet[F];
         }
-      } catch { /* cache entry invalid, continue */ }
+      } catch {
+        /* cache entry invalid, continue */
+      }
       this.cache.delete(feature);
     }
 
@@ -79,7 +83,9 @@ export class Environment {
         this.cache.set(feature, adapterImpl);
         return adapterImpl;
       }
-    } catch { /* adapter failed, fall through */ }
+    } catch {
+      /* adapter failed, fall through */
+    }
 
     // 4. Fallback — gate on criticality
     if (def.critical && !this.allowInsecure) {

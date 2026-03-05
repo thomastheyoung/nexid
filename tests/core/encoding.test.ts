@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { RAW_LEN } from '../../src/common/constants';
 import { decode, encode } from '../../src/core/encoding';
 import { compareBytes } from '../../src/core/helpers';
@@ -9,9 +10,7 @@ describe('Encoding Functions', () => {
     it('correctly encodes byte arrays to strings', () => {
       const testCases = [
         {
-          bytes: new Uint8Array([
-            0x4d, 0x88, 0xe1, 0x5b, 0x60, 0xf4, 0x86, 0xe4, 0x28, 0x41, 0x2d, 0xc9,
-          ]),
+          bytes: new Uint8Array([0x4d, 0x88, 0xe1, 0x5b, 0x60, 0xf4, 0x86, 0xe4, 0x28, 0x41, 0x2d, 0xc9]),
           expected: '9m4e2mr0ui3e8a215n4g',
         },
         {
@@ -19,14 +18,12 @@ describe('Encoding Functions', () => {
           expected: '00000000000000000000',
         },
         {
-          bytes: new Uint8Array([
-            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-          ]),
+          bytes: new Uint8Array([0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]),
           expected: 'vvvvvvvvvvvvvvvvvvvg',
         },
       ];
 
-      testCases.forEach((testCase) => {
+      testCases.forEach(testCase => {
         const result = encode(testCase.bytes as XIDBytes);
         expect(result).toBe(testCase.expected);
       });
@@ -57,9 +54,7 @@ describe('Encoding Functions', () => {
       const testCases = [
         {
           string: '9m4e2mr0ui3e8a215n4g',
-          expected: new Uint8Array([
-            0x4d, 0x88, 0xe1, 0x5b, 0x60, 0xf4, 0x86, 0xe4, 0x28, 0x41, 0x2d, 0xc9,
-          ]),
+          expected: new Uint8Array([0x4d, 0x88, 0xe1, 0x5b, 0x60, 0xf4, 0x86, 0xe4, 0x28, 0x41, 0x2d, 0xc9]),
         },
         {
           string: '00000000000000000000',
@@ -67,7 +62,7 @@ describe('Encoding Functions', () => {
         },
       ];
 
-      testCases.forEach((testCase) => {
+      testCases.forEach(testCase => {
         const result = decode(testCase.string);
         expect(Array.from(result)).toEqual(Array.from(testCase.expected));
       });
@@ -80,7 +75,7 @@ describe('Encoding Functions', () => {
         '9m4e2mr0ui3e8a215n4g9m4e2mr0ui3e8a215n4g', // Too long
       ];
 
-      invalidInputs.forEach((input) => {
+      invalidInputs.forEach(input => {
         expect(() => decode(input)).toThrow();
       });
     });
@@ -93,7 +88,7 @@ describe('Encoding Functions', () => {
         'vvvvvvvvvvvvvvvvvvvv', // str[19] = 'v' ≠ (0xFF << 4) & 0x1F = 0x10 = 'g'
       ];
 
-      invalidInputs.forEach((input) => {
+      invalidInputs.forEach(input => {
         expect(() => decode(input)).toThrow();
       });
     });
@@ -145,7 +140,7 @@ describe('Encoding Functions', () => {
         },
       ];
 
-      testCases.forEach((testCase) => {
+      testCases.forEach(testCase => {
         const result = compareBytes(testCase.a, testCase.b);
         if (testCase.expected === 0) {
           expect(result).toBe(0);

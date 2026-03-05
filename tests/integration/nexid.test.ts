@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { helpers } from '../../src/core/helpers';
 import { XID } from '../../src/core/xid';
 import NeXID, { XIDGenerator } from '../../src/node';
@@ -157,9 +158,7 @@ describe('NeXID Integration', () => {
       expect(timePerIdMs).toBeGreaterThanOrEqual(0); // Just ensure it completes
 
       // Log the performance for information
-      console.log(
-        `Generated ${idCount} IDs in ${endTime - startTime}ms (${toNS(timePerIdMs)}ns per ID)`
-      );
+      console.log(`Generated ${idCount} IDs in ${endTime - startTime}ms (${toNS(timePerIdMs)}ns per ID)`);
     });
 
     it('fastId is efficient for direct string IDs', () => {

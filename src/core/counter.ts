@@ -53,7 +53,7 @@ export function createAtomicCounter(seed: number): AtomicCounter {
     globalThis.SharedArrayBuffer || (globalThis.WebAssembly && globalThis.WebAssembly.Memory);
   if (buffer.constructor === ArrayBuffer && couldHaveUsedSharedMemory) {
     console.warn(
-      'NeXID: Could not initialize shared memory, falling back to ArrayBuffer. Atomicity is NOT guaranteed across threads/workers.'
+      'NeXID: Could not initialize shared memory, falling back to ArrayBuffer. Atomicity is NOT guaranteed across threads/workers.',
     );
   }
 
@@ -65,9 +65,7 @@ export function createAtomicCounter(seed: number): AtomicCounter {
     getNext(): CounterValue {
       // 1. Increments the 32-bit value at index 0 by 1 (atomically if shared memory is available).
       // 2. Returns the value *before* the increment occurred.
-      const beforeIncrement = isShared
-        ? Atomics.add(counter, 0, 1)
-        : counter[0]++;
+      const beforeIncrement = isShared ? Atomics.add(counter, 0, 1) : counter[0]++;
 
       // 3. Applies a bitwise AND mask (0xffffff) to the value.
       //    This effectively keeps only the lower 24 bits.

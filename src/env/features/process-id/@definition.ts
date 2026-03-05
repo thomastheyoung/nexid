@@ -18,7 +18,7 @@
  * processes or contexts on a single machine without risk of collisions.
  */
 
-import { type FeatureSet, type FeatureDefinition } from 'nexid/env/registry';
+import { type FeatureDefinition, type FeatureSet } from 'nexid/env/registry';
 
 /**
  * Definition of the ProcessId feature including validation and fallback.

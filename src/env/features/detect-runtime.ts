@@ -116,10 +116,7 @@ export function detectRuntimeEnvironment(): RuntimeEnvironment {
   }
 
   // Check for Deno environment
-  if (
-    typeof globalThis !== 'undefined' &&
-    typeof (globalThis as any).Deno?.version?.deno === 'string'
-  ) {
+  if (typeof globalThis !== 'undefined' && typeof (globalThis as any).Deno?.version?.deno === 'string') {
     return RuntimeEnvironment.Deno;
   }
 
@@ -163,8 +160,7 @@ export function detectRuntimeEnvironment(): RuntimeEnvironment {
       typeof navigator.product === 'string' &&
       navigator.product === 'ReactNative') ||
     // More reliable check for newer React Native versions
-    (typeof global !== 'undefined' &&
-      typeof (global as any).__fbBatchedBridgeConfig !== 'undefined') ||
+    (typeof global !== 'undefined' && typeof (global as any).__fbBatchedBridgeConfig !== 'undefined') ||
     typeof (globalThis as any).nativeFabricUIManager !== 'undefined'
   ) {
     return RuntimeEnvironment.ReactNative;

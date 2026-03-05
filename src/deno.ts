@@ -15,6 +15,7 @@
  */
 
 import crypto from 'node:crypto';
+
 import { XID } from 'nexid/core/xid';
 import { XIDGenerator, type HashFn } from 'nexid/core/xid-generator';
 import { Environment, type EnvironmentAdapter } from 'nexid/env/environment';

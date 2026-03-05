@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
+
 import { FeatureDefinition } from '../../src/env/registry';
 
 describe('Validator.randomBytes', async () => {
-  const validator: FeatureDefinition<'RandomBytes'> = (
-    await import('../../src/env/features/random-bytes/@definition')
-  ).RandomBytesDefinition;
+  const validator: FeatureDefinition<'RandomBytes'> = (await import('../../src/env/features/random-bytes/@definition'))
+    .RandomBytesDefinition;
 
   it('accepts valid random byte functions', () => {
     const validRandomFunctions = [
@@ -17,7 +17,7 @@ describe('Validator.randomBytes', async () => {
       },
     ];
 
-    validRandomFunctions.forEach(async (impl) => {
+    validRandomFunctions.forEach(async impl => {
       const result = await validator.test(impl);
       expect(result).toBe(true);
 
@@ -44,7 +44,7 @@ describe('Validator.randomBytes', async () => {
       (size: number) => new Uint8Array(size + 1),
     ];
 
-    invalidFunctions.forEach(async (impl) => {
+    invalidFunctions.forEach(async impl => {
       const result = await validator.test(impl);
       expect(result).toBe(false); // Our new validator should detect bad functions at validation time
     });
@@ -53,7 +53,7 @@ describe('Validator.randomBytes', async () => {
   it('rejects non-function values', () => {
     const invalidValues = [null, undefined, 123, 'string', [], {}];
 
-    invalidValues.forEach(async (value) => {
+    invalidValues.forEach(async value => {
       // @ts-ignore - Deliberately testing invalid types
       const result = await validator.test(value);
       expect(result).toBe(false);

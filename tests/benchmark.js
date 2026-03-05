@@ -79,7 +79,7 @@ async function runBenchmark() {
   // Sort by operations per second (higher is better)
   const results = [];
 
-  bench.tasks.forEach((task) => {
+  bench.tasks.forEach(task => {
     const name = task.name.replace(`Generate ${NUM_IDS} `, '');
     // Calculate accurate ops/sec based on number of iterations in the loop
     const multiplier = name === 'ksuid' ? 100 : 1000;
@@ -101,7 +101,7 @@ async function runBenchmark() {
   console.log('\n=== Results ===');
   console.log('\nGeneration Speed (ops/sec, higher is better):');
   ('------------------------------------------------------------------------------');
-  results.forEach((result) => {
+  results.forEach(result => {
     const idsPerSec = result.opsPerSec.toLocaleString().padStart(12);
     const nsPerId = Math.trunc(result.timePerOp);
     console.log(`${result.name.padEnd(20)}: ${idsPerSec} ids/sec (${nsPerId}ns per id)`);
@@ -123,7 +123,7 @@ function getByteLength(str) {
 }
 
 // Run the benchmark
-runBenchmark().catch((err) => {
+runBenchmark().catch(err => {
   console.error('Benchmark failed:', err);
   process.exit(1);
 });

@@ -27,9 +27,9 @@
  * the other XID components (timestamp, counter, PID) still prevent collisions.
  */
 
-import { getFingerprint } from "nexid/env/features/machine-id/web-fingerprint";
+import { getFingerprint } from 'nexid/env/features/machine-id/web-fingerprint';
 
-const STORAGE_KEY = "nexid:wmid";
+const STORAGE_KEY = 'nexid:wmid';
 
 /**
  * Returns a stable machine ID for the current browser/device.

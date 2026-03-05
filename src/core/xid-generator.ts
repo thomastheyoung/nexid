@@ -29,6 +29,7 @@ import { BYTE_MASK, PROCESS_ID_MASK, RAW_LEN } from 'nexid/common/constants';
 import { Environment } from 'nexid/env/environment';
 import { XIDBytes } from 'nexid/types/xid';
 import { Generator } from 'nexid/types/xid-generator';
+
 import { createAtomicCounter } from './counter';
 import { encode } from './encoding';
 import { XID } from './xid';
@@ -46,11 +47,7 @@ export type HashFn = (data: string | Uint8Array) => Uint8Array;
  * @param options - Optional configuration parameters
  * @returns Generator API
  */
-export function XIDGenerator(
-  env: Environment,
-  hashMachineId: HashFn,
-  options: Generator.Options = {}
-): Generator.API {
+export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: Generator.Options = {}): Generator.API {
   // ==========================================================================
   // Setup components
   // ==========================================================================

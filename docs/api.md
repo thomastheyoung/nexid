@@ -92,11 +92,12 @@ try {
 ### Initialization
 
 ```typescript
+// Or use the named export
+import { init } from 'nexid';
+
 // Initialize with default settings
 const generator = await NeXID.init();
 
-// Or use the named export
-import { init } from 'nexid';
 const generator = await init();
 ```
 
@@ -176,7 +177,7 @@ const generator = await init({
   processId: 12345,
 
   // Optional: Custom random source function
-  randomBytes: (size) => {
+  randomBytes: size => {
     // Your custom secure random implementation
     const bytes = new Uint8Array(size);
     // Fill with random values...
@@ -226,7 +227,7 @@ import { Generator } from 'nexid/types/xid-generator';
 const options: Generator.Options = {
   machineId: 'custom-id',
   processId: 1234,
-  randomBytes: (size) => new Uint8Array(size),
+  randomBytes: size => new Uint8Array(size),
 };
 
 // Generator API

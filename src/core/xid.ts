@@ -28,6 +28,7 @@
 
 import { ENCODED_LEN, RAW_LEN } from 'nexid/common/constants';
 import { XIDBytes, XIDString } from 'nexid/types/xid';
+
 import { decode, encode } from './encoding';
 import { compareBytes } from './helpers';
 
@@ -173,7 +174,7 @@ export class XID {
    * @returns True if this is a nil ID, false otherwise
    */
   isNil(): boolean {
-    return this.bytes.every((byte) => byte === 0);
+    return this.bytes.every(byte => byte === 0);
   }
 
   /**
