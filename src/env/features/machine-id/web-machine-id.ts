@@ -9,14 +9,14 @@
  *
  * 1. **localStorage-first**: A crypto-random ID is generated on first use and
  *    persisted in localStorage. This provides high entropy and cross-session
- *    stability — the web equivalent of a persistent system identifier.
+ *    stability, the web equivalent of a persistent system identifier.
  *
  * 2. **Fingerprint fallback**: When localStorage is unavailable (private
  *    browsing, workers, sandboxed iframes), a deterministic fingerprint is
  *    computed from stable browser signals.
  *
  * NOTE: Unlike the node adapter's `getOSMachineId()`, this function never
- * returns null — it always resolves to a usable string. This means the
+ * returns null, it always resolves to a usable string. This means the
  * Environment's `@definition.ts` fallback is never reached, and degradation
  * to fingerprint-only mode is silent. This is intentional: even the lowest
  * tier (deterministic fingerprint) provides better stability than the
@@ -27,9 +27,9 @@
  * the other XID components (timestamp, counter, PID) still prevent collisions.
  */
 
-import { getFingerprint } from 'nexid/env/features/machine-id/web-fingerprint';
+import { getFingerprint } from "nexid/env/features/machine-id/web-fingerprint";
 
-const STORAGE_KEY = 'nexid:mid';
+const STORAGE_KEY = "nexid:wmid";
 
 /**
  * Returns a stable machine ID for the current browser/device.
@@ -88,6 +88,7 @@ function tryRandomUUID(): string | null {
   try {
     return globalThis.crypto?.randomUUID?.() ?? null;
   } catch {
+    // TypeError in insecure contexts (HTTP) where the method exists but is blocked.
     return null;
   }
 }

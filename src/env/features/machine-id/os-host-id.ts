@@ -1,5 +1,5 @@
 /**
- * @module nexid/env/features/machine-id/os-hostid
+ * @module nexid/env/features/machine-id/os-host-id
  *
  * Operating system machine ID retrieval for server environments.
  *

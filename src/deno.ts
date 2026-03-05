@@ -18,7 +18,7 @@ import crypto from 'node:crypto';
 import { XID } from 'nexid/core/xid';
 import { XIDGenerator, type HashFn } from 'nexid/core/xid-generator';
 import { Environment, type EnvironmentAdapter } from 'nexid/env/environment';
-import { getOSMachineId } from 'nexid/env/features/machine-id/os-hostid';
+import { getOSMachineId } from 'nexid/env/features/machine-id/os-host-id';
 import { getProcessId as getDenoPID } from 'nexid/env/features/process-id/deno-pid';
 import { randomBytes as cryptoRandomBytes } from 'nexid/env/features/random-bytes/node-crypto';
 import { type initNeXID } from 'nexid/types/api';
