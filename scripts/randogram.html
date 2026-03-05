@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Randogram — nexid byte distribution</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', Menlo, Consolas, monospace;
+        background: #111;
+        color: #ccc;
+        padding: 24px 32px;
+        line-height: 1.5;
+      }
+
+      h1 {
+        font-size: 18px;
+        color: #eee;
+        margin-bottom: 4px;
+      }
+      h2 {
+        font-size: 14px;
+        color: #888;
+        font-weight: 400;
+        margin-bottom: 16px;
+      }
+      h3 {
+        font-size: 13px;
+        color: #ddd;
+        margin-bottom: 8px;
+      }
+
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: center;
+        margin-bottom: 24px;
+        padding: 12px 16px;
+        background: #1a1a1a;
+        border-radius: 6px;
+        border: 1px solid #333;
+      }
+      .controls label {
+        font-size: 12px;
+        color: #999;
+      }
+      .controls input[type='range'] {
+        width: 140px;
+        accent-color: #6af;
+      }
+      .controls .count-value {
+        font-size: 13px;
+        color: #6af;
+        min-width: 40px;
+      }
+      .controls button {
+        background: #2a2a2a;
+        border: 1px solid #444;
+        color: #ccc;
+        padding: 5px 14px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 12px;
+      }
+      .controls button:hover {
+        background: #333;
+        border-color: #666;
+      }
+      .controls .cb-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: #999;
+        cursor: pointer;
+      }
+      .controls input[type='checkbox'] {
+        accent-color: #6af;
+      }
+
+      .meta {
+        font-size: 11px;
+        color: #666;
+        margin-bottom: 20px;
+      }
+
+      .section {
+        margin-bottom: 28px;
+      }
+      .section-title {
+        font-size: 12px;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-bottom: 1px solid #333;
+        padding-bottom: 4px;
+        margin-bottom: 12px;
+      }
+
+      .heatmaps {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+      }
+      .heatmap-card {
+        background: #1a1a1a;
+        border-radius: 6px;
+        padding: 12px;
+        border: 1px solid #282828;
+      }
+      .heatmap-label {
+        font-size: 12px;
+        color: #aaa;
+        margin-bottom: 6px;
+      }
+      .heatmap-label .fixed {
+        color: #666;
+        font-style: italic;
+      }
+      .heatmap-canvas {
+        display: block;
+        width: 100%;
+        border-radius: 3px;
+        image-rendering: pixelated;
+      }
+
+      .tooltip {
+        position: fixed;
+        pointer-events: none;
+        background: #222;
+        border: 1px solid #555;
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 11px;
+        color: #eee;
+        display: none;
+        z-index: 100;
+        white-space: nowrap;
+      }
+
+      .histograms {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+      }
+      .hist-card {
+        background: #1a1a1a;
+        border-radius: 6px;
+        padding: 12px;
+        border: 1px solid #282828;
+      }
+      .hist-label {
+        font-size: 12px;
+        color: #aaa;
+        margin-bottom: 8px;
+      }
+      .hist-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 2px;
+        font-size: 11px;
+      }
+      .hist-range {
+        color: #777;
+        width: 42px;
+        text-align: right;
+        flex-shrink: 0;
+      }
+      .hist-bar-bg {
+        flex: 1;
+        height: 12px;
+        background: #222;
+        border-radius: 2px;
+        overflow: hidden;
+      }
+      .hist-bar {
+        height: 100%;
+        background: #4a8;
+        border-radius: 2px;
+        transition: width 0.2s;
+      }
+      .hist-count {
+        color: #777;
+        width: 36px;
+        text-align: right;
+        flex-shrink: 0;
+      }
+
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 12px;
+      }
+      th {
+        text-align: left;
+        color: #888;
+        font-weight: 500;
+        padding: 4px 10px;
+        border-bottom: 1px solid #333;
+      }
+      td {
+        padding: 4px 10px;
+        border-bottom: 1px solid #222;
+      }
+      .pass {
+        color: #4a8;
+      }
+      .marginal {
+        color: #da4;
+      }
+      .biased {
+        color: #d55;
+      }
+      .fixed-verdict {
+        color: #666;
+      }
+
+      .entropy-bar-bg {
+        display: inline-block;
+        width: 80px;
+        height: 10px;
+        background: #222;
+        border-radius: 2px;
+        vertical-align: middle;
+        overflow: hidden;
+      }
+      .entropy-bar {
+        height: 100%;
+        border-radius: 2px;
+      }
+
+      .cross-section {
+        border-top: 2px solid #333;
+        padding-top: 20px;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Randogram</h1>
+    <h2>Visual byte distribution inspector for nexid XIDs</h2>
+
+    <div class="controls">
+      <label for="count">Count:</label>
+      <input type="range" id="count" min="50" max="5000" step="50" value="500" />
+      <span class="count-value" id="count-display">500</span>
+
+      <label class="cb-label"> <input type="checkbox" id="cross-second" /> Cross-second </label>
+
+      <button id="regenerate">Regenerate</button>
+    </div>
+
+    <div class="meta" id="meta"></div>
+
+    <div id="output"></div>
+
+    <div class="tooltip" id="tooltip"></div>
+
+    <script src="../bin/nexid-web.min.js"></script>
+    <script>
+      (function () {
+        'use strict';
+
+        const COMPONENTS = [
+          { label: 'TIME', offset: 0, width: 4, fixed: false },
+          { label: 'MID', offset: 4, width: 3, fixed: true },
+          { label: 'PID', offset: 7, width: 2, fixed: true },
+          { label: 'CTR', offset: 9, width: 3, fixed: false },
+        ];
+
+        const CELL = 3; // pixels per byte cell
+
+        const countSlider = document.getElementById('count');
+        const countDisplay = document.getElementById('count-display');
+        const crossSecondCb = document.getElementById('cross-second');
+        const regenBtn = document.getElementById('regenerate');
+        const metaEl = document.getElementById('meta');
+        const outputEl = document.getElementById('output');
+        const tooltip = document.getElementById('tooltip');
+
+        countSlider.addEventListener('input', () => {
+          countDisplay.textContent = countSlider.value;
+        });
+
+        regenBtn.addEventListener('click', generate);
+        countSlider.addEventListener('change', generate);
+        crossSecondCb.addEventListener('change', generate);
+
+        // -- Analysis helpers (ported from randogram.ts) --
+
+        function computeFreqs(ids, offset, width) {
+          const freqs = new Uint32Array(256);
+          let total = 0;
+          for (const id of ids) {
+            for (let j = offset; j < offset + width; j++) {
+              freqs[id[j]]++;
+              total++;
+            }
+          }
+          return { freqs, total };
+        }
+
+        function computeHistogramBuckets(freqs) {
+          const bucketSize = 16;
+          const buckets = new Float64Array(256 / bucketSize);
+          for (let b = 0; b < 256; b++) {
+            buckets[Math.floor(b / bucketSize)] += freqs[b];
+          }
+          return buckets;
+        }
+
+        function chiSquared(freqs, total) {
+          const expected = total / 256;
+          let chi = 0;
+          for (let b = 0; b < 256; b++) {
+            chi += (freqs[b] - expected) ** 2 / expected;
+          }
+          return chi;
+        }
+
+        function verdict(comp, chi) {
+          if (comp.fixed) return { text: 'FIXED (expected)', cls: 'fixed-verdict' };
+          if (chi < 293) return { text: 'PASS (uniform)', cls: 'pass' };
+          if (chi < 400) return { text: 'MARGINAL', cls: 'marginal' };
+          const note = comp.label === 'TIME' ? ' — same-second IDs are identical' : ' — 20-bit seed caps byte[9]';
+          return { text: 'BIASED' + note, cls: 'biased' };
+        }
+
+        function shannonEntropy(freqs, n) {
+          let h = 0;
+          for (let b = 0; b < 256; b++) {
+            if (freqs[b] > 0) {
+              const p = freqs[b] / n;
+              h -= p * Math.log2(p);
+            }
+          }
+          return h;
+        }
+
+        // -- Rendering --
+
+        function renderHeatmaps(ids, label) {
+          const section = el('div', 'section');
+          section.appendChild(sectionTitle(label + ' — heatmaps'));
+
+          const grid = el('div', 'heatmaps');
+
+          for (const comp of COMPONENTS) {
+            const card = el('div', 'heatmap-card');
+            const lbl = el('div', 'heatmap-label');
+            lbl.innerHTML =
+              `<strong>${comp.label}</strong> [${comp.width} bytes] ` +
+              (comp.fixed ? '<span class="fixed">(fixed per process)</span>' : '');
+            card.appendChild(lbl);
+
+            const canvas = document.createElement('canvas');
+            canvas.className = 'heatmap-canvas';
+            const cols = Math.max(1, Math.floor(260 / (comp.width * CELL)));
+            const rows = Math.ceil(ids.length / cols);
+            canvas.width = cols * comp.width * CELL;
+            canvas.height = rows * CELL;
+
+            const ctx = canvas.getContext('2d');
+            for (let i = 0; i < ids.length; i++) {
+              const row = Math.floor(i / cols);
+              const col = i % cols;
+              for (let j = 0; j < comp.width; j++) {
+                const b = ids[i][comp.offset + j];
+                ctx.fillStyle = `rgb(${b},${b},${b})`;
+                ctx.fillRect((col * comp.width + j) * CELL, row * CELL, CELL, CELL);
+              }
+            }
+
+            // Tooltip on hover
+            canvas.addEventListener('mousemove', e => {
+              const rect = canvas.getBoundingClientRect();
+              const scaleX = canvas.width / rect.width;
+              const px = (e.clientX - rect.left) * scaleX;
+              const py = (e.clientY - rect.top) * (canvas.height / rect.height);
+              const col = Math.floor(px / (comp.width * CELL));
+              const row = Math.floor(py / CELL);
+              const idx = row * cols + col;
+              const byteIdx = Math.floor((px - col * comp.width * CELL) / CELL);
+              if (idx < ids.length && byteIdx < comp.width) {
+                const b = ids[idx][comp.offset + byteIdx];
+                tooltip.style.display = 'block';
+                tooltip.style.left = e.clientX + 12 + 'px';
+                tooltip.style.top = e.clientY - 8 + 'px';
+                tooltip.textContent = `ID #${idx} byte[${comp.offset + byteIdx}] = ${b} (0x${b.toString(16).padStart(2, '0')})`;
+              } else {
+                tooltip.style.display = 'none';
+              }
+            });
+            canvas.addEventListener('mouseleave', () => {
+              tooltip.style.display = 'none';
+            });
+
+            card.appendChild(canvas);
+            grid.appendChild(card);
+          }
+
+          section.appendChild(grid);
+          return section;
+        }
+
+        function renderHistograms(ids, label) {
+          const section = el('div', 'section');
+          section.appendChild(sectionTitle(label + ' — byte frequency (16-bucket histogram)'));
+
+          const grid = el('div', 'histograms');
+
+          for (const comp of COMPONENTS) {
+            const { freqs } = computeFreqs(ids, comp.offset, comp.width);
+            const buckets = computeHistogramBuckets(freqs);
+            const maxBucket = Math.max(...buckets);
+
+            const card = el('div', 'hist-card');
+            const lbl = el('div', 'hist-label');
+            lbl.innerHTML =
+              `<strong>${comp.label}</strong>` +
+              (comp.fixed ? ' <span class="fixed">(constant per process)</span>' : '');
+            card.appendChild(lbl);
+
+            for (let b = 0; b < buckets.length; b++) {
+              const row = el('div', 'hist-row');
+              const lo = (b * 16).toString(16).padStart(2, '0');
+              const hi = ((b + 1) * 16 - 1).toString(16).padStart(2, '0');
+              const pct = maxBucket > 0 ? (buckets[b] / maxBucket) * 100 : 0;
+
+              row.innerHTML =
+                `<span class="hist-range">${lo}-${hi}</span>` +
+                `<span class="hist-bar-bg"><span class="hist-bar" style="width:${pct.toFixed(1)}%"></span></span>` +
+                `<span class="hist-count">${buckets[b]}</span>`;
+              card.appendChild(row);
+            }
+
+            grid.appendChild(card);
+          }
+
+          section.appendChild(grid);
+          return section;
+        }
+
+        function renderStatsTable(ids, label) {
+          const section = el('div', 'section');
+          section.appendChild(sectionTitle(label + ' — uniformity'));
+
+          const table = document.createElement('table');
+          table.innerHTML =
+            '<thead><tr><th>Component</th><th>Vals</th><th>Range</th><th>Chi²</th><th>Verdict</th></tr></thead>';
+          const tbody = document.createElement('tbody');
+
+          for (const comp of COMPONENTS) {
+            const { freqs, total } = computeFreqs(ids, comp.offset, comp.width);
+            const chi = chiSquared(freqs, total);
+            let occupied = 0,
+              min = Infinity,
+              max = 0;
+            for (let b = 0; b < 256; b++) {
+              if (freqs[b] > 0) occupied++;
+              if (freqs[b] < min) min = freqs[b];
+              if (freqs[b] > max) max = freqs[b];
+            }
+            const v = verdict(comp, chi);
+            const tr = document.createElement('tr');
+            tr.innerHTML =
+              `<td>${comp.label}</td>` +
+              `<td>${occupied}/256</td>` +
+              `<td>[${min}, ${max}]</td>` +
+              `<td>${chi.toFixed(0)}</td>` +
+              `<td class="${v.cls}">${v.text}</td>`;
+            tbody.appendChild(tr);
+          }
+
+          table.appendChild(tbody);
+          section.appendChild(table);
+          return section;
+        }
+
+        function renderPerByteEntropy(ids, label) {
+          const section = el('div', 'section');
+          section.appendChild(sectionTitle(label + ' — per-byte position entropy'));
+
+          const table = document.createElement('table');
+          table.innerHTML =
+            '<thead><tr><th>Byte</th><th>Unique</th><th>Min</th><th>Max</th><th>Entropy</th><th></th><th>%</th><th>Notes</th></tr></thead>';
+          const tbody = document.createElement('tbody');
+
+          for (let pos = 0; pos < 12; pos++) {
+            const freqs = new Uint32Array(256);
+            for (const id of ids) freqs[id[pos]]++;
+
+            let occupied = 0,
+              min = Infinity,
+              max = 0;
+            for (let b = 0; b < 256; b++) {
+              if (freqs[b] > 0) occupied++;
+              if (freqs[b] < min) min = freqs[b];
+              if (freqs[b] > max) max = freqs[b];
+            }
+
+            const entropy = shannonEntropy(freqs, ids.length);
+            const pct = ((entropy / 8) * 100).toFixed(0);
+            const comp = COMPONENTS.find(c => pos >= c.offset && pos < c.offset + c.width);
+            const barW = (entropy / 8) * 100;
+
+            let barColor;
+            if (entropy > 7) barColor = '#4a8';
+            else if (entropy > 4) barColor = '#da4';
+            else barColor = '#d55';
+
+            let note = '';
+            if (comp.fixed) note = `${comp.label} — fixed`;
+            else if (occupied === 1) note = 'constant';
+            else if (entropy < 2) note = 'low entropy';
+            else if (entropy > 7) note = 'good';
+
+            const tr = document.createElement('tr');
+            tr.innerHTML =
+              `<td>[${String(pos).padStart(2, '\u00a0')}]</td>` +
+              `<td>${occupied}</td>` +
+              `<td>${min}</td>` +
+              `<td>${max}</td>` +
+              `<td>${entropy.toFixed(2)}</td>` +
+              `<td><span class="entropy-bar-bg"><span class="entropy-bar" style="width:${barW.toFixed(1)}%;background:${barColor}"></span></span></td>` +
+              `<td>${pct}%</td>` +
+              `<td style="color:#777">${note}</td>`;
+            tbody.appendChild(tr);
+          }
+
+          table.appendChild(tbody);
+          section.appendChild(table);
+          return section;
+        }
+
+        // -- Helpers --
+
+        function el(tag, cls) {
+          const e = document.createElement(tag);
+          if (cls) e.className = cls;
+          return e;
+        }
+
+        function sectionTitle(text) {
+          const d = el('div', 'section-title');
+          d.textContent = text;
+          return d;
+        }
+
+        // -- Main --
+
+        function generate() {
+          const count = parseInt(countSlider.value, 10);
+          const crossSecond = crossSecondCb.checked;
+
+          const gen = NeXID.init();
+
+          // Same-second burst
+          const burstIds = [];
+          for (let i = 0; i < count; i++) {
+            burstIds.push(gen.newId().bytes);
+          }
+
+          metaEl.textContent = `${count} XIDs | machine=${gen.machineId} pid=${gen.processId}`;
+
+          outputEl.innerHTML = '';
+          outputEl.appendChild(renderHeatmaps(burstIds, 'Same-second burst'));
+          outputEl.appendChild(renderHistograms(burstIds, 'Same-second burst'));
+          outputEl.appendChild(renderStatsTable(burstIds, 'Same-second burst'));
+          outputEl.appendChild(renderPerByteEntropy(burstIds, 'Same-second burst'));
+
+          if (crossSecond) {
+            const crossIds = [];
+            const baseTime = Date.now();
+            const seconds = Math.min(count, 100);
+            const perSecond = Math.max(1, Math.floor(count / seconds));
+
+            for (let s = 0; s < seconds; s++) {
+              const ts = new Date(baseTime + s * 1000);
+              for (let i = 0; i < perSecond; i++) {
+                crossIds.push(gen.newId(ts).bytes);
+              }
+            }
+
+            const crossSection = el('div', 'cross-section');
+            crossSection.appendChild(renderHeatmaps(crossIds, 'Cross-second'));
+            crossSection.appendChild(renderHistograms(crossIds, 'Cross-second'));
+            crossSection.appendChild(renderStatsTable(crossIds, 'Cross-second'));
+            crossSection.appendChild(renderPerByteEntropy(crossIds, 'Cross-second'));
+            outputEl.appendChild(crossSection);
+          }
+        }
+
+        // Initial render
+        generate();
+      })();
+    </script>
+  </body>
+</html>

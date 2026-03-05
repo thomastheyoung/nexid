@@ -26,7 +26,14 @@ export interface AtomicCounter {
    * @returns A unique counter value (0 to 16,777,215)
    */
   getNext(): CounterValue;
-  reset(): void;
+
+  /**
+   * Re-seeds the counter with a new 32-bit value. The full 32 bits are stored
+   * internally; the 24-bit masking happens in {@link getNext}.
+   *
+   * @param seed - Unsigned 32-bit initial value for the counter
+   */
+  reset(seed: number): void;
 }
 
 /**
@@ -46,18 +53,19 @@ export function createAtomicCounter(seed: number): AtomicCounter {
     globalThis.SharedArrayBuffer || (globalThis.WebAssembly && globalThis.WebAssembly.Memory);
   if (buffer.constructor === ArrayBuffer && couldHaveUsedSharedMemory) {
     console.warn(
-      'NeXID: Could not initialize shared memory, falling back to ArrayBuffer. Atomicity is NOT guaranteed across threads/workers.'
+      'NeXID: Could not initialize shared memory, falling back to ArrayBuffer. Atomicity is NOT guaranteed across threads/workers.',
     );
   }
 
   const counter = new Uint32Array(buffer);
   counter[0] = seed;
+  const isShared = !(buffer instanceof ArrayBuffer);
 
   return {
     getNext(): CounterValue {
-      // 1. Atomically increments the 32-bit value at index 0 by 1.
+      // 1. Increments the 32-bit value at index 0 by 1 (atomically if shared memory is available).
       // 2. Returns the value *before* the increment occurred.
-      const beforeIncrement = Atomics.add(counter, 0, 1);
+      const beforeIncrement = isShared ? Atomics.add(counter, 0, 1) : counter[0]++;
 
       // 3. Applies a bitwise AND mask (0xffffff) to the value.
       //    This effectively keeps only the lower 24 bits.
@@ -69,8 +77,12 @@ export function createAtomicCounter(seed: number): AtomicCounter {
       return (beforeIncrement & 0xffffff) as CounterValue;
     },
 
-    reset() {
-      Atomics.store(counter, 0, 0);
+    reset(seed: number) {
+      if (isShared) {
+        Atomics.store(counter, 0, seed);
+      } else {
+        counter[0] = seed;
+      }
     },
   };
 }

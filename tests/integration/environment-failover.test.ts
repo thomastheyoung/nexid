@@ -1,6 +1,8 @@
 import crypto from 'node:crypto';
 import os from 'node:os';
+
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import NeXID, { XID } from '../../src/node';
 
 describe('Environment Failover', () => {
@@ -14,12 +16,20 @@ describe('Environment Failover', () => {
   };
 
   describe('Random source failover', () => {
-    it('initializes with fallback when secure random source is unavailable', async () => {
+    it('throws by default when secure random source is unavailable', () => {
       vi.spyOn(crypto, 'randomBytes').mockImplementation(mockError);
       vi.spyOn(globalThis.crypto, 'getRandomValues').mockImplementation(mockError);
 
-      // Should still initialize
-      const nexid = await NeXID.init();
+      expect(() => NeXID.init()).toThrow(/RandomBytes/);
+    });
+
+    it('initializes with fallback when allowInsecure is true', () => {
+      vi.spyOn(crypto, 'randomBytes').mockImplementation(mockError);
+      vi.spyOn(globalThis.crypto, 'getRandomValues').mockImplementation(mockError);
+
+      const nexid = NeXID.init({ allowInsecure: true });
+
+      expect(nexid.degraded).toBe(true);
 
       // Should be able to generate IDs
       const id = nexid.newId();
@@ -28,12 +38,12 @@ describe('Environment Failover', () => {
   });
 
   describe('Machine ID failover', () => {
-    it('initializes with random machine ID when platform methods fail', async () => {
+    it('initializes with random machine ID when platform methods fail', () => {
       vi.spyOn(os, 'hostname').mockImplementation(mockError);
       vi.spyOn(os, 'networkInterfaces').mockImplementation(mockError);
 
-      // Should still initialize
-      const nexid = await NeXID.init();
+      // Should still initialize (MachineId is not critical)
+      const nexid = NeXID.init();
 
       // Should be able to generate IDs
       const id = nexid.newId();
@@ -42,12 +52,12 @@ describe('Environment Failover', () => {
   });
 
   describe('Process ID failover', () => {
-    it('initializes with random process ID when platform methods fail', async () => {
+    it('initializes with random process ID when platform methods fail', () => {
       const currentPid = process.pid;
       vi.stubGlobal('process', { pid: undefined });
 
-      // Should still initialize
-      const nexid = await NeXID.init();
+      // Should still initialize (ProcessId is not critical)
+      const nexid = NeXID.init();
       expect(nexid.processId === currentPid).toBeFalsy();
 
       // Should be able to generate IDs
@@ -57,14 +67,14 @@ describe('Environment Failover', () => {
   });
 
   describe('Cross-environment compatibility', () => {
-    it('generates compatible IDs between environments', async () => {
+    it('generates compatible IDs between environments', () => {
       // Create a generator with fixed machine ID and process ID
       // This simulates IDs generated in different environments but with the same inputs
       const processId = 0x1234;
       const timestamp = new Date('2023-01-01T00:00:00Z');
       const machineId = 'custom-machine-id';
 
-      const nexid = await NeXID.init({ machineId, processId });
+      const nexid = NeXID.init({ machineId, processId });
 
       // Generate an ID with a fixed timestamp
       const id: XID = nexid.newId(timestamp);
@@ -77,14 +87,11 @@ describe('Environment Failover', () => {
       const timestampBytes = bytes.slice(0, 4);
       const expectedTimestamp = Math.floor(timestamp.getTime() / 1000);
       const actualTimestamp =
-        (timestampBytes[0] << 24) |
-        (timestampBytes[1] << 16) |
-        (timestampBytes[2] << 8) |
-        timestampBytes[3];
+        (timestampBytes[0] << 24) | (timestampBytes[1] << 16) | (timestampBytes[2] << 8) | timestampBytes[3];
       expect(actualTimestamp).toBe(expectedTimestamp);
 
-      // Check machine ID (next 3 bytes)
-      expect(machineId).toEqual(nexid.machineId);
+      // Check machine ID (next 3 bytes) — nexid.machineId is hashed hex
+      expect(nexid.machineId).toMatch(/^[0-9a-f]{6}$/);
 
       const actualMachineId = bytes.slice(4, 7);
       expect(actualMachineId).toEqual(id.machineId);

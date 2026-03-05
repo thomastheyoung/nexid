@@ -27,7 +27,8 @@
  */
 
 import { ENCODED_LEN, RAW_LEN } from 'nexid/common/constants';
-import { XIDBytes } from 'nexid/types/xid';
+import { XIDBytes, XIDString } from 'nexid/types/xid';
+
 import { decode, encode } from './encoding';
 import { compareBytes } from './helpers';
 
@@ -80,8 +81,8 @@ export class XID {
     if (str.length !== ENCODED_LEN) {
       throw new Error('Invalid id length');
     }
-    if (!/[0-9a-v]{20}/.test(str)) {
-      throw new Error('Invalid string id (must be 20 chars, 0-9 a-v');
+    if (!/^[0-9a-v]{20}$/.test(str)) {
+      throw new Error('Invalid string id (must be 20 chars, 0-9 a-v)');
     }
     return new XID(decode(str) as XIDBytes);
   }
@@ -107,7 +108,7 @@ export class XID {
   get time(): Date {
     const id = this.bytes;
     // First 4 bytes contain Unix timestamp (seconds since epoch)
-    const seconds = (id[0] << 24) | (id[1] << 16) | (id[2] << 8) | id[3];
+    const seconds = ((id[0] << 24) | (id[1] << 16) | (id[2] << 8) | id[3]) >>> 0;
     return new Date(seconds * 1000);
   }
 
@@ -154,8 +155,16 @@ export class XID {
    *
    * @returns A 20-character string representation of the XID
    */
-  toString(): string {
+  toString(): XIDString {
     return encode(this.bytes);
+  }
+
+  /**
+   * Returns the string representation for JSON serialization.
+   * Ensures `JSON.stringify(xid)` produces the base32-hex string, not the raw bytes.
+   */
+  toJSON(): XIDString {
+    return this.toString();
   }
 
   /**
@@ -165,7 +174,7 @@ export class XID {
    * @returns True if this is a nil ID, false otherwise
    */
   isNil(): boolean {
-    return this.bytes.every((byte) => byte === 0);
+    return this.bytes.every(byte => byte === 0);
   }
 
   /**

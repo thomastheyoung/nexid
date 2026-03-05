@@ -31,7 +31,7 @@ import { FeatureSet } from 'nexid/env/registry';
  *
  * @returns Promise resolving to a random process ID between 0 and PROCESS_ID_MASK (65535)
  */
-export const getProcessId: FeatureSet['ProcessId'] = async (): Promise<number> => {
+export const getProcessId: FeatureSet['ProcessId'] = (): number => {
   // Generates a random 16-bit unsigned integer (0 to 65535)
   return crypto.getRandomValues(new Uint16Array(1))[0];
 };

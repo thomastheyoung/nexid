@@ -13,43 +13,40 @@
 
 /**
  * Branded type helper that creates a nominal type from a base type.
- * This technique ensures that even structurally identical types cannot be
- * used interchangeably if they have different brands.
+ * Uses a string literal tag to ensure structurally identical base types
+ * (e.g. two Brand<number> variants) are not interchangeable.
  */
-export type Brand<T> = Readonly<T> & { readonly __xid: unique symbol };
+export type Brand<T, Tag extends string> = Readonly<T> & {
+  readonly __brand: Tag;
+};
 
 /**
  * XID binary representation - a branded 12-byte Uint8Array.
  * This provides compile-time and runtime immutability guarantees.
  */
-export type XIDBytes = Brand<Uint8Array & { readonly __length: 12 }>;
+export type XIDBytes = Brand<Uint8Array & { readonly __length: 12 }, 'XIDBytes'>;
 
 /**
  * XID string representation - a branded 20-character string.
  * Ensures only properly formatted XID strings are accepted by functions
  * expecting this type.
  */
-export type XIDString = Brand<string & { readonly __length: 20 }>;
+export type XIDString = Brand<string & { readonly __length: 20 }, 'XIDString'>;
+
+/** Branded timestamp extracted from an XID. */
+export type XIDTime = Brand<Date, 'XIDTime'>;
+
+/** Branded 3-byte machine identifier extracted from an XID. */
+export type XIDMachineID = Brand<Uint8Array & { readonly __length: 3 }, 'XIDMachineID'>;
+
+/** Branded process ID extracted from an XID. */
+export type XIDProcessID = Brand<number, 'XIDProcessID'>;
+
+/** Branded counter value extracted from an XID. */
+export type XIDCounter = Brand<number, 'XIDCounter'>;
 
 /**
- * Type definitions for individual components of an XID.
+ * Internal counter value used during XID generation (pre-encoding).
+ * Distinct from XIDCounter, which is the value extracted from a parsed XID.
  */
-namespace XIDPart {
-  /** Timestamp component type */
-  export type Time = Brand<Date>;
-
-  /** Machine ID component type - branded 3-byte array */
-  export type MachineID = Brand<Uint8Array & { readonly __length: 3 }>;
-
-  /** Process ID component type - branded number */
-  export type ProcessID = Brand<number>;
-
-  /** Counter component type - branded number */
-  export type Counter = Brand<number>;
-}
-
-/**
- * Type for counter values used in XID generation.
- * This is a branded number to prevent accidental misuse.
- */
-export type CounterValue = Brand<number>;
+export type CounterValue = Brand<number, 'CounterValue'>;
