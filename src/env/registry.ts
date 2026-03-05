@@ -39,7 +39,6 @@ export type FeatureSet = {
 };
 
 export type Feature = keyof FeatureSet;
-export type FeatureValidator = (impl: unknown) => boolean;
 
 /**
  * Candidate implementations provided by adapters. Unlike FeatureSet (which
@@ -58,7 +57,7 @@ export type FeatureCandidate = {
  * Definition of a feature including its validation function and fallback implementation.
  */
 export type FeatureDefinition<F extends Feature> = {
-  test: FeatureValidator;
+  test(impl: unknown): impl is FeatureSet[F];
   fallback: FeatureSet[F];
   /** Whether this feature is security-critical. Critical features throw instead of falling back by default. */
   critical: boolean;

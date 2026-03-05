@@ -35,11 +35,7 @@ const fnv1aHash: HashFn = (data: string | Uint8Array): Uint8Array => {
   if (typeof data === 'string') {
     str = data;
   } else {
-    const chunks: string[] = [];
-    for (let i = 0; i < data.length; i++) {
-      chunks.push(String.fromCharCode(data[i]));
-    }
-    str = chunks.join('');
+    str = String.fromCharCode(...data);
   }
   let h = 0x811c9dc5;
   for (let i = 0; i < str.length; i++) {
@@ -53,11 +49,11 @@ const fnv1aHash: HashFn = (data: string | Uint8Array): Uint8Array => {
   return out;
 };
 
-const webAdapterConfig: EnvironmentAdapter = {
+const webAdapterConfig = {
   RandomBytes: webCryptoRandomBytes,
   MachineId: getWebMachineId,
   ProcessId: getProcessId,
-};
+} satisfies EnvironmentAdapter;
 
 /**
  * Creates an XID generator with browser-specific optimizations.

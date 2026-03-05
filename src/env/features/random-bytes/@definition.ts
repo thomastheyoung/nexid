@@ -15,7 +15,7 @@
  * - Platform-specific implementations should use the best available source of entropy
  */
 
-import { FeatureDefinition } from 'nexid/env/registry';
+import { type FeatureSet, type FeatureDefinition } from 'nexid/env/registry';
 
 /**
  * Definition of the RandomBytes feature including validation and fallback.
@@ -29,7 +29,7 @@ export const RandomBytesDefinition: FeatureDefinition<'RandomBytes'> = {
    * @param impl - The implementation to test
    * @returns True if the implementation is valid
    */
-  test(impl: unknown): boolean {
+  test(impl: unknown): impl is FeatureSet['RandomBytes'] {
     if (typeof impl !== 'function') return false;
     try {
       const result = impl(5);

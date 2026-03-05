@@ -18,7 +18,7 @@
  * processes or contexts on a single machine without risk of collisions.
  */
 
-import { FeatureDefinition } from 'nexid/env/registry';
+import { type FeatureSet, type FeatureDefinition } from 'nexid/env/registry';
 
 /**
  * Definition of the ProcessId feature including validation and fallback.
@@ -32,7 +32,7 @@ export const ProcessIdDefinition: FeatureDefinition<'ProcessId'> = {
    * @param impl - The implementation to test
    * @returns True if the implementation is valid
    */
-  test(impl: unknown): boolean {
+  test(impl: unknown): impl is FeatureSet['ProcessId'] {
     if (typeof impl !== 'function') return false;
     try {
       const result = impl();

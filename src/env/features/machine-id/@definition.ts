@@ -20,7 +20,7 @@
  * - Fallback implementation provides uniqueness but with appropriate warnings
  */
 
-import { FeatureDefinition } from 'nexid/env/registry';
+import { type FeatureSet, type FeatureDefinition } from 'nexid/env/registry';
 
 /**
  * Definition of the MachineId feature including validation and fallback.
@@ -34,7 +34,7 @@ export const MachineIdDefinition: FeatureDefinition<'MachineId'> = {
    * @param impl - The implementation to test
    * @returns True if the implementation is valid
    */
-  test(impl: unknown): boolean {
+  test(impl: unknown): impl is FeatureSet['MachineId'] {
     if (typeof impl !== 'function') return false;
     try {
       const result = impl();

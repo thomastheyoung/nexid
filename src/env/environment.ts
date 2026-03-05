@@ -76,8 +76,8 @@ export class Environment {
     try {
       const adapterImpl = this.adapter[feature];
       if (def.test(adapterImpl)) {
-        this.cache.set(feature, adapterImpl as FeatureSet[F]);
-        return adapterImpl as FeatureSet[F];
+        this.cache.set(feature, adapterImpl);
+        return adapterImpl;
       }
     } catch { /* adapter failed, fall through */ }
 

@@ -77,8 +77,8 @@ describe('NeXID Integration', () => {
         processId: customProcessId,
       });
 
-      // Generate an ID
-      expect(customMachineId).toBe(nexid.machineId);
+      // machineId is now the hashed bytes (hex-encoded, 3 bytes = 6 hex chars)
+      expect(nexid.machineId).toMatch(/^[0-9a-f]{6}$/);
       expect(customProcessId).toBe(nexid.processId);
     });
   });

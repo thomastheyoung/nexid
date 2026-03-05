@@ -91,8 +91,8 @@ describe('Environment Failover', () => {
         timestampBytes[3];
       expect(actualTimestamp).toBe(expectedTimestamp);
 
-      // Check machine ID (next 3 bytes)
-      expect(machineId).toEqual(nexid.machineId);
+      // Check machine ID (next 3 bytes) — nexid.machineId is hashed hex
+      expect(nexid.machineId).toMatch(/^[0-9a-f]{6}$/);
 
       const actualMachineId = bytes.slice(4, 7);
       expect(actualMachineId).toEqual(id.machineId);

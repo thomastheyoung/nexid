@@ -28,13 +28,11 @@ import { type Generator } from 'nexid/types/xid-generator';
 const nodeHash: HashFn = (data: string | Uint8Array): Uint8Array =>
   new Uint8Array(crypto.createHash('sha256').update(data).digest());
 
-const nodeMachineId = (): string | null => getOSMachineId();
-
-const nodeAdapterConfig: EnvironmentAdapter = {
+const nodeAdapterConfig = {
   RandomBytes: cryptoRandomBytes,
-  MachineId: nodeMachineId,
+  MachineId: getOSMachineId,
   ProcessId: getNodePID,
-};
+} satisfies EnvironmentAdapter;
 
 /**
  * Creates an XID generator with Node.js-specific optimizations.

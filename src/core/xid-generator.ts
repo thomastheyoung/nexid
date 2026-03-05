@@ -57,11 +57,11 @@ export function XIDGenerator(
   // Resolve capabilities
   const randomBytes = env.get('RandomBytes', options.randomBytes || undefined);
 
-  const userMachineId = options.machineId && (() => options.machineId as string);
-  const getMachineId = env.get('MachineId', userMachineId || undefined);
+  const mid = options.machineId;
+  const getMachineId = env.get('MachineId', mid ? () => mid : undefined);
 
-  const userProcessId = options.processId && (() => options.processId as number);
-  const getProcessId = env.get('ProcessId', userProcessId || undefined);
+  const pid = options.processId;
+  const getProcessId = env.get('ProcessId', pid != null ? () => pid : undefined);
 
   // ==========================================================================
   // Constructor
@@ -138,10 +138,13 @@ export function XIDGenerator(
   // ==========================================================================
   // Export API
   // ==========================================================================
+  // Expose hashed machine ID bytes (hex) rather than raw system identifier
+  const machineIdHex = Array.from(machineIdBytes, b => b.toString(16).padStart(2, '0')).join('');
+
   return {
-    machineId,
+    machineId: machineIdHex,
     processId,
-    degraded: env.degraded,
+    get degraded() { return env.degraded; },
     /**
      * Generates a new XID with the specified timestamp (defaults to current time).
      *

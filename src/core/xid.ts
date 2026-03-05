@@ -81,7 +81,7 @@ export class XID {
       throw new Error('Invalid id length');
     }
     if (!/^[0-9a-v]{20}$/.test(str)) {
-      throw new Error('Invalid string id (must be 20 chars, 0-9 a-v');
+      throw new Error('Invalid string id (must be 20 chars, 0-9 a-v)');
     }
     return new XID(decode(str) as XIDBytes);
   }

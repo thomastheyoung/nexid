@@ -27,13 +27,11 @@ import { type Generator } from 'nexid/types/xid-generator';
 const denoHash: HashFn = (data: string | Uint8Array): Uint8Array =>
   new Uint8Array(crypto.createHash('sha256').update(data).digest());
 
-const denoMachineId = (): string | null => getOSMachineId();
-
-const denoAdapterConfig: EnvironmentAdapter = {
+const denoAdapterConfig = {
   RandomBytes: cryptoRandomBytes,
-  MachineId: denoMachineId,
+  MachineId: getOSMachineId,
   ProcessId: getDenoPID,
-};
+} satisfies EnvironmentAdapter;
 
 /**
  * Creates an XID generator with Deno-specific optimizations.

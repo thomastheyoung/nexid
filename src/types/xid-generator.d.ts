@@ -20,7 +20,7 @@ export namespace Generator {
    * This interface defines the operations available after initialization.
    */
   export interface API {
-    /** The machine ID used by this generator instance (unhashed input) */
+    /** The hashed machine ID bytes used by this generator instance (hex-encoded) */
     readonly machineId: string;
 
     /** The process ID used by this generator instance */
