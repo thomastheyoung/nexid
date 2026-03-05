@@ -10,6 +10,7 @@ const { v1: uuidv1, v4: uuidv4, v7: uuidv7 } = require('uuid');
 const { ulid } = require('ulid');
 const KSUID = require('ksuid');
 const { nanoid } = require('nanoid');
+const { createId: cuid2 } = require('@paralleldrive/cuid2');
 const hyperid = require('hyperid');
 
 // Import our NeXID implementation (from the compiled JS)
@@ -38,6 +39,7 @@ async function runBenchmark() {
     'node randomUUID': () => crypto.randomUUID(),
     ulid: () => ulid(),
     nanoid: () => nanoid(),
+    cuid2: () => cuid2(),
     hyperid: () => hyperidInstance(),
   };
 
