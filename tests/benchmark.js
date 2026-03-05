@@ -13,7 +13,7 @@ const { nanoid } = require('nanoid');
 const hyperid = require('hyperid');
 
 // Import our NeXID implementation (from the compiled JS)
-const NeXID = require('../bin/nexid-node.js');
+const NeXID = require('../dist/node.js');
 
 // Constants
 const NUM_IDS = 1_000_000; // 1 million IDs for reporting
@@ -83,8 +83,9 @@ async function runBenchmark() {
     const name = task.name.replace(`Generate ${NUM_IDS} `, '');
     // Calculate accurate ops/sec based on number of iterations in the loop
     const multiplier = name === 'ksuid' ? 100 : 1000;
-    const opsPerSec = (task.result.hz * multiplier) | 0;
-    const timePerOp = 1_000_000_000 / opsPerSec;
+    // tinybench v6: throughput.mean = iterations/sec, latency.mean = ms/iteration
+    const opsPerSec = (task.result.throughput.mean * multiplier) | 0;
+    const timePerOp = (task.result.latency.mean / multiplier) * 1_000_000;
 
     results.push({
       name,
