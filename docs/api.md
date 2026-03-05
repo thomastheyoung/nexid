@@ -11,8 +11,9 @@ NeXID is a high-performance library for generating globally unique, lexicographi
 5. [XID class API](#xid-class-api)
 6. [Helper functions](#helper-functions)
 7. [Advanced configuration](#advanced-configuration)
-8. [Type definitions](#type-definitions)
-9. [Error handling](#error-handling)
+8. [Word filter](#word-filter)
+9. [Type definitions](#type-definitions)
+10. [Error handling](#error-handling)
 
 ## Installation
 
@@ -242,17 +243,25 @@ const generator = init({
   // Optional: allow insecure fallbacks (default: false)
   // When false, throws if CSPRNG cannot be resolved
   allowInsecure: true,
+
+  // Optional: reject IDs containing offensive substrings
+  wordFilter: defaultWordFilter,
+
+  // Optional: max retries when wordFilter rejects (default: 10)
+  maxFilterRetries: 10,
 });
 ```
 
 ### All options
 
-| Option          | Type                           | Default | Description                                             |
-| --------------- | ------------------------------ | ------- | ------------------------------------------------------- |
-| `machineId`     | `string`                       | auto    | Custom machine identifier (hashed to 3 bytes)           |
-| `processId`     | `number`                       | auto    | Custom process ID (masked to 16 bits)                   |
-| `randomBytes`   | `(size: number) => Uint8Array` | auto    | Custom CSPRNG function                                  |
-| `allowInsecure` | `boolean`                      | `false` | Allow insecure fallbacks for security-critical features |
+| Option             | Type                           | Default     | Description                                             |
+| ------------------ | ------------------------------ | ----------- | ------------------------------------------------------- |
+| `machineId`        | `string`                       | auto        | Custom machine identifier (hashed to 3 bytes)           |
+| `processId`        | `number`                       | auto        | Custom process ID (masked to 16 bits)                   |
+| `randomBytes`      | `(size: number) => Uint8Array` | auto        | Custom CSPRNG function                                  |
+| `allowInsecure`    | `boolean`                      | `false`     | Allow insecure fallbacks for security-critical features |
+| `wordFilter`       | `WordFilterFn`                 | `undefined` | Predicate to reject IDs containing offensive words      |
+| `maxFilterRetries` | `number`                       | `10`        | Max retry attempts when `wordFilter` rejects an ID      |
 
 ### Customizing machine ID
 
@@ -301,20 +310,55 @@ if (generator.degraded) {
 
 The `degraded` property on the generator is `true` when any security-critical feature (currently only `RandomBytes`) fell back to an insecure implementation.
 
+### Word filter
+
+IDs are encoded with base32-hex (0-9, a-v), which can occasionally produce substrings that look like offensive words. The word filter is an opt-in mechanism that rejects these IDs at generation time, retrying with a new counter value.
+
+```typescript
+import { init, defaultWordFilter, createWordFilter } from 'nexid/node';
+
+// Use the built-in blocklist (~60 curated offensive words)
+const generator = init({ wordFilter: defaultWordFilter });
+
+// Or create a custom filter from your own word list
+const customFilter = createWordFilter(['bad', 'word']);
+const generator2 = init({ wordFilter: customFilter });
+
+// Combine with maxFilterRetries to control retry budget
+const generator3 = init({
+  wordFilter: defaultWordFilter,
+  maxFilterRetries: 20, // default is 10
+});
+```
+
+The filter strategy is bound at construction time — generators without a word filter pay zero overhead. Each retry consumes one counter value. If the retry budget is exhausted, the last generated ID is returned regardless.
+
+#### Exports
+
+All entry points export the following word filter utilities:
+
+| Export              | Type                                    | Description                                  |
+| ------------------- | --------------------------------------- | -------------------------------------------- |
+| `defaultWordFilter` | `WordFilterFn`                          | Built-in filter using the curated blocklist  |
+| `createWordFilter`  | `(words: string[]) => WordFilterFn`     | Factory for custom word list filters         |
+| `BLOCKED_WORDS`     | `readonly string[]`                     | The raw built-in blocklist (~60 words)       |
+| `WordFilterFn`      | `type (encoded: string) => boolean`     | Predicate type (exported as type-only)       |
+
 ## Type definitions
 
 NeXID provides TypeScript branded types for compile-time safety:
 
 ```typescript
 // Exported from all entry points
-import type { XIDBytes, XIDGenerator, XIDString } from 'nexid';
+import type { XIDBytes, XIDGenerator, XIDString, WordFilterFn } from 'nexid';
 ```
 
-| Type           | Base type              | Description                          |
-| -------------- | ---------------------- | ------------------------------------ |
-| `XIDBytes`     | `Readonly<Uint8Array>` | Branded 12-byte XID binary form      |
-| `XIDString`    | `Readonly<string>`     | Branded 20-character XID string form |
-| `XIDGenerator` | `Generator.API`        | The generator interface type alias   |
+| Type           | Base type              | Description                                |
+| -------------- | ---------------------- | ------------------------------------------ |
+| `XIDBytes`     | `Readonly<Uint8Array>` | Branded 12-byte XID binary form            |
+| `XIDString`    | `Readonly<string>`     | Branded 20-character XID string form       |
+| `XIDGenerator` | `Generator.API`        | The generator interface type alias         |
+| `WordFilterFn` | `Function`             | `(encoded: string) => boolean` predicate   |
 
 ### Generator types (internal)
 

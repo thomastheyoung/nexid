@@ -81,15 +81,18 @@ const nexid = NeXID.init({
   processId: 42,              // Override auto-detected process ID (0–65535)
   randomBytes: myCSPRNG,      // Custom (size: number) => Uint8Array
   allowInsecure: false,       // Allow non-cryptographic fallbacks (default: false)
+  wordFilter: defaultWordFilter, // Reject IDs containing offensive words
 });
 ```
 
-| Option          | Type                           | Default       | Description                                          |
-| --------------- | ------------------------------ | ------------- | ---------------------------------------------------- |
-| `machineId`     | `string`                       | Auto-detected | Custom machine identifier string (hashed before use) |
-| `processId`     | `number`                       | Auto-detected | Custom process ID, masked to 16-bit                  |
-| `randomBytes`   | `(size: number) => Uint8Array` | Auto-detected | Custom CSPRNG implementation                         |
-| `allowInsecure` | `boolean`                      | `false`       | When `false`, throws if CSPRNG cannot be resolved    |
+| Option            | Type                           | Default       | Description                                          |
+| ----------------- | ------------------------------ | ------------- | ---------------------------------------------------- |
+| `machineId`       | `string`                       | Auto-detected | Custom machine identifier string (hashed before use) |
+| `processId`       | `number`                       | Auto-detected | Custom process ID, masked to 16-bit                  |
+| `randomBytes`     | `(size: number) => Uint8Array` | Auto-detected | Custom CSPRNG implementation                         |
+| `allowInsecure`   | `boolean`                      | `false`       | When `false`, throws if CSPRNG cannot be resolved    |
+| `wordFilter`      | `WordFilterFn`                 | `undefined`   | Predicate to reject IDs containing offensive words   |
+| `maxFilterRetries`| `number`                       | `10`          | Max retry attempts when `wordFilter` rejects an ID   |
 
 ### Generator API
 
@@ -151,14 +154,36 @@ helpers.sortIds(ids);        // Sort XID array chronologically
 helpers.compareBytes(a, b);  // Lexicographic byte array comparison
 ```
 
+### Word filter
+
+Opt-in filtering rejects generated IDs that contain offensive substrings, retrying with a new counter value. The filter is a simple predicate — use the built-in blocklist or supply your own.
+
+```typescript
+import NeXID, { defaultWordFilter, createWordFilter } from 'nexid/node';
+
+// Use the built-in blocklist (~60 curated offensive words)
+const nexid = NeXID.init({ wordFilter: defaultWordFilter });
+
+// Or create a custom filter
+const customFilter = createWordFilter(['bad', 'word']);
+const nexid2 = NeXID.init({ wordFilter: customFilter });
+```
+
+The built-in blocklist, retry limit, and factory are all exported from every entry point:
+
+- `defaultWordFilter` — predicate using the built-in blocklist
+- `createWordFilter(words)` — factory for custom word lists
+- `BLOCKED_WORDS` — the raw built-in word list (readonly array)
+
 ### Exported types
 
 ```typescript
-import type { XIDBytes, XIDGenerator, XIDString } from 'nexid';
+import type { XIDBytes, XIDGenerator, XIDString, WordFilterFn } from 'nexid';
 
-// XIDBytes      -- branded 12-byte Uint8Array
-// XIDString     -- branded 20-character string
-// XIDGenerator  -- alias for Generator.API
+// XIDBytes       -- branded 12-byte Uint8Array
+// XIDString      -- branded 20-character string
+// XIDGenerator   -- alias for Generator.API
+// WordFilterFn   -- (encoded: string) => boolean
 ```
 
 ## Architecture
