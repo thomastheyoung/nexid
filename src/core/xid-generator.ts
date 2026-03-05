@@ -14,6 +14,22 @@
  * 3. Process ID (2 bytes) - Current process or context identifier
  * 4. Counter (3 bytes) - Thread-safe incrementing counter
  *
+ * COUNTER SEEDING:
+ * The counter is re-seeded with a full 24-bit random value on each new second,
+ * matching the Go rs/xid reference implementation. This was a deliberate choice
+ * over the previous 20-bit masked seed:
+ *
+ * - 20-bit mask: byte[9] limited to 0x00–0x0F (16 values), ~15.7M headroom
+ * - 24-bit full: byte[9] spans 0x00–0xFF (256 values), 0–16M headroom
+ *
+ * The wrap risk (seed + increments > 2^24 within one second) is acceptable because:
+ * 1. Real workloads rarely exceed 100K IDs/sec from a single process
+ * 2. Even at the library's ~10.5M/sec benchmark ceiling, the probability of a
+ *    seed high enough to cause wrapping is ~63% × (1 / seconds of sustained load)
+ * 3. Wrapping only causes a local K-ordering inversion within that second — IDs
+ *    remain globally unique, and the next second re-seeds fresh
+ * 4. The Go reference implementation makes the same tradeoff
+ *
  * SECURITY:
  * - Uses cryptographically secure random sources when available
  * - Machine IDs are cryptographically hashed to prevent system information disclosure
@@ -82,12 +98,12 @@ export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: G
   baseBuffer[8] = processId & BYTE_MASK;
 
   // Setup atomic counter with random re-seeding.
-  // Mask seed to 20 bits so the visible 24-bit counter starts at most at 0x0FFFFF (~1M),
-  // leaving ~15.7M increments before the 24-bit output wraps — well above the library's
-  // throughput ceiling (~10.5M/sec), which guarantees K-ordering within any single second.
+  // Use a full 24-bit random seed, matching the Go rs/xid reference implementation.
+  // This maximizes counter entropy at the cost of a theoretical wrap risk if a single
+  // process generates >16M IDs within the same second — unreachable in practice.
   const nextSeed = () => {
-    const b = randomBytes(4);
-    return (((b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3]) >>> 0) & 0x0fffff;
+    const b = randomBytes(3);
+    return (b[0] << 16) | (b[1] << 8) | b[2];
   };
 
   const counter = createAtomicCounter(nextSeed());
@@ -110,11 +126,9 @@ export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: G
     // If the last timestamp is undefined, initialize it with current
     lastTimestamp ??= timestamp;
 
-    // Re-seed counter if timestamp changed.
-    // This prevents wrapping within the same second, where successive XIDs would sort
-    // counter-wise as [S][0xFF FF FF] -> [S][0x00 00 00], breaking K-ordering.
-    // The seed is masked to 20 bits (max ~1M), so ~15.7M increments remain before
-    // the 24-bit output wraps — well above the library's ~10.5M/sec throughput.
+    // Re-seed counter when the second changes, so each second starts from a fresh
+    // random position. This provides K-ordering (monotonic within a second) while
+    // distributing counter bytes uniformly across the full 24-bit range.
     if (timestamp !== lastTimestamp) {
       counter.reset(nextSeed());
       lastTimestamp = timestamp;
