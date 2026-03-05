@@ -52,7 +52,7 @@
     "build": "rm -rf dist/ && tsup src/index.ts src/node.ts src/web.ts src/deno.ts --format cjs,esm --dts --out-dir dist",
     "bundle": "rm -rf bin/ && node esbuild.mjs",
     "benchmark": "node tests/benchmark.js",
-    "test": "vitest",
+    "test": "vitest run",
     "serve": "python3 -m http.server 3000"
   },
   "devDependencies": {
