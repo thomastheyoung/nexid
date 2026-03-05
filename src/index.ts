@@ -34,6 +34,8 @@ async function init(options?: Generator.Options): Promise<Generator.API> {
 }
 
 export { XID, init, resolveEnvironment };
+export { defaultWordFilter, createWordFilter, BLOCKED_WORDS } from './core/word-filter.js';
+export type { WordFilterFn } from './core/word-filter.js';
 export type { XIDBytes, XIDString } from 'nexid/types/xid';
 export type XIDGenerator = Generator.API;
 export default { init };
