@@ -22,7 +22,7 @@
  */
 
 import { ENCODED_LEN, ENCODING, RAW_LEN } from 'nexid/common/constants';
-import { XIDBytes } from 'nexid/types/xid';
+import { XIDBytes, XIDString } from 'nexid/types/xid';
 
 // ============================================================================
 // Constants
@@ -32,7 +32,7 @@ import { XIDBytes } from 'nexid/types/xid';
  * Pre-computed array of character codes for the encoding alphabet.
  * This optimizes encoding by avoiding repeated character code lookups.
  */
-const ENCODING_CHARS: Uint8Array = new Uint8Array(Array.from(ENCODING).map((c) => c.charCodeAt(0)));
+const ENCODING_CHARS: Uint8Array = new Uint8Array(Array.from(ENCODING).map(c => c.charCodeAt(0)));
 
 /**
  * Lookup table for decoding base32-hex characters to their 5-bit values.
@@ -73,7 +73,7 @@ const ENCODING_DEST = new Array<number>(ENCODED_LEN);
  * @param id - Raw 12-byte ID to encode
  * @returns A 20-character base32-hex encoded string
  */
-export function encode(id: XIDBytes): string {
+export function encode(id: XIDBytes): XIDString {
   const charCodes = ENCODING_DEST;
 
   // Access bytes directly for performance optimization
@@ -115,7 +115,7 @@ export function encode(id: XIDBytes): string {
 
   // Convert character codes to string all at once.
   // This is more efficient than building the string character by character
-  return String.fromCharCode.apply(null, charCodes);
+  return String.fromCharCode.apply(null, charCodes) as unknown as XIDString;
 }
 
 /**

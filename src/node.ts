@@ -15,34 +15,39 @@
  * code in bundlers.
  */
 
+import crypto from 'node:crypto';
+
 import { XID } from 'nexid/core/xid';
-import { XIDGenerator } from 'nexid/core/xid-generator';
+import { XIDGenerator, type HashFn } from 'nexid/core/xid-generator';
 import { Environment, type EnvironmentAdapter } from 'nexid/env/environment';
-import { hash as cryptoHash } from 'nexid/env/features/hash-function/node-crypto';
-import { getOSMachineId } from 'nexid/env/features/machine-id/os-hostid';
+import { getOSMachineId } from 'nexid/env/features/machine-id/os-host-id';
 import { getProcessId as getNodePID } from 'nexid/env/features/process-id/node-pid';
 import { randomBytes as cryptoRandomBytes } from 'nexid/env/features/random-bytes/node-crypto';
 import { type initNeXID } from 'nexid/types/api';
 import { type Generator } from 'nexid/types/xid-generator';
 
-const NodeAdapter = new Environment({
+const nodeHash: HashFn = (data: string | Uint8Array): Uint8Array =>
+  new Uint8Array(crypto.createHash('sha256').update(data).digest());
+
+const nodeAdapterConfig = {
   RandomBytes: cryptoRandomBytes,
-  HashFunction: cryptoHash,
   MachineId: getOSMachineId,
   ProcessId: getNodePID,
-} as EnvironmentAdapter);
+} satisfies EnvironmentAdapter;
 
 /**
  * Creates an XID generator with Node.js-specific optimizations.
  *
  * @param options - Optional configuration parameters
- * @returns Promise resolving to a fully configured XID generator
+ * @returns A fully configured XID generator
  */
-async function createXIDGenerator(options?: Generator.Options): Promise<Generator.API> {
-  return XIDGenerator(NodeAdapter, options);
+function createXIDGenerator(options?: Generator.Options): Generator.API {
+  const env = new Environment(nodeAdapterConfig, { allowInsecure: options?.allowInsecure });
+  return XIDGenerator(env, nodeHash, options);
 }
 
 export { XID };
+export type { XIDBytes, XIDString } from 'nexid/types/xid';
 export type XIDGenerator = Generator.API;
 export const init: initNeXID = createXIDGenerator;
 export default { init: createXIDGenerator };

@@ -10,10 +10,11 @@ const { v1: uuidv1, v4: uuidv4, v7: uuidv7 } = require('uuid');
 const { ulid } = require('ulid');
 const KSUID = require('ksuid');
 const { nanoid } = require('nanoid');
+const { createId: cuid2 } = require('@paralleldrive/cuid2');
 const hyperid = require('hyperid');
 
 // Import our NeXID implementation (from the compiled JS)
-const NeXID = require('../bin/nexid-node.js');
+const NeXID = require('../dist/node.js');
 
 // Constants
 const NUM_IDS = 1_000_000; // 1 million IDs for reporting
@@ -38,6 +39,7 @@ async function runBenchmark() {
     'node randomUUID': () => crypto.randomUUID(),
     ulid: () => ulid(),
     nanoid: () => nanoid(),
+    cuid2: () => cuid2(),
     hyperid: () => hyperidInstance(),
   };
 
@@ -79,12 +81,13 @@ async function runBenchmark() {
   // Sort by operations per second (higher is better)
   const results = [];
 
-  bench.tasks.forEach((task) => {
+  bench.tasks.forEach(task => {
     const name = task.name.replace(`Generate ${NUM_IDS} `, '');
     // Calculate accurate ops/sec based on number of iterations in the loop
     const multiplier = name === 'ksuid' ? 100 : 1000;
-    const opsPerSec = (task.result.hz * multiplier) | 0;
-    const timePerOp = 1_000_000_000 / opsPerSec;
+    // tinybench v6: throughput.mean = iterations/sec, latency.mean = ms/iteration
+    const opsPerSec = (task.result.throughput.mean * multiplier) | 0;
+    const timePerOp = (task.result.latency.mean / multiplier) * 1_000_000;
 
     results.push({
       name,
@@ -100,7 +103,7 @@ async function runBenchmark() {
   console.log('\n=== Results ===');
   console.log('\nGeneration Speed (ops/sec, higher is better):');
   ('------------------------------------------------------------------------------');
-  results.forEach((result) => {
+  results.forEach(result => {
     const idsPerSec = result.opsPerSec.toLocaleString().padStart(12);
     const nsPerId = Math.trunc(result.timePerOp);
     console.log(`${result.name.padEnd(20)}: ${idsPerSec} ids/sec (${nsPerId}ns per id)`);
@@ -122,7 +125,7 @@ function getByteLength(str) {
 }
 
 // Run the benchmark
-runBenchmark().catch((err) => {
+runBenchmark().catch(err => {
   console.error('Benchmark failed:', err);
   process.exit(1);
 });

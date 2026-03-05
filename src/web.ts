@@ -18,31 +18,32 @@
 import { XID } from 'nexid/core/xid';
 import { XIDGenerator } from 'nexid/core/xid-generator';
 import { Environment, type EnvironmentAdapter } from 'nexid/env/environment';
-import { hash as subtleCryptoHash } from 'nexid/env/features/hash-function/subtle-crypto';
-import { getFingerprint } from 'nexid/env/features/machine-id/web-fingerprint';
+import { murmur3Hash } from 'nexid/env/features/hash/murmur3';
+import { getWebMachineId } from 'nexid/env/features/machine-id/web-machine-id';
 import { getProcessId } from 'nexid/env/features/process-id/web';
 import { randomBytes as webCryptoRandomBytes } from 'nexid/env/features/random-bytes/web-crypto';
 import { type initNeXID } from 'nexid/types/api';
 import { type Generator } from 'nexid/types/xid-generator';
 
-const WebAdapter = new Environment({
+const webAdapterConfig = {
   RandomBytes: webCryptoRandomBytes,
-  HashFunction: subtleCryptoHash,
-  MachineId: getFingerprint,
+  MachineId: getWebMachineId,
   ProcessId: getProcessId,
-} as EnvironmentAdapter);
+} satisfies EnvironmentAdapter;
 
 /**
  * Creates an XID generator with browser-specific optimizations.
  *
  * @param options - Optional configuration parameters
- * @returns Promise resolving to a fully configured XID generator
+ * @returns A fully configured XID generator
  */
-async function createXIDGenerator(options?: Generator.Options): Promise<Generator.API> {
-  return XIDGenerator(WebAdapter, options);
+function createXIDGenerator(options?: Generator.Options): Generator.API {
+  const env = new Environment(webAdapterConfig, { allowInsecure: options?.allowInsecure });
+  return XIDGenerator(env, murmur3Hash, options);
 }
 
 export { XID };
+export type { XIDBytes, XIDString } from 'nexid/types/xid';
 export type XIDGenerator = Generator.API;
 export const init: initNeXID = createXIDGenerator;
 export default { init: createXIDGenerator };

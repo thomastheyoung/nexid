@@ -14,6 +14,22 @@
  * 3. Process ID (2 bytes) - Current process or context identifier
  * 4. Counter (3 bytes) - Thread-safe incrementing counter
  *
+ * COUNTER SEEDING:
+ * The counter is re-seeded with a full 24-bit random value on each new second,
+ * matching the Go rs/xid reference implementation. This was a deliberate choice
+ * over the previous 20-bit masked seed:
+ *
+ * - 20-bit mask: byte[9] limited to 0x00–0x0F (16 values), ~15.7M headroom
+ * - 24-bit full: byte[9] spans 0x00–0xFF (256 values), 0–16M headroom
+ *
+ * The wrap risk (seed + increments > 2^24 within one second) is acceptable because:
+ * 1. Real workloads rarely exceed 100K IDs/sec from a single process
+ * 2. Even at the library's ~10.5M/sec benchmark ceiling, the probability of a
+ *    seed high enough to cause wrapping is ~63% × (1 / seconds of sustained load)
+ * 3. Wrapping only causes a local K-ordering inversion within that second — IDs
+ *    remain globally unique, and the next second re-seeds fresh
+ * 4. The Go reference implementation makes the same tradeoff
+ *
  * SECURITY:
  * - Uses cryptographically secure random sources when available
  * - Machine IDs are cryptographically hashed to prevent system information disclosure
@@ -29,9 +45,12 @@ import { BYTE_MASK, PROCESS_ID_MASK, RAW_LEN } from 'nexid/common/constants';
 import { Environment } from 'nexid/env/environment';
 import { XIDBytes } from 'nexid/types/xid';
 import { Generator } from 'nexid/types/xid-generator';
+
 import { createAtomicCounter } from './counter';
 import { encode } from './encoding';
 import { XID } from './xid';
+
+export type HashFn = (data: string | Uint8Array) => Uint8Array;
 
 /**
  * Creates an XID generator with the specified environment and options.
@@ -40,25 +59,22 @@ import { XID } from './xid';
  * machine ID, process ID, and atomic counter components.
  *
  * @param env - Environment abstraction providing platform capabilities
+ * @param hashMachineId - Hash function for machine ID hashing
  * @param options - Optional configuration parameters
- * @returns Promise resolving to generator API
+ * @returns Generator API
  */
-export async function XIDGenerator(
-  env: Environment,
-  options: Generator.Options = {}
-): Promise<Generator.API> {
+export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: Generator.Options = {}): Generator.API {
   // ==========================================================================
   // Setup components
   // ==========================================================================
   // Resolve capabilities
-  const randomBytes = await env.get('RandomBytes', options.randomBytes || undefined);
-  const hashFunction = await env.get('HashFunction');
+  const randomBytes = env.get('RandomBytes', options.randomBytes ?? undefined);
 
-  const userMachineId = options.machineId && (async () => options.machineId as string);
-  const getMachineId = await env.get('MachineId', userMachineId || undefined);
+  const mid = options.machineId;
+  const getMachineId = env.get('MachineId', mid ? () => mid : undefined);
 
-  const userProcessId = options.processId && (async () => options.processId as number);
-  let getProcessId = await env.get('ProcessId', userProcessId || undefined);
+  const pid = options.processId;
+  const getProcessId = env.get('ProcessId', pid != null ? () => pid : undefined);
 
   // ==========================================================================
   // Constructor
@@ -70,23 +86,27 @@ export async function XIDGenerator(
   const baseBuffer = new Uint8Array(RAW_LEN);
 
   // Machine ID (3 bytes)
-  const machineId = await getMachineId();
-  const machineIdBytes = (await hashFunction(machineId)).subarray(0, 3);
+  const machineId = getMachineId();
+  const machineIdBytes = hashMachineId(machineId).subarray(0, 3);
   baseBuffer[4] = machineIdBytes[0] & BYTE_MASK;
   baseBuffer[5] = machineIdBytes[1] & BYTE_MASK;
   baseBuffer[6] = machineIdBytes[2] & BYTE_MASK;
 
   // Process ID (2 bytes, big endian)
-  const processId = (await getProcessId()) & PROCESS_ID_MASK;
+  const processId = getProcessId() & PROCESS_ID_MASK;
   baseBuffer[7] = (processId >> 8) & BYTE_MASK;
   baseBuffer[8] = processId & BYTE_MASK;
 
-  // Setup atomic counter
-  const seedBytes = randomBytes(4);
-  const randomSeed =
-    (seedBytes[0] << 24) | (seedBytes[1] << 16) | (seedBytes[2] << 8) | seedBytes[3];
+  // Setup atomic counter with random re-seeding.
+  // Use a full 24-bit random seed, matching the Go rs/xid reference implementation.
+  // This maximizes counter entropy at the cost of a theoretical wrap risk if a single
+  // process generates >16M IDs within the same second — unreachable in practice.
+  const nextSeed = () => {
+    const b = randomBytes(3);
+    return (b[0] << 16) | (b[1] << 8) | b[2];
+  };
 
-  const counter = createAtomicCounter(randomSeed);
+  const counter = createAtomicCounter(nextSeed());
   let lastTimestamp: number;
 
   // ==========================================================================
@@ -106,13 +126,11 @@ export async function XIDGenerator(
     // If the last timestamp is undefined, initialize it with current
     lastTimestamp ??= timestamp;
 
-    // Reset counter if timestamp changed.
-    // This prevents wrapping to occur within the same second, in which case 2 successive XIDs
-    // would sort counter-wise as [S][0xFF FF FF] -> [S][0x00 00 00], making K-ordering moot.
-    // With this reset, we would need to generate 2^24 (~16.7M) XIDs/sec to incur a wrapping,
-    // which is above the current library performance (~10.5M/sec).
+    // Re-seed counter when the second changes, so each second starts from a fresh
+    // random position. This provides K-ordering (monotonic within a second) while
+    // distributing counter bytes uniformly across the full 24-bit range.
     if (timestamp !== lastTimestamp) {
-      counter.reset();
+      counter.reset(nextSeed());
       lastTimestamp = timestamp;
     }
 
@@ -134,9 +152,13 @@ export async function XIDGenerator(
   // ==========================================================================
   // Export API
   // ==========================================================================
+  // Expose hashed machine ID bytes (hex) rather than raw system identifier
+  const machineIdHex = Array.from(machineIdBytes, b => b.toString(16).padStart(2, '0')).join('');
+
   return {
-    machineId,
+    machineId: machineIdHex,
     processId,
+    degraded: env.degraded,
     /**
      * Generates a new XID with the specified timestamp (defaults to current time).
      *
@@ -144,7 +166,13 @@ export async function XIDGenerator(
      * @returns A new XID object
      */
     newId(datetime?: Date) {
-      const timestamp = datetime instanceof Date ? +datetime : Date.now();
+      let timestamp: number;
+      if (datetime instanceof Date) {
+        timestamp = +datetime;
+        if (Number.isNaN(timestamp)) throw new Error('Invalid Date passed to newId()');
+      } else {
+        timestamp = Date.now();
+      }
       return XID.fromBytes(buildXIDBytes(timestamp));
     },
 

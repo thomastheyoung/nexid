@@ -7,14 +7,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['tests/**/*.test.ts'],
-    exclude: [
-      '**/node_modules/**',
-      '**/dist/**',
-      '**/bin/**',
-      '**/docs/**',
-      '**/archive/**',
-      '**/source/**',
-    ],
+    exclude: ['**/node_modules/**', '**/dist/**', '**/bin/**', '**/docs/**', '**/archive/**', '**/source/**'],
     testTimeout: 20000,
     coverage: {
       provider: 'v8',

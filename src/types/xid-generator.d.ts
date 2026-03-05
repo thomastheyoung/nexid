@@ -12,6 +12,7 @@
 
 import { XID } from 'nexid/core/xid';
 import { FeatureSet } from 'nexid/env/registry';
+import { XIDString } from 'nexid/types/xid';
 
 export namespace Generator {
   /**
@@ -19,11 +20,14 @@ export namespace Generator {
    * This interface defines the operations available after initialization.
    */
   export interface API {
-    /** The machine ID used by this generator instance (hashed) */
+    /** The hashed machine ID bytes used by this generator instance (hex-encoded) */
     readonly machineId: string;
 
     /** The process ID used by this generator instance */
     readonly processId: number;
+
+    /** True if any security-critical feature is using an insecure fallback */
+    readonly degraded: boolean;
 
     /**
      * Generates a new XID with the specified timestamp or current time.
@@ -40,7 +44,7 @@ export namespace Generator {
      *
      * @returns A string representation of a new XID
      */
-    fastId(): string;
+    fastId(): XIDString;
   }
 
   /**
@@ -56,5 +60,12 @@ export namespace Generator {
 
     /** Custom process identifier number */
     processId: number;
+
+    /**
+     * Allow insecure fallbacks for security-critical features.
+     * When false (default), initialization throws if CSPRNG
+     * cannot be resolved.
+     */
+    allowInsecure: boolean;
   }>;
 }

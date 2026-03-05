@@ -16,7 +16,6 @@
  * while still utilizing environment-specific optimizations when available.
  */
 
-import { HashFunctionDefinition } from './features/hash-function/@definition';
 import { MachineIdDefinition } from './features/machine-id/@definition';
 import { ProcessIdDefinition } from './features/process-id/@definition';
 import { RandomBytesDefinition } from './features/random-bytes/@definition';
@@ -32,25 +31,34 @@ export type FeatureSet = {
   /** Generates cryptographically secure random bytes */
   RandomBytes: (size: number) => Uint8Array;
 
-  /** Creates a cryptographic hash of input data */
-  HashFunction: (data: string | Uint8Array) => Promise<Uint8Array>;
-
   /** Provides a stable machine/device identifier */
-  MachineId: () => Promise<string>;
+  MachineId: () => string;
 
   /** Provides a process-specific identifier */
-  ProcessId: () => Promise<number>;
+  ProcessId: () => number;
 };
 
 export type Feature = keyof FeatureSet;
-export type FeatureValidator = (impl: unknown) => Promise<boolean>;
+
+/**
+ * Candidate implementations provided by adapters. Unlike FeatureSet (which
+ * represents validated, resolved features), candidates may return null to
+ * signal failure. The Environment validates each and falls back when needed.
+ */
+type NullableReturn<T> = T extends (...args: infer A) => infer R ? (...args: A) => R | null : T;
+
+export type FeatureCandidate = {
+  [F in Feature]: NullableReturn<FeatureSet[F]>;
+};
 
 /**
  * Definition of a feature including its validation function and fallback implementation.
  */
 export type FeatureDefinition<F extends Feature> = {
-  test: FeatureValidator;
+  test(impl: unknown): impl is FeatureSet[F];
   fallback: FeatureSet[F];
+  /** Whether this feature is security-critical. Critical features throw instead of falling back by default. */
+  critical: boolean;
 };
 
 type Registry = {
@@ -65,7 +73,6 @@ type Registry = {
  */
 export const REGISTRY: Registry = {
   RandomBytes: RandomBytesDefinition,
-  HashFunction: HashFunctionDefinition,
   MachineId: MachineIdDefinition,
   ProcessId: ProcessIdDefinition,
 };

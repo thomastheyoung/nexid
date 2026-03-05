@@ -15,8 +15,9 @@
  * - Suitable for cryptographic applications and secure ID generation
  */
 
-import { FeatureSet } from 'nexid/env/registry';
 import crypto from 'node:crypto';
+
+import { FeatureSet } from 'nexid/env/registry';
 
 /**
  * Generates cryptographically secure random bytes using Node.js crypto.
