@@ -156,9 +156,9 @@ helpers.compareBytes(a, b);  // Lexicographic byte array comparison
 ```typescript
 import type { XIDBytes, XIDGenerator, XIDString } from 'nexid';
 
-// XIDBytes      —— branded 12-byte Uint8Array
-// XIDString     —— branded 20-character string
-// XIDGenerator  —— alias for Generator.API
+// XIDBytes      -- branded 12-byte Uint8Array
+// XIDString     -- branded 20-character string
+// XIDGenerator  -- alias for Generator.API
 ```
 
 ## Architecture
@@ -242,8 +242,8 @@ Example range query:
 ```sql
 -- Retrieving time-ordered data without timestamp columns
 SELECT * FROM events
-WHERE id >= 'cv37ijlxxxxxxxxxxxxxxx' —— Start timestamp
-AND id <= 'cv37mogxxxxxxxxxxxxxxx'   —— End timestamp
+WHERE id >= 'cv37ijlxxxxxxxxxxxxxxx' -- Start timestamp
+AND id <= 'cv37mogxxxxxxxxxxxxxxx'   -- End timestamp
 ```
 
 ### Distributed systems
