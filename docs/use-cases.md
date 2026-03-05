@@ -1,4 +1,4 @@
-# XIDs Use Cases
+# XIDs use cases
 
 Examples of real-world scenarios where XIDs's unique characteristics provide significant advantages over traditional UUID or other ID generation approaches.
 
@@ -6,15 +6,15 @@ Examples of real-world scenarios where XIDs's unique characteristics provide sig
 
 XID identifiers are:
 
-- **Lexicographically Sortable**: Natural sorting in databases, binary searches, and indexes
-- **Time-Ordered**: Built-in chronological ordering (timestamp is the first component)
+- **Lexicographically sortable**: natural sorting in databases, binary searches, and indexes
+- **Time-ordered**: built-in chronological ordering (timestamp is the first component)
 - **Compact**: 20 characters vs 36 for UUID (44% smaller)
-- **URL-Safe**: Alphanumeric only (0-9 and a-v), no special characters to escape
-- **Universal**: Works in Node.js, browsers, Deno, and edge runtimes
-- **Fast**: Generates 10+ million IDs per second
-- **Secure**: Uses platform-specific cryptographic random number generation
+- **URL-safe**: alphanumeric only (0-9 and a-v), no special characters to escape
+- **Universal**: works in Node.js, browsers, Deno, and edge runtimes
+- **Fast**: generates 10+ million IDs per second
+- **Secure**: uses platform-specific cryptographic random number generation
 
-## E-commerce Order Management System
+## E-commerce order management system
 
 **Scenario:** An e-commerce platform needs to track millions of orders across distributed microservices.
 
@@ -28,11 +28,12 @@ XID identifiers are:
 **Example:**
 
 ```typescript
-import NeXID from 'nexid';
+import NeXID, { type XIDGenerator } from 'nexid/node';
+
+const generator: XIDGenerator = NeXID.init();
 
 const orderService = {
-  async createOrder(userId: string, items: CartItem[]): Promise<Order> {
-    const generator = await NeXID.init();
+  createOrder(userId: string, items: CartItem[]): Promise<Order> {
     const orderId = generator.fastId();
 
     // Order ID inherently encodes creation timestamp
@@ -42,7 +43,7 @@ const orderService = {
 };
 ```
 
-## Distributed Content Management System
+## Distributed content management system
 
 **Scenario:** A CMS with multiple editing nodes needs to synchronize content across servers without conflicts.
 
@@ -55,10 +56,11 @@ const orderService = {
 **Example:**
 
 ```typescript
-// Content editors in different geographic locations can create content
-// without central coordination
-async function createContent(title: string, body: string): Promise<Content> {
-  const generator = await NeXID.init();
+import NeXID, { type XIDGenerator } from 'nexid/node';
+
+const generator: XIDGenerator = NeXID.init();
+
+function createContent(title: string, body: string): Content {
   const contentId = generator.newId();
 
   // Each editor can see content in time order without round trips to a central server
@@ -67,7 +69,7 @@ async function createContent(title: string, body: string): Promise<Content> {
 }
 ```
 
-## High-Throughput Event Processing System
+## High-throughput event processing system
 
 **Scenario:** An analytics platform needs to process millions of events per second with guaranteed ordering.
 
@@ -80,14 +82,10 @@ async function createContent(title: string, body: string): Promise<Content> {
 **Example:**
 
 ```typescript
-import NeXID from 'nexid';
+import NeXID, { type XIDGenerator } from 'nexid/node';
 
 class EventProcessor {
-  private idGenerator: XIDGenerator;
-
-  async initialize() {
-    this.idGenerator = await NeXID.init();
-  }
+  private idGenerator: XIDGenerator = NeXID.init();
 
   processEvent(eventData: any) {
     const eventId = this.idGenerator.fastId(); // Using fast path for high throughput
@@ -99,7 +97,7 @@ class EventProcessor {
 }
 ```
 
-## Collaborative Document Editing
+## Collaborative document editing
 
 **Scenario:** A real-time collaborative editor like Google Docs where multiple users make simultaneous edits.
 
@@ -112,29 +110,28 @@ class EventProcessor {
 **Example:**
 
 ```typescript
-class CollaborativeEditor {
-  private idGenerator: XIDGenerator;
+import NeXID, { type XIDGenerator } from 'nexid/web';
 
-  async connect() {
-    this.idGenerator = await NeXID.init();
-  }
+class CollaborativeEditor {
+  private idGenerator: XIDGenerator = NeXID.init();
 
   makeEdit(position: number, content: string) {
     const editId = this.idGenerator.newId();
     // Edits naturally sort by creation time
     // Helps with operational transform algorithms
+    const machineHex = Array.from(editId.machineId, b => b.toString(16).padStart(2, '0')).join('');
     return {
       id: editId.toString(),
       position,
       content,
       timestamp: editId.time,
-      client: editId.machineId.toString('hex'),
+      client: machineHex,
     };
   }
 }
 ```
 
-## URL Shortener Service
+## URL shortener service
 
 **Scenario:** A URL shortening service that needs to generate millions of short, unique links.
 
@@ -147,14 +144,10 @@ class CollaborativeEditor {
 **Example:**
 
 ```typescript
-import NeXID from 'nexid';
+import NeXID, { type XIDGenerator } from 'nexid/node';
 
 class UrlShortener {
-  private idGenerator: XIDGenerator;
-
-  async initialize() {
-    this.idGenerator = await NeXID.init();
-  }
+  private idGenerator: XIDGenerator = NeXID.init();
 
   async shortenUrl(originalUrl: string): Promise<string> {
     const shortId = this.idGenerator.fastId();
@@ -167,7 +160,7 @@ class UrlShortener {
 }
 ```
 
-## Distributed File System
+## Distributed file system
 
 **Scenario:** A cloud storage platform that needs to manage billions of files across distributed nodes.
 
@@ -180,12 +173,10 @@ class UrlShortener {
 **Example:**
 
 ```typescript
-class StorageManager {
-  private idGenerator: XIDGenerator;
+import NeXID, { type XIDGenerator } from 'nexid/node';
 
-  async initialize() {
-    this.idGenerator = await NeXID.init();
-  }
+class StorageManager {
+  private idGenerator: XIDGenerator = NeXID.init();
 
   async storeFile(fileData: Buffer, metadata: FileMetadata): Promise<string> {
     const fileId = this.idGenerator.newId();
@@ -199,7 +190,7 @@ class StorageManager {
 }
 ```
 
-## Notification System with Batching
+## Notification system with batching
 
 **Scenario:** A messaging platform that needs to batch and deliver notifications efficiently.
 
@@ -212,15 +203,15 @@ class StorageManager {
 **Example:**
 
 ```typescript
+import NeXID, { type XIDGenerator } from 'nexid/node';
+
 class NotificationManager {
-  private idGenerator: XIDGenerator;
+  private idGenerator: XIDGenerator = NeXID.init();
 
-  async initialize() {
-    this.idGenerator = await NeXID.init();
-  }
-
-  async createNotification(userId: string, message: string): Promise<Notification> {
+  createNotification(userId: string, message: string): Notification {
     const id = this.idGenerator.newId();
+
+    const machineHex = Array.from(id.machineId, b => b.toString(16).padStart(2, '0')).join('');
 
     // Can efficiently get notifications in time order
     // Batching by machine ID component for optimized delivery
@@ -229,13 +220,13 @@ class NotificationManager {
       userId,
       message,
       created: id.time,
-      routingKey: id.machineId.toString('hex'),
+      routingKey: machineHex,
     };
   }
 }
 ```
 
-## Distributed Caching System
+## Distributed caching system
 
 **Scenario:** A distributed caching layer that needs to manage cache keys and expiration across nodes.
 
@@ -248,12 +239,10 @@ class NotificationManager {
 **Example:**
 
 ```typescript
-class DistributedCache {
-  private idGenerator: XIDGenerator;
+import NeXID, { type XIDGenerator } from 'nexid/node';
 
-  async initialize() {
-    this.idGenerator = await NeXID.init();
-  }
+class DistributedCache {
+  private idGenerator: XIDGenerator = NeXID.init();
 
   async setCacheItem(data: any, ttlSeconds: number = 3600): Promise<string> {
     const cacheKey = this.idGenerator.newId();
@@ -270,7 +259,7 @@ class DistributedCache {
 }
 ```
 
-## Database Indexing and Performance
+## Database indexing and performance
 
 **Scenario:** A database system that needs efficient indexing on ID columns.
 
@@ -297,14 +286,14 @@ CREATE INDEX users_created_idx ON users (id);
 
 // Querying recent users is efficient with the natural time ordering
 const getRecentUsersSQL = `
-SELECT * FROM users 
-WHERE id > '${someThresholdId}'  -- Efficient range scan
-ORDER BY id DESC                 -- Already sorted by time
+SELECT * FROM users
+WHERE id > $1        -- Efficient range scan using a threshold XID
+ORDER BY id DESC     -- Already sorted by time
 LIMIT 100;
 `;
 ```
 
-## Session Management
+## Session management
 
 **Scenario:** A web application that needs to track and manage user sessions.
 
@@ -317,12 +306,10 @@ LIMIT 100;
 **Example:**
 
 ```typescript
-class SessionManager {
-  private idGenerator: XIDGenerator;
+import NeXID, { XID, type XIDGenerator } from 'nexid/node';
 
-  async initialize() {
-    this.idGenerator = await NeXID.init();
-  }
+class SessionManager {
+  private idGenerator: XIDGenerator = NeXID.init();
 
   async createSession(userId: string): Promise<Session> {
     const sessionId = this.idGenerator.newId();
@@ -341,20 +328,15 @@ class SessionManager {
 
   // Efficient cleanup of expired sessions
   async cleanupExpiredSessions() {
-    const now = new Date();
-    const thresholdId = NeXID.fromTime(new Date(now.getTime() - 24 * 60 * 60 * 1000));
-
-    // Can efficiently delete all sessions older than threshold
-    // using the natural ordering of IDs
-    await this.sessionStore.deleteRange({
-      start: '0',
-      end: thresholdId.toString(),
-    });
+    // Use the natural time ordering of XIDs for efficient range deletion.
+    // XIDs created 24+ hours ago will lexicographically precede recent ones.
+    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    await this.sessionStore.deleteOlderThan(cutoff);
   }
 }
 ```
 
-## Log Aggregation System
+## Log aggregation system
 
 **Scenario:** A logging system that collects logs from multiple services and needs to maintain their chronological order.
 
@@ -367,12 +349,10 @@ class SessionManager {
 **Example:**
 
 ```typescript
-class Logger {
-  private idGenerator: XIDGenerator;
+import NeXID, { type XIDGenerator } from 'nexid/node';
 
-  async initialize() {
-    this.idGenerator = await NeXID.init();
-  }
+class Logger {
+  private idGenerator: XIDGenerator = NeXID.init();
 
   log(level: string, message: string, metadata: object = {}) {
     const logId = this.idGenerator.newId();
@@ -383,7 +363,7 @@ class Logger {
       level,
       message,
       source: {
-        machineId: logId.machineId.toString('hex'),
+        machineId: Array.from(logId.machineId, b => b.toString(16).padStart(2, '0')).join(''),
         processId: logId.processId,
       },
       metadata,

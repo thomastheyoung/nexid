@@ -169,7 +169,7 @@ Each XID consists of 12 bytes (96 bits), encoded as 20 characters:
 
 ```
   ┌───────────────────────────────────────────────────────────────────────────┐
-  │                         Binary structure (12 bytes)                      |
+  │                         Binary structure (12 bytes)                       │
   ├────────────────────────┬──────────────────┬────────────┬──────────────────┤
   │        Timestamp       │    Machine ID    │ Process ID │      Counter     │
   │        (4 bytes)       │     (3 bytes)    │  (2 bytes) │     (3 bytes)    │

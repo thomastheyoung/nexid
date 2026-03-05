@@ -45,8 +45,7 @@ export const murmur3Hash: HashFn = (data: string | Uint8Array): Uint8Array => {
   // Body — process 4-byte blocks
   for (let i = 0; i < nblocks; i++) {
     const off = i << 2;
-    let k =
-      bytes[off] | (bytes[off + 1] << 8) | (bytes[off + 2] << 16) | (bytes[off + 3] << 24);
+    let k = bytes[off] | (bytes[off + 1] << 8) | (bytes[off + 2] << 16) | (bytes[off + 3] << 24);
     k = Math.imul(k, c1);
     k = (k << 15) | (k >>> 17);
     k = Math.imul(k, c2);

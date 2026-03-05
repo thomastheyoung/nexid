@@ -48,10 +48,18 @@ function renderHeatmap(ids: Uint8Array[], useColor: boolean, label: string, mach
     const totalRows = Math.ceil(ids.length / colsPerRow);
 
     const note = comp.fixed ? ' (fixed)' : '';
-    console.log(`  ${bold(comp.label)}${note}  [${comp.width} bytes × ${ids.length} IDs → ${colsPerRow}×${totalRows} grid]`);
+    console.log(
+      `  ${bold(comp.label)}${note}  [${comp.width} bytes × ${ids.length} IDs → ${colsPerRow}×${totalRows} grid]`,
+    );
 
     // X-axis tick marks
-    const ticks = [0, Math.floor(colsPerRow / 4), Math.floor(colsPerRow / 2), Math.floor((3 * colsPerRow) / 4), colsPerRow - 1];
+    const ticks = [
+      0,
+      Math.floor(colsPerRow / 4),
+      Math.floor(colsPerRow / 2),
+      Math.floor((3 * colsPerRow) / 4),
+      colsPerRow - 1,
+    ];
     let tickLine = ' '.repeat(labelCol);
     for (let col = 0; col < colsPerRow; col++) {
       if (ticks.includes(col)) {
@@ -64,7 +72,8 @@ function renderHeatmap(ids: Uint8Array[], useColor: boolean, label: string, mach
 
     for (let row = 0; row < totalRows; row++) {
       const rowIdx = row * colsPerRow;
-      const prefix = rowIdx % 50 === 0 || row === 0 ? String(rowIdx).padStart(labelCol - 1) + ' ' : ' '.repeat(labelCol);
+      const prefix =
+        rowIdx % 50 === 0 || row === 0 ? String(rowIdx).padStart(labelCol - 1) + ' ' : ' '.repeat(labelCol);
       let line = prefix;
       for (let col = 0; col < colsPerRow; col++) {
         const idx = rowIdx + col;
@@ -137,7 +146,7 @@ function renderStats(ids: Uint8Array[], label: string) {
       if (freqs[b] > 0) occupied++;
       if (freqs[b] < min) min = freqs[b];
       if (freqs[b] > max) max = freqs[b];
-      chiSq += ((freqs[b] - expected) ** 2) / expected;
+      chiSq += (freqs[b] - expected) ** 2 / expected;
     }
 
     let verdict: string;
@@ -153,7 +162,9 @@ function renderStats(ids: Uint8Array[], label: string) {
       verdict = `\x1b[31mBIASED${note}\x1b[0m`;
     }
 
-    console.log(`  ${comp.label.padEnd(5)} vals=${String(occupied).padStart(3)}/256  range=[${min},${max}]  chi2=${chiSq.toFixed(0).padStart(7)}  ${verdict}`);
+    console.log(
+      `  ${comp.label.padEnd(5)} vals=${String(occupied).padStart(3)}/256  range=[${min},${max}]  chi2=${chiSq.toFixed(0).padStart(7)}  ${verdict}`,
+    );
   }
   console.log();
 }
