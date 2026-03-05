@@ -84,10 +84,13 @@ export function XIDGenerator(
   baseBuffer[7] = (processId >> 8) & BYTE_MASK;
   baseBuffer[8] = processId & BYTE_MASK;
 
-  // Setup atomic counter with random re-seeding
+  // Setup atomic counter with random re-seeding.
+  // Mask seed to 20 bits so the visible 24-bit counter starts at most at 0x0FFFFF (~1M),
+  // leaving ~15.7M increments before the 24-bit output wraps — well above the library's
+  // throughput ceiling (~10.5M/sec), which guarantees K-ordering within any single second.
   const nextSeed = () => {
     const b = randomBytes(4);
-    return ((b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3]) >>> 0;
+    return (((b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3]) >>> 0) & 0x0fffff;
   };
 
   const counter = createAtomicCounter(nextSeed());
@@ -111,10 +114,10 @@ export function XIDGenerator(
     lastTimestamp ??= timestamp;
 
     // Re-seed counter if timestamp changed.
-    // This prevents wrapping to occur within the same second, in which case 2 successive XIDs
-    // would sort counter-wise as [S][0xFF FF FF] -> [S][0x00 00 00], making K-ordering moot.
-    // With this re-seed, we would need to generate 2^24 (~16.7M) XIDs/sec to incur a wrapping,
-    // which is above the current library performance (~10.5M/sec).
+    // This prevents wrapping within the same second, where successive XIDs would sort
+    // counter-wise as [S][0xFF FF FF] -> [S][0x00 00 00], breaking K-ordering.
+    // The seed is masked to 20 bits (max ~1M), so ~15.7M increments remain before
+    // the 24-bit output wraps — well above the library's ~10.5M/sec throughput.
     if (timestamp !== lastTimestamp) {
       counter.reset(nextSeed());
       lastTimestamp = timestamp;
