@@ -102,7 +102,7 @@ export function detectOperatingSystem(): OperatingSystem | null {
     if (
       env !== RuntimeEnvironment.Node &&
       env !== RuntimeEnvironment.Electron &&
-      env !== RuntimeEnvironment.Electron_Renderer &&
+      env !== RuntimeEnvironment.ElectronRenderer &&
       env !== RuntimeEnvironment.Bun &&
       env !== RuntimeEnvironment.Deno
     ) {
