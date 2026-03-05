@@ -164,6 +164,17 @@ NeXID delivers high performance on par with or exceeding Node's native `randomUU
 
 _Benchmarks on Node.js v22 on Apple Silicon. Results may vary by environment._
 
+### Speed and security
+
+For password hashing, slowness is intentional: attackers must brute-force a small input space (human-chosen passwords), so making each attempt expensive is the defense (that's why bcrypt/argon2 exist).
+
+For unique IDs, security comes from entropy (randomness). If an ID has 128 bits of cryptographic randomness:
+
+- An attacker doesn't need your generator, they can enumerate candidates independently at any speed they want
+- The search space is 2^128 regardless of how fast you can generate IDs
+- Collision resistance is a function of bit-length (birthday bound), not generation throughput
+- There's no "entropy-hiding" to break, the output is the random value
+
 ## Comparison with alternative solutions
 
 Different identifier systems offer distinct advantages:
