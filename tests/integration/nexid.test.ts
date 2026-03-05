@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { helpers } from '../../src/core/helpers';
 import { XID } from '../../src/core/xid';
 import NeXID, { XIDGenerator } from '../../src/node';
@@ -9,15 +9,10 @@ function toNS(ms: number, decimals: number = 2): string {
 
 describe('NeXID Integration', () => {
   // Set up a default generator for tests
-  let nexid: XIDGenerator;
-
-  beforeAll(async () => {
-    // Initialize NeXID
-    nexid = await NeXID.init();
-  });
+  const nexid: XIDGenerator = NeXID.init();
 
   describe('Basic functionality', () => {
-    it('generates valid XIDs', async () => {
+    it('generates valid XIDs', () => {
       const id = nexid.newId();
 
       // Check that the ID has the correct structure
@@ -26,7 +21,7 @@ describe('NeXID Integration', () => {
       expect(id.isNil()).toBe(false);
     });
 
-    it('generates unique XIDs', async () => {
+    it('generates unique XIDs', () => {
       const idCount = 100; // Reduced from 1000 for test speed
       const ids = new Set<string>();
 
@@ -39,7 +34,7 @@ describe('NeXID Integration', () => {
       expect(ids.size).toBe(idCount);
     });
 
-    it('generates time-based IDs', async () => {
+    it('generates time-based IDs', () => {
       const now = new Date();
       const id = nexid.newId();
 
@@ -53,7 +48,7 @@ describe('NeXID Integration', () => {
   });
 
   describe('fromString and parsing', () => {
-    it('parses valid XID strings', async () => {
+    it('parses valid XID strings', () => {
       const original = nexid.newId();
       const idString = original.toString();
 
@@ -72,12 +67,12 @@ describe('NeXID Integration', () => {
   });
 
   describe('Custom initialization', () => {
-    it('accepts custom options', async () => {
+    it('accepts custom options', () => {
       const customMachineId = 'custom-machine-id';
       const customProcessId = 0x1234;
 
       // Create custom generator with options
-      const nexid = await NeXID.init({
+      const nexid = NeXID.init({
         machineId: customMachineId,
         processId: customProcessId,
       });
@@ -99,7 +94,7 @@ describe('NeXID Integration', () => {
   });
 
   describe('sortIds function', () => {
-    it('sorts IDs chronologically', async () => {
+    it('sorts IDs chronologically', () => {
       // Create IDs with specific timestamps
       const now = Date.now();
       const id1 = nexid.newId(new Date(now - 10000)); // 10 seconds ago
@@ -120,7 +115,7 @@ describe('NeXID Integration', () => {
   });
 
   describe('fastId function', () => {
-    it('generates valid ID strings directly', async () => {
+    it('generates valid ID strings directly', () => {
       const idString = nexid.fastId();
 
       // Check that the string is valid
@@ -132,7 +127,7 @@ describe('NeXID Integration', () => {
       expect(parsed).toBeInstanceOf(XID);
     });
 
-    it('generates unique ID strings', async () => {
+    it('generates unique ID strings', () => {
       const idCount = 100; // Reduced from 1000 for test speed
       const ids = new Set<string>();
 
@@ -146,7 +141,7 @@ describe('NeXID Integration', () => {
   });
 
   describe('Performance', () => {
-    it('generates IDs efficiently', async () => {
+    it('generates IDs efficiently', () => {
       const idCount = 100; // Reduced from 10000 for test speed
       const startTime = performance.now();
 
@@ -167,7 +162,7 @@ describe('NeXID Integration', () => {
       );
     });
 
-    it('fastId is efficient for direct string IDs', async () => {
+    it('fastId is efficient for direct string IDs', () => {
       const idCount = 100; // Reduced from 10000 for test speed
 
       // Time for regular newId()

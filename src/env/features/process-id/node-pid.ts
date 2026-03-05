@@ -19,8 +19,8 @@ import { FeatureSet } from 'nexid/env/registry';
 /**
  * Retrieves the current Node.js process ID, masked to fit within 2 bytes.
  *
- * @returns Promise resolving to the masked process ID
+ * @returns The masked process ID
  */
-export const getProcessId: FeatureSet['ProcessId'] = async (): Promise<number> => {
+export const getProcessId: FeatureSet['ProcessId'] = (): number => {
   return process.pid & PROCESS_ID_MASK;
 };

@@ -24,16 +24,18 @@ import { FeatureDefinition } from 'nexid/env/registry';
  * Definition of the ProcessId feature including validation and fallback.
  */
 export const ProcessIdDefinition: FeatureDefinition<'ProcessId'> = {
+  critical: false,
+
   /**
    * Tests if the provided implementation is a valid ProcessId function.
    *
    * @param impl - The implementation to test
-   * @returns Promise resolving to true if the implementation is valid
+   * @returns True if the implementation is valid
    */
-  async test(impl: unknown): Promise<boolean> {
+  test(impl: unknown): boolean {
     if (typeof impl !== 'function') return false;
     try {
-      const result = await impl();
+      const result = impl();
       return typeof result === 'number' && result > 0;
     } catch {
       return false;
@@ -44,9 +46,9 @@ export const ProcessIdDefinition: FeatureDefinition<'ProcessId'> = {
    * Generates a random process ID when process information is unavailable.
    * This ensures IDs can still be generated with some level of uniqueness.
    *
-   * @returns A Promise that resolves to a randomly generated process ID
+   * @returns A randomly generated process ID
    */
-  async fallback(): Promise<number> {
+  fallback(): number {
     console.warn('Using non-secure fallback (process id)');
     // Generate a random number between 1 and 65535 (0xFFFF)
     return Math.floor(Math.random() * 0xffff) + 1;

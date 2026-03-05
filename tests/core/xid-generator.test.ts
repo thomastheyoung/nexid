@@ -2,17 +2,17 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { XID } from '../../src/core/xid';
 import NeXID from '../../src/node';
 
-describe('XIDGenerator', async () => {
+describe('XIDGenerator', () => {
   // Set up a default generator for tests
-  const defaultGenerator = await NeXID.init();
+  const defaultGenerator = NeXID.init();
 
-  afterEach(async () => {
+  afterEach(() => {
     vi.restoreAllMocks();
   });
 
   describe('build method', () => {
-    it('creates a default generator with valid components', async () => {
-      const gen = await NeXID.init();
+    it('creates a default generator with valid components', () => {
+      const gen = NeXID.init();
 
       // Check machine ID
       expect(gen.machineId).toBeTypeOf('string');
@@ -23,20 +23,20 @@ describe('XIDGenerator', async () => {
       expect(gen.processId).toBeLessThanOrEqual(0xffff); // 16-bit value
     });
 
-    it('accepts custom process ID', async () => {
+    it('accepts custom process ID', () => {
       const customProcessId = 0x1234;
-      const gen = await NeXID.init({ processId: customProcessId });
+      const gen = NeXID.init({ processId: customProcessId });
 
       // Check that the custom process ID was used
       expect(gen.processId).toBe(customProcessId);
     });
 
-    it('accepts custom random source', async () => {
+    it('accepts custom random source', () => {
       // Mock random source that returns predictable values
       const mockRandomSource = (size: number): Uint8Array => {
         return new Uint8Array(size).fill(0x42);
       };
-      const gen = await NeXID.init({ randomBytes: mockRandomSource });
+      const gen = NeXID.init({ randomBytes: mockRandomSource });
 
       // Generate an ID and verify the counter part has the expected pattern
       // based on our mock random source
@@ -47,10 +47,10 @@ describe('XIDGenerator', async () => {
       expect(id).toBeInstanceOf(XID);
     });
 
-    it('rejects invalid machine ID', async () => {
+    it('rejects invalid machine ID', () => {
       // Machine ID that's too short
       // We expect build to still succeed but use a default machine ID instead
-      const gen = await NeXID.init({ machineId: '' });
+      const gen = NeXID.init({ machineId: '' });
       expect(gen.machineId.length).toBeGreaterThan(0);
 
       // The machine ID should not be our invalid one
@@ -58,12 +58,12 @@ describe('XIDGenerator', async () => {
       expect(Array.from(id.bytes)).not.toEqual([0xaa, 0xbb]);
     });
 
-    it('rejects invalid process ID', async () => {
+    it('rejects invalid process ID', () => {
       // Process ID that's out of 16-bit range
       const invalidProcessId = 0x10000; // 17 bits set
 
       // We expect build to still succeed but use a default process ID instead
-      const gen = await NeXID.init({ processId: invalidProcessId });
+      const gen = NeXID.init({ processId: invalidProcessId });
 
       // The process ID should be a 16-bit value, not our invalid one
       expect(gen.processId).toBeLessThanOrEqual(0xffff);

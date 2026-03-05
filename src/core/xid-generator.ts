@@ -33,6 +33,8 @@ import { createAtomicCounter } from './counter';
 import { encode } from './encoding';
 import { XID } from './xid';
 
+export type HashFn = (data: string | Uint8Array) => Uint8Array;
+
 /**
  * Creates an XID generator with the specified environment and options.
  *
@@ -40,25 +42,26 @@ import { XID } from './xid';
  * machine ID, process ID, and atomic counter components.
  *
  * @param env - Environment abstraction providing platform capabilities
+ * @param hashMachineId - Hash function for machine ID hashing
  * @param options - Optional configuration parameters
- * @returns Promise resolving to generator API
+ * @returns Generator API
  */
-export async function XIDGenerator(
+export function XIDGenerator(
   env: Environment,
+  hashMachineId: HashFn,
   options: Generator.Options = {}
-): Promise<Generator.API> {
+): Generator.API {
   // ==========================================================================
   // Setup components
   // ==========================================================================
   // Resolve capabilities
-  const randomBytes = await env.get('RandomBytes', options.randomBytes || undefined);
-  const hashFunction = await env.get('HashFunction');
+  const randomBytes = env.get('RandomBytes', options.randomBytes || undefined);
 
-  const userMachineId = options.machineId && (async () => options.machineId as string);
-  const getMachineId = await env.get('MachineId', userMachineId || undefined);
+  const userMachineId = options.machineId && (() => options.machineId as string);
+  const getMachineId = env.get('MachineId', userMachineId || undefined);
 
-  const userProcessId = options.processId && (async () => options.processId as number);
-  let getProcessId = await env.get('ProcessId', userProcessId || undefined);
+  const userProcessId = options.processId && (() => options.processId as number);
+  const getProcessId = env.get('ProcessId', userProcessId || undefined);
 
   // ==========================================================================
   // Constructor
@@ -70,23 +73,24 @@ export async function XIDGenerator(
   const baseBuffer = new Uint8Array(RAW_LEN);
 
   // Machine ID (3 bytes)
-  const machineId = await getMachineId();
-  const machineIdBytes = (await hashFunction(machineId)).subarray(0, 3);
+  const machineId = getMachineId();
+  const machineIdBytes = hashMachineId(machineId).subarray(0, 3);
   baseBuffer[4] = machineIdBytes[0] & BYTE_MASK;
   baseBuffer[5] = machineIdBytes[1] & BYTE_MASK;
   baseBuffer[6] = machineIdBytes[2] & BYTE_MASK;
 
   // Process ID (2 bytes, big endian)
-  const processId = (await getProcessId()) & PROCESS_ID_MASK;
+  const processId = getProcessId() & PROCESS_ID_MASK;
   baseBuffer[7] = (processId >> 8) & BYTE_MASK;
   baseBuffer[8] = processId & BYTE_MASK;
 
-  // Setup atomic counter
-  const seedBytes = randomBytes(4);
-  const randomSeed =
-    (seedBytes[0] << 24) | (seedBytes[1] << 16) | (seedBytes[2] << 8) | seedBytes[3];
+  // Setup atomic counter with random re-seeding
+  const nextSeed = () => {
+    const b = randomBytes(4);
+    return ((b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3]) >>> 0;
+  };
 
-  const counter = createAtomicCounter(randomSeed);
+  const counter = createAtomicCounter(nextSeed());
   let lastTimestamp: number;
 
   // ==========================================================================
@@ -106,13 +110,13 @@ export async function XIDGenerator(
     // If the last timestamp is undefined, initialize it with current
     lastTimestamp ??= timestamp;
 
-    // Reset counter if timestamp changed.
+    // Re-seed counter if timestamp changed.
     // This prevents wrapping to occur within the same second, in which case 2 successive XIDs
-    // would sort counter-wise as [S][0xFF FF FF] -> [S][0x00 00 00], making K-ordering moot.
-    // With this reset, we would need to generate 2^24 (~16.7M) XIDs/sec to incur a wrapping,
+    // would sort counter-wise as [S][0xFF FF FF] -> [S][0x00 00 00], making K-ordering moot.
+    // With this re-seed, we would need to generate 2^24 (~16.7M) XIDs/sec to incur a wrapping,
     // which is above the current library performance (~10.5M/sec).
     if (timestamp !== lastTimestamp) {
-      counter.reset();
+      counter.reset(nextSeed());
       lastTimestamp = timestamp;
     }
 
@@ -137,6 +141,7 @@ export async function XIDGenerator(
   return {
     machineId,
     processId,
+    degraded: env.degraded,
     /**
      * Generates a new XID with the specified timestamp (defaults to current time).
      *

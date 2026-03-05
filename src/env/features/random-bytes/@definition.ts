@@ -21,13 +21,15 @@ import { FeatureDefinition } from 'nexid/env/registry';
  * Definition of the RandomBytes feature including validation and fallback.
  */
 export const RandomBytesDefinition: FeatureDefinition<'RandomBytes'> = {
+  critical: true,
+
   /**
    * Tests if the provided implementation is a valid RandomBytes function.
    *
    * @param impl - The implementation to test
-   * @returns Promise resolving to true if the implementation is valid
+   * @returns True if the implementation is valid
    */
-  async test(impl: unknown): Promise<boolean> {
+  test(impl: unknown): boolean {
     if (typeof impl !== 'function') return false;
     try {
       const result = impl(5);

@@ -26,16 +26,18 @@ import { FeatureDefinition } from 'nexid/env/registry';
  * Definition of the MachineId feature including validation and fallback.
  */
 export const MachineIdDefinition: FeatureDefinition<'MachineId'> = {
+  critical: false,
+
   /**
    * Tests if the provided implementation is a valid MachineId function.
    *
    * @param impl - The implementation to test
-   * @returns Promise resolving to true if the implementation is valid
+   * @returns True if the implementation is valid
    */
-  async test(impl: unknown): Promise<boolean> {
+  test(impl: unknown): boolean {
     if (typeof impl !== 'function') return false;
     try {
-      const result = await impl();
+      const result = impl();
       return typeof result === 'string' && result.length > 0;
     } catch {
       return false;
@@ -50,9 +52,9 @@ export const MachineIdDefinition: FeatureDefinition<'MachineId'> = {
    * SECURITY NOTE: This implementation is NOT cryptographically secure
    * and should not be used for any security-critical purposes.
    *
-   * @returns A Promise that resolves to a machine identifier string
+   * @returns A machine identifier string
    */
-  async fallback(): Promise<string> {
+  fallback(): string {
     console.warn('Using non-secure fallback (machine id)');
     const timestamp = Date.now().toString(36);
     const random = () => Math.random().toString(36).substring(2, 10);

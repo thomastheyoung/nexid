@@ -9,11 +9,17 @@
  * the XID generator with environment-specific optimizations. The module uses
  * dynamic imports to ensure only the necessary environment-specific code is
  * loaded at runtime.
+ *
+ * NOTE: This universal entry point remains async due to dynamic imports.
+ * For sync initialization, use the platform-specific entry points:
+ * - nexid/node
+ * - nexid/web
+ * - nexid/deno
  */
 
 import { XID } from 'nexid/core/xid';
 import { detectRuntimeEnvironment, RuntimeEnvironment } from 'nexid/env/features/detect-runtime';
-import { type initNeXID } from 'nexid/types/api';
+import { type initNeXIDAsync } from 'nexid/types/api';
 import { type Generator } from 'nexid/types/xid-generator';
 
 /**
@@ -48,6 +54,7 @@ async function createXIDGenerator(options?: Generator.Options): Promise<Generato
 }
 
 export { XID };
+export type { XIDBytes, XIDString } from 'nexid/types/xid';
 export type XIDGenerator = Generator.API;
-export const init: initNeXID = createXIDGenerator;
+export const init: initNeXIDAsync = createXIDGenerator;
 export default { init: createXIDGenerator };

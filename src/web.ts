@@ -16,33 +16,62 @@
  */
 
 import { XID } from 'nexid/core/xid';
-import { XIDGenerator } from 'nexid/core/xid-generator';
+import { XIDGenerator, type HashFn } from 'nexid/core/xid-generator';
 import { Environment, type EnvironmentAdapter } from 'nexid/env/environment';
-import { hash as subtleCryptoHash } from 'nexid/env/features/hash-function/subtle-crypto';
-import { getFingerprint } from 'nexid/env/features/machine-id/web-fingerprint';
+import { getWebMachineId } from 'nexid/env/features/machine-id/web-machine-id';
 import { getProcessId } from 'nexid/env/features/process-id/web';
 import { randomBytes as webCryptoRandomBytes } from 'nexid/env/features/random-bytes/web-crypto';
 import { type initNeXID } from 'nexid/types/api';
 import { type Generator } from 'nexid/types/xid-generator';
 
-const WebAdapter = new Environment({
+/**
+ * FNV-1a hash function for browser environments where crypto.subtle
+ * is async-only. Produces a 32-byte output from a 32-bit FNV-1a digest.
+ * Not cryptographically secure — sufficient for machine ID differentiation
+ * since only 3 bytes are extracted for the XID machine ID component.
+ */
+const fnv1aHash: HashFn = (data: string | Uint8Array): Uint8Array => {
+  let str: string;
+  if (typeof data === 'string') {
+    str = data;
+  } else {
+    const chunks: string[] = [];
+    for (let i = 0; i < data.length; i++) {
+      chunks.push(String.fromCharCode(data[i]));
+    }
+    str = chunks.join('');
+  }
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = (h * 0x01000193) >>> 0;
+  }
+  const out = new Uint8Array(32);
+  for (let i = 0; i < 32; i++) {
+    out[i] = ((h ^ (i * 0x53)) + i) & 0xff;
+  }
+  return out;
+};
+
+const webAdapterConfig: EnvironmentAdapter = {
   RandomBytes: webCryptoRandomBytes,
-  HashFunction: subtleCryptoHash,
-  MachineId: getFingerprint,
+  MachineId: getWebMachineId,
   ProcessId: getProcessId,
-} as EnvironmentAdapter);
+};
 
 /**
  * Creates an XID generator with browser-specific optimizations.
  *
  * @param options - Optional configuration parameters
- * @returns Promise resolving to a fully configured XID generator
+ * @returns A fully configured XID generator
  */
-async function createXIDGenerator(options?: Generator.Options): Promise<Generator.API> {
-  return XIDGenerator(WebAdapter, options);
+function createXIDGenerator(options?: Generator.Options): Generator.API {
+  const env = new Environment(webAdapterConfig, { allowInsecure: options?.allowInsecure });
+  return XIDGenerator(env, fnv1aHash, options);
 }
 
 export { XID };
+export type { XIDBytes, XIDString } from 'nexid/types/xid';
 export type XIDGenerator = Generator.API;
 export const init: initNeXID = createXIDGenerator;
 export default { init: createXIDGenerator };
