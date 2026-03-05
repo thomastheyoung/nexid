@@ -63,7 +63,7 @@ Platform-specific entry points skip detection entirely and are synchronous:
 ```typescript
 import NeXID from 'nexid/deno'; // Deno
 import NeXID from 'nexid/node'; // Node.js
-import NeXID from 'nexid/web'; // Browser
+import NeXID from 'nexid/web';  // Browser
 
 // No await needed — init is synchronous
 const nexid = NeXID.init();
@@ -78,9 +78,9 @@ Creates an XID generator. Returns `Generator.API`.
 ```typescript
 const nexid = NeXID.init({
   machineId: 'my-service-01', // Override auto-detected machine ID
-  processId: 42, // Override auto-detected process ID (0–65535)
-  randomBytes: myCSPRNG, // Custom (size: number) => Uint8Array
-  allowInsecure: false, // Allow non-cryptographic fallbacks (default: false)
+  processId: 42,              // Override auto-detected process ID (0–65535)
+  randomBytes: myCSPRNG,      // Custom (size: number) => Uint8Array
+  allowInsecure: false,       // Allow non-cryptographic fallbacks (default: false)
 });
 ```
 
@@ -96,13 +96,13 @@ const nexid = NeXID.init({
 Returned by `init()`.
 
 ```typescript
-nexid.newId(); // Generate XID object (current time)
-nexid.newId(new Date()); // Generate XID object with custom timestamp
-nexid.fastId(); // Generate XID string directly (faster)
+nexid.newId();            // Generate XID object (current time)
+nexid.newId(new Date());  // Generate XID object with custom timestamp
+nexid.fastId();           // Generate XID string directly (faster)
 
-nexid.machineId; // Hashed machine ID bytes (hex string)
-nexid.processId; // Process ID used by this instance
-nexid.degraded; // true if using insecure fallbacks
+nexid.machineId;  // Hashed machine ID bytes (hex string)
+nexid.processId;  // Process ID used by this instance
+nexid.degraded;   // true if using insecure fallbacks
 ```
 
 ### XID class
@@ -114,29 +114,29 @@ Immutable value object representing a 12-byte globally unique identifier.
 ```typescript
 import { XID } from 'nexid';
 
-XID.fromBytes(bytes); // Create from 12-byte Uint8Array
-XID.fromString(str); // Parse from 20-character string
-XID.nilID(); // Create a nil (all-zero) ID
+XID.fromBytes(bytes);  // Create from 12-byte Uint8Array
+XID.fromString(str);   // Parse from 20-character string
+XID.nilID();           // Create a nil (all-zero) ID
 ```
 
 #### Instance properties
 
 ```typescript
-id.bytes; // Readonly XIDBytes (12-byte Uint8Array)
-id.time; // Date extracted from timestamp component
-id.machineId; // Uint8Array (3-byte machine ID, copy-on-read)
-id.processId; // number (16-bit process ID)
-id.counter; // number (24-bit counter value)
+id.bytes;      // Readonly XIDBytes (12-byte Uint8Array)
+id.time;       // Date extracted from timestamp component
+id.machineId;  // Uint8Array (3-byte machine ID, copy-on-read)
+id.processId;  // number (16-bit process ID)
+id.counter;    // number (24-bit counter value)
 ```
 
 #### Instance methods
 
 ```typescript
-id.toString(); // 20-character base32-hex string
-id.toJSON(); // Same as toString() — JSON.stringify friendly
-id.isNil(); // true if all bytes are zero
-id.equals(other); // true if identical bytes
-id.compare(other); // -1, 0, or 1 (lexicographic)
+id.toString();      // 20-character base32-hex string
+id.toJSON();        // Same as toString() — JSON.stringify friendly
+id.isNil();         // true if all bytes are zero
+id.equals(other);   // true if identical bytes
+id.compare(other);  // -1, 0, or 1 (lexicographic)
 ```
 
 ### Helper functions
@@ -144,11 +144,11 @@ id.compare(other); // -1, 0, or 1 (lexicographic)
 ```typescript
 import { helpers } from 'nexid/core/helpers';
 
-helpers.compare(a, b); // Lexicographic XID comparison
-helpers.equals(a, b); // XID equality check
-helpers.isNil(id); // Check if XID is nil
-helpers.sortIds(ids); // Sort XID array chronologically
-helpers.compareBytes(a, b); // Lexicographic byte array comparison
+helpers.compare(a, b);       // Lexicographic XID comparison
+helpers.equals(a, b);        // XID equality check
+helpers.isNil(id);           // Check if XID is nil
+helpers.sortIds(ids);        // Sort XID array chronologically
+helpers.compareBytes(a, b);  // Lexicographic byte array comparison
 ```
 
 ### Exported types
@@ -156,9 +156,9 @@ helpers.compareBytes(a, b); // Lexicographic byte array comparison
 ```typescript
 import type { XIDBytes, XIDGenerator, XIDString } from 'nexid';
 
-// XIDBytes    — branded 12-byte Uint8Array
-// XIDString   — branded 20-character string
-// XIDGenerator — alias for Generator.API
+// XIDBytes      —— branded 12-byte Uint8Array
+// XIDString     —— branded 20-character string
+// XIDGenerator  —— alias for Generator.API
 ```
 
 ## Architecture
@@ -242,8 +242,8 @@ Example range query:
 ```sql
 -- Retrieving time-ordered data without timestamp columns
 SELECT * FROM events
-WHERE id >= 'cv37ijlxxxxxxxxxxxxxxx' -- Start timestamp
-AND id <= 'cv37mogxxxxxxxxxxxxxxx'   -- End timestamp
+WHERE id >= 'cv37ijlxxxxxxxxxxxxxxx' —— Start timestamp
+AND id <= 'cv37mogxxxxxxxxxxxxxxx'   —— End timestamp
 ```
 
 ### Distributed systems
