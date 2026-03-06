@@ -81,7 +81,7 @@ const nexid = NeXID.init({
   processId: 42,              // Override auto-detected process ID (0–65535)
   randomBytes: myCSPRNG,      // Custom (size: number) => Uint8Array
   allowInsecure: false,       // Allow non-cryptographic fallbacks (default: false)
-  wordFilter: defaultWordFilter, // Reject IDs containing offensive words
+  wordFilter: true,              // Reject IDs containing offensive words
 });
 ```
 
@@ -91,7 +91,7 @@ const nexid = NeXID.init({
 | `processId`       | `number`                       | Auto-detected | Custom process ID, masked to 16-bit                  |
 | `randomBytes`     | `(size: number) => Uint8Array` | Auto-detected | Custom CSPRNG implementation                         |
 | `allowInsecure`   | `boolean`                      | `false`       | When `false`, throws if CSPRNG cannot be resolved    |
-| `wordFilter`      | `WordFilterFn`                 | `undefined`   | Predicate to reject IDs containing offensive words   |
+| `wordFilter`      | `true \| string[] \| function` | `undefined`   | Reject IDs containing offensive words                |
 | `maxFilterRetries`| `number`                       | `10`          | Max retry attempts when `wordFilter` rejects an ID   |
 
 ### Generator API
@@ -156,34 +156,34 @@ helpers.compareBytes(a, b);  // Lexicographic byte array comparison
 
 ### Word filter
 
-Opt-in filtering rejects generated IDs that contain offensive substrings, retrying with a new counter value. The filter is a simple predicate — use the built-in blocklist or supply your own.
+Opt-in filtering rejects generated IDs that contain offensive substrings, retrying with a new counter value.
 
 ```typescript
-import NeXID, { defaultWordFilter, createWordFilter } from 'nexid/node';
+import NeXID, { BLOCKED_WORDS } from 'nexid/node';
 
 // Use the built-in blocklist (~60 curated offensive words)
-const nexid = NeXID.init({ wordFilter: defaultWordFilter });
+const nexid = NeXID.init({ wordFilter: true });
 
-// Or create a custom filter
-const customFilter = createWordFilter(['bad', 'word']);
-const nexid2 = NeXID.init({ wordFilter: customFilter });
+// Custom word list
+const nexid2 = NeXID.init({ wordFilter: ['bad', 'word'] });
+
+// Extend the built-in blocklist
+const nexid3 = NeXID.init({ wordFilter: [...BLOCKED_WORDS, 'mycompany'] });
+
+// Custom predicate
+const nexid4 = NeXID.init({ wordFilter: (s) => myCheck(s) });
 ```
 
-The built-in blocklist, retry limit, and factory are all exported from every entry point:
-
-- `defaultWordFilter` — predicate using the built-in blocklist
-- `createWordFilter(words)` — factory for custom word lists
-- `BLOCKED_WORDS` — the raw built-in word list (readonly array)
+`BLOCKED_WORDS` is exported from all entry points for composition.
 
 ### Exported types
 
 ```typescript
-import type { XIDBytes, XIDGenerator, XIDString, WordFilterFn } from 'nexid';
+import type { XIDBytes, XIDGenerator, XIDString } from 'nexid';
 
 // XIDBytes       -- branded 12-byte Uint8Array
 // XIDString      -- branded 20-character string
 // XIDGenerator   -- alias for Generator.API
-// WordFilterFn   -- (encoded: string) => boolean
 ```
 
 ## Architecture

@@ -245,7 +245,7 @@ const generator = init({
   allowInsecure: true,
 
   // Optional: reject IDs containing offensive substrings
-  wordFilter: defaultWordFilter,
+  wordFilter: true,
 
   // Optional: max retries when wordFilter rejects (default: 10)
   maxFilterRetries: 10,
@@ -260,7 +260,7 @@ const generator = init({
 | `processId`        | `number`                       | auto        | Custom process ID (masked to 16 bits)                   |
 | `randomBytes`      | `(size: number) => Uint8Array` | auto        | Custom CSPRNG function                                  |
 | `allowInsecure`    | `boolean`                      | `false`     | Allow insecure fallbacks for security-critical features |
-| `wordFilter`       | `WordFilterFn`                 | `undefined` | Predicate to reject IDs containing offensive words      |
+| `wordFilter`       | `true \| string[] \| function` | `undefined` | Reject IDs containing offensive words                   |
 | `maxFilterRetries` | `number`                       | `10`        | Max retry attempts when `wordFilter` rejects an ID      |
 
 ### Customizing machine ID
@@ -315,34 +315,40 @@ The `degraded` property on the generator is `true` when any security-critical fe
 IDs are encoded with base32-hex (0-9, a-v), which can occasionally produce substrings that look like offensive words. The word filter is an opt-in mechanism that rejects these IDs at generation time, retrying with a new counter value.
 
 ```typescript
-import { init, defaultWordFilter, createWordFilter } from 'nexid/node';
+import { init, BLOCKED_WORDS } from 'nexid/node';
 
 // Use the built-in blocklist (~60 curated offensive words)
-const generator = init({ wordFilter: defaultWordFilter });
+const generator = init({ wordFilter: true });
 
-// Or create a custom filter from your own word list
-const customFilter = createWordFilter(['bad', 'word']);
-const generator2 = init({ wordFilter: customFilter });
+// Custom word list
+const generator2 = init({ wordFilter: ['bad', 'word'] });
 
-// Combine with maxFilterRetries to control retry budget
-const generator3 = init({
-  wordFilter: defaultWordFilter,
+// Extend the built-in blocklist with your own terms
+const generator3 = init({ wordFilter: [...BLOCKED_WORDS, 'mycompany'] });
+
+// Custom predicate for full control
+const generator4 = init({ wordFilter: (s) => myCheck(s) });
+
+// Control retry budget
+const generator5 = init({
+  wordFilter: true,
   maxFilterRetries: 20, // default is 10
 });
 ```
+
+The `wordFilter` option accepts:
+
+| Value        | Description                                        |
+| ------------ | -------------------------------------------------- |
+| `true`       | Use the built-in offensive-word blocklist           |
+| `string[]`   | Custom word list (compiled to a regex internally)   |
+| `function`   | Custom `(encoded: string) => boolean` predicate     |
 
 The filter strategy is bound at construction time — generators without a word filter pay zero overhead. Each retry consumes one counter value. If the retry budget is exhausted, the last generated ID is returned regardless.
 
 #### Exports
 
-All entry points export the following word filter utilities:
-
-| Export              | Type                                    | Description                                  |
-| ------------------- | --------------------------------------- | -------------------------------------------- |
-| `defaultWordFilter` | `WordFilterFn`                          | Built-in filter using the curated blocklist  |
-| `createWordFilter`  | `(words: string[]) => WordFilterFn`     | Factory for custom word list filters         |
-| `BLOCKED_WORDS`     | `readonly string[]`                     | The raw built-in blocklist (~60 words)       |
-| `WordFilterFn`      | `type (encoded: string) => boolean`     | Predicate type (exported as type-only)       |
+All entry points export `BLOCKED_WORDS` (`readonly string[]`) — the raw built-in blocklist (~60 words), useful for extending the default list with custom terms.
 
 ## Type definitions
 
@@ -350,7 +356,7 @@ NeXID provides TypeScript branded types for compile-time safety:
 
 ```typescript
 // Exported from all entry points
-import type { XIDBytes, XIDGenerator, XIDString, WordFilterFn } from 'nexid';
+import type { XIDBytes, XIDGenerator, XIDString } from 'nexid';
 ```
 
 | Type           | Base type              | Description                                |
@@ -358,7 +364,6 @@ import type { XIDBytes, XIDGenerator, XIDString, WordFilterFn } from 'nexid';
 | `XIDBytes`     | `Readonly<Uint8Array>` | Branded 12-byte XID binary form            |
 | `XIDString`    | `Readonly<string>`     | Branded 20-character XID string form       |
 | `XIDGenerator` | `Generator.API`        | The generator interface type alias         |
-| `WordFilterFn` | `Function`             | `(encoded: string) => boolean` predicate   |
 
 ### Generator types (internal)
 
