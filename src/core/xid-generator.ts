@@ -49,6 +49,7 @@ import { Generator } from 'nexid/types/xid-generator';
 import { createAtomicCounter } from './counter';
 import { encode } from './encoding';
 import type { WordFilterFn } from './word-filter';
+import { resolveWordFilter } from './word-filter';
 import { XID } from './xid';
 
 export type HashFn = (data: string | Uint8Array) => Uint8Array;
@@ -68,8 +69,8 @@ export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: G
   // ==========================================================================
   // Setup components
   // ==========================================================================
-  // Word filter (opt-in)
-  const wordFilter: WordFilterFn | null = options.wordFilter ?? null;
+  // Word filter (opt-in) — resolve the union type to a predicate or null
+  const wordFilter: WordFilterFn | null = resolveWordFilter(options.wordFilter);
   const maxFilterRetries = Math.max(0, Math.floor(options.maxFilterRetries ?? 10));
 
   // Resolve capabilities

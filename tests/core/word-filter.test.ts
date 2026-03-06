@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   BLOCKED_WORDS,
-  createWordFilter,
-  defaultWordFilter,
+  resolveWordFilter,
 } from '../../src/core/word-filter';
 import NeXID from '../../src/node';
 
@@ -32,35 +31,36 @@ describe('word-filter', () => {
     });
   });
 
-  describe('defaultWordFilter', () => {
-    it('rejects strings containing blocked words', () => {
-      expect(defaultWordFilter('abc123ass456def')).toBe(true);
-      expect(defaultWordFilter('00shit00000000000000')).toBe(true);
-      expect(defaultWordFilter('fuck')).toBe(true);
+  describe('resolveWordFilter', () => {
+    it('returns null for undefined', () => {
+      expect(resolveWordFilter(undefined)).toBeNull();
     });
 
-    it('accepts clean strings', () => {
-      expect(defaultWordFilter('cv37img5tppgl4002kb0')).toBe(false);
-      expect(defaultWordFilter('00000000000000000000')).toBe(false);
+    it('returns built-in filter for true', () => {
+      const filter = resolveWordFilter(true)!;
+      expect(filter).toBeTypeOf('function');
+      expect(filter('abc123ass456def')).toBe(true);
+      expect(filter('cv37img5tppgl4002kb0')).toBe(false);
     });
-  });
 
-  describe('createWordFilter', () => {
-    it('creates a filter from custom words', () => {
-      const filter = createWordFilter(['bad', 'nope']);
+    it('returns a filter from a custom word list', () => {
+      const filter = resolveWordFilter(['bad', 'nope'])!;
       expect(filter('contains_bad_stuff')).toBe(true);
       expect(filter('contains_nope_here')).toBe(true);
       expect(filter('clean_string')).toBe(false);
     });
 
-    it('returns a no-op filter for empty word list', () => {
-      const filter = createWordFilter([]);
-      expect(filter('anything')).toBe(false);
-      expect(filter('ass')).toBe(false);
+    it('returns null for empty word list', () => {
+      expect(resolveWordFilter([])).toBeNull();
+    });
+
+    it('uses a custom function as-is', () => {
+      const fn = (s: string) => s.includes('x');
+      expect(resolveWordFilter(fn)).toBe(fn);
     });
 
     it('escapes regex metacharacters in custom words', () => {
-      const filter = createWordFilter(['a.b', 'c+d']);
+      const filter = resolveWordFilter(['a.b', 'c+d'])!;
       expect(filter('a.b')).toBe(true);
       expect(filter('aXb')).toBe(false); // dot is escaped, not wildcard
       expect(filter('c+d')).toBe(true);
@@ -68,26 +68,49 @@ describe('word-filter', () => {
     });
 
     it('lowercases custom words for matching', () => {
-      const filter = createWordFilter(['BAD']);
+      const filter = resolveWordFilter(['BAD'])!;
       expect(filter('bad')).toBe(true);
     });
   });
 
+  describe('built-in filter via true', () => {
+    const filter = resolveWordFilter(true)!;
+
+    it('rejects strings containing blocked words', () => {
+      expect(filter('abc123ass456def')).toBe(true);
+      expect(filter('00shit00000000000000')).toBe(true);
+      expect(filter('fuck')).toBe(true);
+    });
+
+    it('accepts clean strings', () => {
+      expect(filter('cv37img5tppgl4002kb0')).toBe(false);
+      expect(filter('00000000000000000000')).toBe(false);
+    });
+  });
+
   describe('generator integration', () => {
-    it('generates IDs that pass the filter', () => {
-      const gen = NeXID.init({ wordFilter: defaultWordFilter });
+    it('generates IDs that pass the filter with wordFilter: true', () => {
+      const filter = resolveWordFilter(true)!;
+      const gen = NeXID.init({ wordFilter: true });
       for (let i = 0; i < 1000; i++) {
         const id = gen.newId().toString();
-        expect(defaultWordFilter(id as string)).toBe(false);
+        expect(filter(id as string)).toBe(false);
       }
     });
 
     it('fastId generates IDs that pass the filter', () => {
-      const gen = NeXID.init({ wordFilter: defaultWordFilter });
+      const filter = resolveWordFilter(true)!;
+      const gen = NeXID.init({ wordFilter: true });
       for (let i = 0; i < 1000; i++) {
         const id = gen.fastId();
-        expect(defaultWordFilter(id as string)).toBe(false);
+        expect(filter(id as string)).toBe(false);
       }
+    });
+
+    it('accepts a custom word list', () => {
+      const gen = NeXID.init({ wordFilter: ['test'] });
+      const id = gen.newId();
+      expect(id).toBeDefined();
     });
 
     it('retries when filter rejects an ID', () => {
@@ -115,7 +138,7 @@ describe('word-filter', () => {
     });
 
     it('generates unique IDs even with filtering', () => {
-      const gen = NeXID.init({ wordFilter: defaultWordFilter });
+      const gen = NeXID.init({ wordFilter: true });
       const ids = new Set<string>();
       for (let i = 0; i < 1000; i++) {
         ids.add(gen.newId().toString());

@@ -20,6 +20,14 @@
 export type WordFilterFn = (encoded: string) => boolean;
 
 /**
+ * Accepted shapes for the `wordFilter` option:
+ * - `true` — use the built-in offensive-word blocklist
+ * - `string[]` — custom word list (compiled to a regex internally)
+ * - `WordFilterFn` — fully custom predicate
+ */
+export type WordFilterOption = true | readonly string[] | WordFilterFn;
+
+/**
  * Built-in blocklist of offensive words (3+ chars) that can be formed
  * from the base32-hex alphabet (0-9, a-v only).
  *
@@ -104,26 +112,31 @@ function getBuiltinRegex(): RegExp {
 /**
  * Built-in word filter predicate. Returns true if the string contains
  * an offensive substring from the built-in blocklist.
- *
- * Usage:
- * ```ts
- * import { defaultWordFilter } from 'nexid';
- * const gen = init({ wordFilter: defaultWordFilter });
- * ```
  */
-export const defaultWordFilter: WordFilterFn = (encoded) => getBuiltinRegex().test(encoded);
+const defaultWordFilter: WordFilterFn = (encoded) => getBuiltinRegex().test(encoded);
 
 /**
  * Creates a word filter predicate from a custom word list.
- * Words are lowercased and regex-escaped. An empty list returns a no-op
- * filter that never rejects.
- *
- * @param words - Array of words to block
- * @returns A predicate that returns true if the encoded string contains any word
+ * Words are lowercased and regex-escaped. An empty list returns null
+ * (no filtering).
  */
-export function createWordFilter(words: readonly string[]): WordFilterFn {
-  if (words.length === 0) return () => false;
+function createWordFilter(words: readonly string[]): WordFilterFn | null {
+  if (words.length === 0) return null;
   const escaped = words.map(w => w.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
   const regex = new RegExp(escaped.join('|'));
   return (encoded) => regex.test(encoded);
+}
+
+/**
+ * Resolves a `WordFilterOption` into a `WordFilterFn | null`.
+ * - `true` → built-in blocklist
+ * - `string[]` → custom word list (empty array → null)
+ * - `function` → used as-is
+ * - `undefined` → null (no filtering)
+ */
+export function resolveWordFilter(option: WordFilterOption | undefined): WordFilterFn | null {
+  if (option === undefined) return null;
+  if (option === true) return defaultWordFilter;
+  if (typeof option === 'function') return option;
+  return createWordFilter(option);
 }
