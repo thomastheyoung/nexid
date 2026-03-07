@@ -28,7 +28,7 @@ export type OffensiveWordFilterFn = (encoded: string) => boolean;
  * - 3+ characters to avoid excessive false positives
  * - Universally offensive English terms
  */
-export const BLOCKED_WORDS: readonly string[] = [
+export const BLOCKED_WORDS: readonly string[] = Object.freeze([
   'anus',
   'ass',
   'ballsac',
@@ -86,7 +86,7 @@ export const BLOCKED_WORDS: readonly string[] = [
   'trann',
   'turd',
   'vag',
-];
+]);
 
 /**
  * Lazily compiled regex from the built-in blocklist.

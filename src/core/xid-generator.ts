@@ -74,7 +74,8 @@ export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: G
     options.filterOffensiveWords,
     options.offensiveWords,
   );
-  const maxFilterAttempts = Math.min(100, Math.max(0, Math.floor(options.maxFilterAttempts ?? 10)));
+  const raw = Math.floor(options.maxFilterAttempts ?? 10);
+  const maxFilterAttempts = Number.isFinite(raw) ? Math.min(100, Math.max(0, raw)) : 10;
 
   // Resolve capabilities
   const randomBytes = env.get('RandomBytes', options.randomBytes);
@@ -163,25 +164,21 @@ export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: G
   // ==========================================================================
   const generateBytes: (timestamp: number) => Readonly<XIDBytes> = offensiveWordFilter
     ? (timestamp) => {
-        let bytes = buildXIDBytes(timestamp);
         for (let attempt = 0; attempt < maxFilterAttempts; attempt++) {
+          const bytes = buildXIDBytes(timestamp);
           if (!offensiveWordFilter(encode(bytes))) return bytes;
-          bytes = buildXIDBytes(timestamp);
         }
-        return bytes;
+        return buildXIDBytes(timestamp);
       }
     : buildXIDBytes;
 
   const generateString: (timestamp: number) => XIDString = offensiveWordFilter
     ? (timestamp) => {
-        let bytes = buildXIDBytes(timestamp);
-        let encoded = encode(bytes);
         for (let attempt = 0; attempt < maxFilterAttempts; attempt++) {
+          const encoded = encode(buildXIDBytes(timestamp));
           if (!offensiveWordFilter(encoded)) return encoded;
-          bytes = buildXIDBytes(timestamp);
-          encoded = encode(bytes);
         }
-        return encoded;
+        return encode(buildXIDBytes(timestamp));
       }
     : (timestamp) => encode(buildXIDBytes(timestamp));
 
