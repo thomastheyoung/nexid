@@ -1,12 +1,12 @@
 /**
- * @module nexid/core/word-filter
+ * @module nexid/core/offensive-word-filter
  *
- * Post-generation word filter for XID strings.
+ * Post-generation offensive word filter for XID strings.
  *
  * ARCHITECTURE:
  * This module provides a mechanism to reject generated IDs that contain
  * offensive words as substrings. It ships a curated built-in blocklist
- * and utilities for creating custom filters. Filters are simple predicates
+ * and supports extending it with custom terms. Filters are simple predicates
  * that return true when an encoded string should be rejected.
  *
  * The built-in regex is lazily compiled on first use so that applications
@@ -17,15 +17,7 @@
 /**
  * Predicate that returns true if the encoded string should be rejected.
  */
-export type WordFilterFn = (encoded: string) => boolean;
-
-/**
- * Accepted shapes for the `wordFilter` option:
- * - `true` — use the built-in offensive-word blocklist
- * - `string[]` — custom word list (compiled to a regex internally)
- * - `WordFilterFn` — fully custom predicate
- */
-export type WordFilterOption = true | readonly string[] | WordFilterFn;
+export type OffensiveWordFilterFn = (encoded: string) => boolean;
 
 /**
  * Built-in blocklist of offensive words (3+ chars) that can be formed
@@ -110,33 +102,35 @@ function getBuiltinRegex(): RegExp {
 }
 
 /**
- * Built-in word filter predicate. Returns true if the string contains
- * an offensive substring from the built-in blocklist.
+ * Built-in offensive word filter predicate. Returns true if the string
+ * contains an offensive substring from the built-in blocklist.
  */
-const defaultWordFilter: WordFilterFn = (encoded) => getBuiltinRegex().test(encoded);
+const defaultOffensiveWordFilter: OffensiveWordFilterFn = (encoded) =>
+  getBuiltinRegex().test(encoded);
 
 /**
- * Creates a word filter predicate from a custom word list.
- * Words are lowercased and regex-escaped. An empty list returns null
- * (no filtering).
+ * Creates a combined filter from the built-in blocklist plus additional words.
+ * Extra words are lowercased and regex-escaped before compilation.
  */
-function createWordFilter(words: readonly string[]): WordFilterFn | null {
-  if (words.length === 0) return null;
-  const escaped = words.map(w => w.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-  const regex = new RegExp(escaped.join('|'));
+function createExtendedFilter(extraWords: readonly string[]): OffensiveWordFilterFn {
+  const escaped = extraWords.map(w => w.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const allWords = [...BLOCKED_WORDS, ...escaped];
+  const regex = new RegExp(allWords.join('|'));
   return (encoded) => regex.test(encoded);
 }
 
 /**
- * Resolves a `WordFilterOption` into a `WordFilterFn | null`.
- * - `true` → built-in blocklist
- * - `string[]` → custom word list (empty array → null)
- * - `function` → used as-is
- * - `undefined` → null (no filtering)
+ * Resolves the offensive word filter configuration into a predicate or null.
+ *
+ * @param filter - Whether to enable offensive word filtering
+ * @param extraWords - Additional words to block alongside the built-in list
+ * @returns A filter predicate, or null if filtering is disabled
  */
-export function resolveWordFilter(option: WordFilterOption | undefined): WordFilterFn | null {
-  if (option === undefined) return null;
-  if (option === true) return defaultWordFilter;
-  if (typeof option === 'function') return option;
-  return createWordFilter(option);
+export function resolveOffensiveWordFilter(
+  filter?: boolean,
+  extraWords?: readonly string[],
+): OffensiveWordFilterFn | null {
+  if (!filter) return null;
+  if (extraWords && extraWords.length > 0) return createExtendedFilter(extraWords);
+  return defaultOffensiveWordFilter;
 }

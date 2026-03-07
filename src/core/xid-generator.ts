@@ -48,8 +48,8 @@ import { Generator } from 'nexid/types/xid-generator';
 
 import { createAtomicCounter } from './counter';
 import { encode } from './encoding';
-import type { WordFilterFn } from './word-filter';
-import { resolveWordFilter } from './word-filter';
+import type { OffensiveWordFilterFn } from './offensive-word-filter';
+import { resolveOffensiveWordFilter } from './offensive-word-filter';
 import { XID } from './xid';
 
 export type HashFn = (data: string | Uint8Array) => Uint8Array;
@@ -69,8 +69,11 @@ export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: G
   // ==========================================================================
   // Setup components
   // ==========================================================================
-  // Word filter (opt-in) — resolve the union type to a predicate or null
-  const wordFilter: WordFilterFn | null = resolveWordFilter(options.wordFilter);
+  // Offensive word filter (opt-in) — resolve the boolean + extra words to a predicate or null
+  const offensiveWordFilter: OffensiveWordFilterFn | null = resolveOffensiveWordFilter(
+    options.filterOffensiveWords,
+    options.offensiveWords,
+  );
   const maxFilterRetries = Math.max(0, Math.floor(options.maxFilterRetries ?? 10));
 
   // Resolve capabilities
@@ -158,21 +161,21 @@ export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: G
   // ==========================================================================
   // Generation strategies (bound once at construction time)
   // ==========================================================================
-  const generateBytes: (timestamp: number) => Readonly<XIDBytes> = wordFilter
+  const generateBytes: (timestamp: number) => Readonly<XIDBytes> = offensiveWordFilter
     ? (timestamp) => {
         for (let attempt = 0; attempt <= maxFilterRetries; attempt++) {
           const bytes = buildXIDBytes(timestamp);
-          if (!wordFilter(encode(bytes) as string)) return bytes;
+          if (!offensiveWordFilter(encode(bytes) as string)) return bytes;
         }
         return buildXIDBytes(timestamp);
       }
     : buildXIDBytes;
 
-  const generateString: (timestamp: number) => XIDString = wordFilter
+  const generateString: (timestamp: number) => XIDString = offensiveWordFilter
     ? (timestamp) => {
         for (let attempt = 0; attempt <= maxFilterRetries; attempt++) {
           const encoded = encode(buildXIDBytes(timestamp));
-          if (!wordFilter(encoded as string)) return encoded;
+          if (!offensiveWordFilter(encoded as string)) return encoded;
         }
         return encode(buildXIDBytes(timestamp));
       }

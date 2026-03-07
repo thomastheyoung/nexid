@@ -81,7 +81,8 @@ const nexid = NeXID.init({
   processId: 42,              // Override auto-detected process ID (0–65535)
   randomBytes: myCSPRNG,      // Custom (size: number) => Uint8Array
   allowInsecure: false,       // Allow non-cryptographic fallbacks (default: false)
-  wordFilter: true,              // Reject IDs containing offensive words
+  filterOffensiveWords: true,    // Reject IDs containing offensive words
+  offensiveWords: ['myterm'],    // Additional words to block
 });
 ```
 
@@ -90,9 +91,10 @@ const nexid = NeXID.init({
 | `machineId`       | `string`                       | Auto-detected | Custom machine identifier string (hashed before use) |
 | `processId`       | `number`                       | Auto-detected | Custom process ID, masked to 16-bit                  |
 | `randomBytes`     | `(size: number) => Uint8Array` | Auto-detected | Custom CSPRNG implementation                         |
-| `allowInsecure`   | `boolean`                      | `false`       | When `false`, throws if CSPRNG cannot be resolved    |
-| `wordFilter`      | `true \| string[] \| function` | `undefined`   | Reject IDs containing offensive words                |
-| `maxFilterRetries`| `number`                       | `10`          | Max retry attempts when `wordFilter` rejects an ID   |
+| `allowInsecure`        | `boolean`  | `false`       | When `false`, throws if CSPRNG cannot be resolved              |
+| `filterOffensiveWords` | `boolean`  | `false`       | Reject IDs containing offensive word substrings                |
+| `offensiveWords`       | `string[]` | `[]`          | Additional words to block alongside the built-in list          |
+| `maxFilterRetries`     | `number`   | `10`          | Max retry attempts when `filterOffensiveWords` rejects an ID   |
 
 ### Generator API
 
@@ -154,7 +156,7 @@ helpers.sortIds(ids);        // Sort XID array chronologically
 helpers.compareBytes(a, b);  // Lexicographic byte array comparison
 ```
 
-### Word filter
+### Offensive word filter
 
 Opt-in filtering rejects generated IDs that contain offensive substrings, retrying with a new counter value.
 
@@ -162,19 +164,16 @@ Opt-in filtering rejects generated IDs that contain offensive substrings, retryi
 import NeXID, { BLOCKED_WORDS } from 'nexid/node';
 
 // Use the built-in blocklist (~60 curated offensive words)
-const nexid = NeXID.init({ wordFilter: true });
+const nexid = NeXID.init({ filterOffensiveWords: true });
 
-// Custom word list
-const nexid2 = NeXID.init({ wordFilter: ['bad', 'word'] });
-
-// Extend the built-in blocklist
-const nexid3 = NeXID.init({ wordFilter: [...BLOCKED_WORDS, 'mycompany'] });
-
-// Custom predicate
-const nexid4 = NeXID.init({ wordFilter: (s) => myCheck(s) });
+// Extend the built-in blocklist with custom terms
+const nexid2 = NeXID.init({
+  filterOffensiveWords: true,
+  offensiveWords: ['mycompany', 'badterm'],
+});
 ```
 
-`BLOCKED_WORDS` is exported from all entry points for composition.
+`BLOCKED_WORDS` is exported from all entry points for inspection.
 
 ### Exported types
 

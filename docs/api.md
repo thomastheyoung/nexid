@@ -11,7 +11,7 @@ NeXID is a high-performance library for generating globally unique, lexicographi
 5. [XID class API](#xid-class-api)
 6. [Helper functions](#helper-functions)
 7. [Advanced configuration](#advanced-configuration)
-8. [Word filter](#word-filter)
+8. [Offensive word filter](#offensive-word-filter)
 9. [Type definitions](#type-definitions)
 10. [Error handling](#error-handling)
 
@@ -245,9 +245,12 @@ const generator = init({
   allowInsecure: true,
 
   // Optional: reject IDs containing offensive substrings
-  wordFilter: true,
+  filterOffensiveWords: true,
 
-  // Optional: max retries when wordFilter rejects (default: 10)
+  // Optional: additional words to block alongside the built-in list
+  offensiveWords: ['myterm'],
+
+  // Optional: max retries when filter rejects (default: 10)
   maxFilterRetries: 10,
 });
 ```
@@ -259,9 +262,10 @@ const generator = init({
 | `machineId`        | `string`                       | auto        | Custom machine identifier (hashed to 3 bytes)           |
 | `processId`        | `number`                       | auto        | Custom process ID (masked to 16 bits)                   |
 | `randomBytes`      | `(size: number) => Uint8Array` | auto        | Custom CSPRNG function                                  |
-| `allowInsecure`    | `boolean`                      | `false`     | Allow insecure fallbacks for security-critical features |
-| `wordFilter`       | `true \| string[] \| function` | `undefined` | Reject IDs containing offensive words                   |
-| `maxFilterRetries` | `number`                       | `10`        | Max retry attempts when `wordFilter` rejects an ID      |
+| `allowInsecure`        | `boolean`  | `false`     | Allow insecure fallbacks for security-critical features          |
+| `filterOffensiveWords` | `boolean`  | `false`     | Reject IDs containing offensive word substrings                  |
+| `offensiveWords`       | `string[]` | `[]`        | Additional words to block alongside the built-in list            |
+| `maxFilterRetries`     | `number`   | `10`        | Max retry attempts when `filterOffensiveWords` rejects an ID     |
 
 ### Customizing machine ID
 
@@ -310,45 +314,42 @@ if (generator.degraded) {
 
 The `degraded` property on the generator is `true` when any security-critical feature (currently only `RandomBytes`) fell back to an insecure implementation.
 
-### Word filter
+### Offensive word filter
 
-IDs are encoded with base32-hex (0-9, a-v), which can occasionally produce substrings that look like offensive words. The word filter is an opt-in mechanism that rejects these IDs at generation time, retrying with a new counter value.
+IDs are encoded with base32-hex (0-9, a-v), which can occasionally produce substrings that look like offensive words. The offensive word filter is an opt-in mechanism that rejects these IDs at generation time, retrying with a new counter value.
 
 ```typescript
 import { init, BLOCKED_WORDS } from 'nexid/node';
 
 // Use the built-in blocklist (~60 curated offensive words)
-const generator = init({ wordFilter: true });
-
-// Custom word list
-const generator2 = init({ wordFilter: ['bad', 'word'] });
+const generator = init({ filterOffensiveWords: true });
 
 // Extend the built-in blocklist with your own terms
-const generator3 = init({ wordFilter: [...BLOCKED_WORDS, 'mycompany'] });
-
-// Custom predicate for full control
-const generator4 = init({ wordFilter: (s) => myCheck(s) });
+const generator2 = init({
+  filterOffensiveWords: true,
+  offensiveWords: ['mycompany', 'badterm'],
+});
 
 // Control retry budget
-const generator5 = init({
-  wordFilter: true,
+const generator3 = init({
+  filterOffensiveWords: true,
   maxFilterRetries: 20, // default is 10
 });
 ```
 
-The `wordFilter` option accepts:
+| Option                 | Type       | Default | Description                                                  |
+| ---------------------- | ---------- | ------- | ------------------------------------------------------------ |
+| `filterOffensiveWords` | `boolean`  | `false` | Enable filtering using the built-in offensive word blocklist  |
+| `offensiveWords`       | `string[]` | `[]`    | Additional words to block alongside the built-in list        |
+| `maxFilterRetries`     | `number`   | `10`    | Max retries before accepting the ID regardless               |
 
-| Value        | Description                                        |
-| ------------ | -------------------------------------------------- |
-| `true`       | Use the built-in offensive-word blocklist           |
-| `string[]`   | Custom word list (compiled to a regex internally)   |
-| `function`   | Custom `(encoded: string) => boolean` predicate     |
+The filter strategy is bound at construction time — generators without filtering enabled pay zero overhead. Each retry consumes one counter value. If the retry budget is exhausted, the last generated ID is returned regardless.
 
-The filter strategy is bound at construction time — generators without a word filter pay zero overhead. Each retry consumes one counter value. If the retry budget is exhausted, the last generated ID is returned regardless.
+Only words representable in the base32-hex alphabet (0-9, a-v) will ever match generated IDs. Custom words outside this alphabet are accepted but will never trigger a rejection.
 
 #### Exports
 
-All entry points export `BLOCKED_WORDS` (`readonly string[]`) — the raw built-in blocklist (~60 words), useful for extending the default list with custom terms.
+All entry points export `BLOCKED_WORDS` (`readonly string[]`) — the raw built-in blocklist (~60 words). This is useful for inspection or for building custom filtering logic outside the generator.
 
 ## Type definitions
 

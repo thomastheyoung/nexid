@@ -11,7 +11,6 @@
  */
 
 import { XID } from 'nexid/core/xid';
-import { WordFilterOption } from 'nexid/core/word-filter';
 import { FeatureSet } from 'nexid/env/registry';
 import { XIDString } from 'nexid/types/xid';
 
@@ -70,19 +69,34 @@ export namespace Generator {
     allowInsecure: boolean;
 
     /**
-     * Word filter for rejecting IDs containing offensive substrings.
-     * When set, the generator retries (incrementing the counter) until the
+     * Enable filtering of generated IDs that contain offensive word substrings.
+     * When enabled, the generator retries (incrementing the counter) until the
      * filter passes or maxFilterRetries is reached.
      *
-     * - `true` — use the built-in offensive-word blocklist
-     * - `string[]` — custom word list (compiled to a regex internally)
-     * - `(encoded: string) => boolean` — fully custom predicate
+     * Uses a curated built-in blocklist of ~60 universally offensive English
+     * terms that can be formed from the base32-hex alphabet (0-9, a-v).
+     *
+     * @default false
      */
-    wordFilter: WordFilterOption;
+    filterOffensiveWords: boolean;
 
     /**
-     * Maximum retry attempts when wordFilter rejects an ID.
-     * Each retry consumes one counter value.
+     * Additional offensive words to block alongside the built-in blocklist.
+     * Only takes effect when `filterOffensiveWords` is `true`.
+     *
+     * Words are lowercased and regex-escaped internally. Only words
+     * representable in the base32-hex alphabet (0-9, a-v) will ever
+     * match generated IDs.
+     */
+    offensiveWords: string[];
+
+    /**
+     * Maximum retry attempts when the offensive word filter rejects an ID.
+     * Each retry consumes one counter value. If the budget is exhausted,
+     * the last generated ID is returned regardless.
+     *
+     * Only takes effect when `filterOffensiveWords` is `true`.
+     *
      * @default 10
      */
     maxFilterRetries: number;
