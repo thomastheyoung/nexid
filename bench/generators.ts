@@ -11,7 +11,6 @@ import NeXID from '../dist/node.js';
 export interface GeneratorEntry {
   name: string;
   fn: (() => unknown) | (() => Promise<unknown>);
-  async: boolean;
 }
 
 export function createGenerators(): GeneratorEntry[] {
@@ -19,20 +18,16 @@ export function createGenerators(): GeneratorEntry[] {
   const hid = hyperid();
 
   return [
-    { name: 'NeXID.newId()', fn: () => nexid.newId().toString(), async: false },
-    { name: 'NeXID.fastId()', fn: () => nexid.fastId(), async: false },
-    { name: 'uuid v1', fn: () => uuidv1(), async: false },
-    { name: 'uuid v4', fn: () => uuidv4(), async: false },
-    { name: 'uuid v7', fn: () => uuidv7(), async: false },
-    { name: 'node randomUUID', fn: () => crypto.randomUUID(), async: false },
-    { name: 'ulid', fn: () => ulid(), async: false },
-    { name: 'nanoid', fn: () => nanoid(), async: false },
-    { name: 'cuid2', fn: () => cuid2(), async: false },
-    { name: 'hyperid', fn: () => hid(), async: false },
-    {
-      name: 'ksuid',
-      fn: async () => (await KSUID.random()).string,
-      async: true,
-    },
+    { name: 'NeXID.newId()', fn: () => nexid.newId().toString() },
+    { name: 'NeXID.fastId()', fn: () => nexid.fastId() },
+    { name: 'uuid v1', fn: () => uuidv1() },
+    { name: 'uuid v4', fn: () => uuidv4() },
+    { name: 'uuid v7', fn: () => uuidv7() },
+    { name: 'node randomUUID', fn: () => crypto.randomUUID() },
+    { name: 'ulid', fn: () => ulid() },
+    { name: 'nanoid', fn: () => nanoid() },
+    { name: 'cuid2', fn: () => cuid2() },
+    { name: 'hyperid', fn: () => hid() },
+    { name: 'ksuid', fn: async () => (await KSUID.random()).string },
   ];
 }

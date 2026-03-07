@@ -79,8 +79,10 @@ export function printTaskComplete(result: BenchmarkResult, index: number, total:
 
 export function printReport(report: BenchmarkReport): void {
   const { results } = report;
+  if (results.length === 0) return;
+
   const sorted = [...results].sort((a, b) => b.opsPerSec - a.opsPerSec);
-  const maxOps = sorted[0]!.opsPerSec;
+  const maxOps = sorted[0].opsPerSec;
 
   // Results table
   console.log(`\n  ${styleText('gray', '\u2500\u2500')} ${styleText('bold', 'Results')} ${styleText('gray', '\u2500'.repeat(62))}\n`);
@@ -94,7 +96,9 @@ export function printReport(report: BenchmarkReport): void {
     const name = styleName(r.name);
     const ops = fmtNum(r.opsPerSec).padStart(14);
     const p99 = fmtNs(r.p99ns).padStart(8);
-    const ratio = (r.opsPerSec / maxOps).toFixed(2).padStart(7) + 'x';
+    const ratio = i === 0
+      ? 'best'.padStart(8)
+      : `${(r.opsPerSec / maxOps).toFixed(2)}x`.padStart(8);
     const barStr = bar(r.opsPerSec, maxOps, isNexid(r.name));
     const warn = r.unstable
       ? `  ${styleText('yellow', `\u26a0 \u00b1${r.rme.toFixed(1)}%`)}`

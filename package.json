@@ -51,7 +51,7 @@
     "prepublishOnly": "git push origin --follow-tags",
     "build": "rm -rf dist/ && tsup src/index.ts src/node.ts src/web.ts src/deno.ts --format cjs,esm --dts --out-dir dist",
     "bundle": "rm -rf bin/ && node esbuild.mjs",
-    "benchmark": "tsx bench/run.ts",
+    "benchmark": "pnpm build && tsx bench/run.ts",
     "test": "vitest run",
     "serve": "python3 -m http.server 3000"
   },

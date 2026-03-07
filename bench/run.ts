@@ -21,7 +21,7 @@ const { values: flags } = parseArgs({
 
 async function run() {
   const generators = createGenerators();
-  const json = flags.json!;
+  const json = flags.json ?? false;
 
   if (!json) {
     printHeader(process.version);
@@ -78,6 +78,9 @@ async function runBenchmarks(
 
     const result: BenchmarkResult = {
       name: gen.name,
+      // throughput.mean is the arithmetic mean of per-sample throughput values,
+      // which differs from 1/latency.mean due to Jensen's inequality. This is
+      // the more conservative (slightly lower) number.
       opsPerSec: Math.round(r.throughput.mean),
       nsPerOp: Math.round(r.latency.mean * 1_000_000),
       p99ns: Math.round(r.latency.p99 * 1_000_000),
@@ -100,5 +103,5 @@ async function runBenchmarks(
 
 run().catch((err) => {
   console.error('Benchmark failed:', err);
-  process.exit(1);
+  process.exitCode = 1;
 });
