@@ -88,14 +88,18 @@ export namespace Generator {
      * representable in the base32-hex alphabet (0-9, a-v) will ever
      * match generated IDs.
      */
-    offensiveWords: string[];
+    offensiveWords: readonly string[];
 
     /**
      * Maximum retry attempts when the offensive word filter rejects an ID.
      * Each retry consumes one counter value. If the budget is exhausted,
-     * the last generated ID is returned regardless.
+     * the last generated ID is returned regardless (best-effort filtering).
+     *
+     * A value of 0 returns the first generated ID unchecked. To disable
+     * filtering entirely, set `filterOffensiveWords: false` instead.
      *
      * Only takes effect when `filterOffensiveWords` is `true`.
+     * Clamped to 0–100.
      *
      * @default 10
      */

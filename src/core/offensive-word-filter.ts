@@ -86,7 +86,7 @@ export const BLOCKED_WORDS: readonly string[] = [
   'trann',
   'turd',
   'vag',
-] as const;
+];
 
 /**
  * Lazily compiled regex from the built-in blocklist.
@@ -113,7 +113,9 @@ const defaultOffensiveWordFilter: OffensiveWordFilterFn = (encoded) =>
  * Extra words are lowercased and regex-escaped before compilation.
  */
 function createExtendedFilter(extraWords: readonly string[]): OffensiveWordFilterFn {
-  const escaped = extraWords.map(w => w.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const escaped = extraWords
+    .filter(w => w.length > 0)
+    .map(w => w.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
   const allWords = [...BLOCKED_WORDS, ...escaped];
   const regex = new RegExp(allWords.join('|'));
   return (encoded) => regex.test(encoded);
@@ -130,7 +132,7 @@ export function resolveOffensiveWordFilter(
   filter?: boolean,
   extraWords?: readonly string[],
 ): OffensiveWordFilterFn | null {
-  if (!filter) return null;
+  if (filter !== true) return null;
   if (extraWords && extraWords.length > 0) return createExtendedFilter(extraWords);
   return defaultOffensiveWordFilter;
 }

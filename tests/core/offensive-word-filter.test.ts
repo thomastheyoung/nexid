@@ -103,7 +103,7 @@ describe('word-filter', () => {
       const gen = NeXID.init({ filterOffensiveWords: true });
       for (let i = 0; i < 1000; i++) {
         const id = gen.newId().toString();
-        expect(filter(id as string)).toBe(false);
+        expect(filter(id)).toBe(false);
       }
     });
 
@@ -112,7 +112,7 @@ describe('word-filter', () => {
       const gen = NeXID.init({ filterOffensiveWords: true });
       for (let i = 0; i < 1000; i++) {
         const id = gen.fastId();
-        expect(filter(id as string)).toBe(false);
+        expect(filter(id)).toBe(false);
       }
     });
 
@@ -139,7 +139,7 @@ describe('word-filter', () => {
       // Smoke test: generate many IDs quickly without filtering
       const ids = new Set<string>();
       for (let i = 0; i < 10000; i++) {
-        ids.add(gen.fastId() as string);
+        ids.add(gen.fastId());
       }
       expect(ids.size).toBe(10000);
     });

@@ -74,10 +74,10 @@ export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: G
     options.filterOffensiveWords,
     options.offensiveWords,
   );
-  const maxFilterRetries = Math.max(0, Math.floor(options.maxFilterRetries ?? 10));
+  const maxFilterRetries = Math.min(100, Math.max(0, Math.floor(options.maxFilterRetries ?? 10)));
 
   // Resolve capabilities
-  const randomBytes = env.get('RandomBytes', options.randomBytes ?? undefined);
+  const randomBytes = env.get('RandomBytes', options.randomBytes);
 
   const mid = options.machineId;
   const getMachineId = env.get('MachineId', mid ? () => mid : undefined);
@@ -163,21 +163,25 @@ export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: G
   // ==========================================================================
   const generateBytes: (timestamp: number) => Readonly<XIDBytes> = offensiveWordFilter
     ? (timestamp) => {
-        for (let attempt = 0; attempt <= maxFilterRetries; attempt++) {
-          const bytes = buildXIDBytes(timestamp);
-          if (!offensiveWordFilter(encode(bytes) as string)) return bytes;
+        let bytes = buildXIDBytes(timestamp);
+        for (let attempt = 0; attempt < maxFilterRetries; attempt++) {
+          if (!offensiveWordFilter(encode(bytes))) return bytes;
+          bytes = buildXIDBytes(timestamp);
         }
-        return buildXIDBytes(timestamp);
+        return bytes;
       }
     : buildXIDBytes;
 
   const generateString: (timestamp: number) => XIDString = offensiveWordFilter
     ? (timestamp) => {
-        for (let attempt = 0; attempt <= maxFilterRetries; attempt++) {
-          const encoded = encode(buildXIDBytes(timestamp));
-          if (!offensiveWordFilter(encoded as string)) return encoded;
+        let bytes = buildXIDBytes(timestamp);
+        let encoded = encode(bytes);
+        for (let attempt = 0; attempt < maxFilterRetries; attempt++) {
+          if (!offensiveWordFilter(encoded)) return encoded;
+          bytes = buildXIDBytes(timestamp);
+          encoded = encode(bytes);
         }
-        return encode(buildXIDBytes(timestamp));
+        return encoded;
       }
     : (timestamp) => encode(buildXIDBytes(timestamp));
 
