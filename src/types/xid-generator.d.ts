@@ -73,7 +73,7 @@ export namespace Generator {
      * When enabled, the generator retries (incrementing the counter) until the
      * filter passes or maxFilterRetries is reached.
      *
-     * Uses a curated built-in blocklist of ~60 universally offensive English
+     * Uses a curated built-in blocklist of 57 universally offensive English
      * terms that can be formed from the base32-hex alphabet (0-9, a-v).
      *
      * @default false

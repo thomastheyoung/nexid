@@ -14,10 +14,10 @@
  * in separate browser contexts don't collide even on the same device.
  *
  * PERFORMANCE:
- * This implementation uses Math.random() which is very fast but less random
- * than cryptographic solutions. Since the process ID is only one component
- * of the XID and only needs to differentiate between browser contexts,
- * this approach provides a good balance of performance and uniqueness.
+ * This implementation uses crypto.getRandomValues() for high-quality
+ * randomness. Since the process ID is only one component of the XID
+ * and only needs to differentiate between browser contexts, a single
+ * random 16-bit value provides sufficient uniqueness.
  */
 
 import { FeatureSet } from 'nexid/env/registry';

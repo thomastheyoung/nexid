@@ -35,12 +35,13 @@ const generator = await NeXID.init();
 
 This entry point automatically detects the current runtime environment and dynamically imports the appropriate adapter. It returns a `Promise` and requires `await`. It's the most flexible option but may result in slightly larger bundle sizes.
 
-Also exports `resolveEnvironment()` for manual two-step initialization:
+Also exports `resolveEnvironment()` for manual two-step initialization. It returns a `ResolvedEnvironment` object with a synchronous `init` function:
 
 ```typescript
 import { resolveEnvironment } from 'nexid';
 
 const { init } = await resolveEnvironment();
+// init is now synchronous — (options?: Generator.Options) => Generator.API
 const generator = init();
 ```
 
@@ -149,7 +150,7 @@ const generator = init();
 
 | Method                    | Description                                                           | Return type |
 | ------------------------- | --------------------------------------------------------------------- | ----------- |
-| `newId(timestamp?: Date)` | Creates a new XID, optionally with the specified timestamp            | `XID`       |
+| `newId(timestamp?: Date)` | Creates a new XID, optionally with the specified timestamp. Throws if an invalid `Date` is passed. Non-Date arguments are silently ignored (uses current time). | `XID`       |
 | `fastId()`                | Creates a new XID and returns its string representation (~30% faster) | `XIDString` |
 
 ### Generator properties
@@ -184,7 +185,7 @@ const generator = init();
 
 | Property    | Type         | Description                                     |
 | ----------- | ------------ | ----------------------------------------------- |
-| `bytes`     | `Uint8Array` | The 12-byte raw representation (read-only copy) |
+| `bytes`     | `Uint8Array` | The 12-byte raw representation (read-only reference) |
 | `time`      | `Date`       | The timestamp extracted from the XID            |
 | `machineId` | `Uint8Array` | The 3-byte machine ID component (copy)          |
 | `processId` | `number`     | The process ID component (16-bit)               |
@@ -271,8 +272,8 @@ const generator = init({
 
 By default, NeXID uses platform-specific methods to generate a stable machine ID:
 
-- **Node.js/Deno**: OS host UUID (via `hostid` on macOS/Linux, registry on Windows)
-- **Browsers**: Stable fingerprint derived from hardware characteristics
+- **Node.js/Deno**: OS host UUID (`/etc/machine-id` on Linux, `IOPlatformUUID` on macOS, registry `MachineGuid` on Windows)
+- **Browsers**: localStorage-persisted random UUID via `crypto.randomUUID()`, with deterministic fingerprint fallback
 
 The machine ID is always hashed (SHA-256 on Node.js/Deno, MurmurHash3 on web) before being truncated to 3 bytes, so no system information is disclosed.
 
@@ -290,7 +291,7 @@ Process IDs help differentiate IDs generated from different processes on the sam
 
 - **Node.js**: `process.pid`
 - **Deno**: `Deno.pid`
-- **Browsers**: Tab/window identifier
+- **Browsers**: Cryptographic random 16-bit value via `crypto.getRandomValues()`
 
 Override with:
 
@@ -321,7 +322,7 @@ IDs are encoded with base32-hex (0-9, a-v), which can occasionally produce subst
 ```typescript
 import { init, BLOCKED_WORDS } from 'nexid/node';
 
-// Use the built-in blocklist (~60 curated offensive words)
+// Use the built-in blocklist (57 curated offensive words)
 const generator = init({ filterOffensiveWords: true });
 
 // Extend the built-in blocklist with your own terms
@@ -349,7 +350,7 @@ Only words representable in the base32-hex alphabet (0-9, a-v) will ever match g
 
 #### Exports
 
-All entry points export `BLOCKED_WORDS` (`readonly string[]`) — the raw built-in blocklist (~60 words). This is useful for inspection or for building custom filtering logic outside the generator.
+All entry points export `BLOCKED_WORDS` (`readonly string[]`) — the raw built-in blocklist (57 words). This is useful for inspection or for building custom filtering logic outside the generator.
 
 ## Type definitions
 

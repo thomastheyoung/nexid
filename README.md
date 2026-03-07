@@ -86,15 +86,15 @@ const nexid = NeXID.init({
 });
 ```
 
-| Option            | Type                           | Default       | Description                                          |
-| ----------------- | ------------------------------ | ------------- | ---------------------------------------------------- |
-| `machineId`       | `string`                       | Auto-detected | Custom machine identifier string (hashed before use) |
-| `processId`       | `number`                       | Auto-detected | Custom process ID, masked to 16-bit                  |
-| `randomBytes`     | `(size: number) => Uint8Array` | Auto-detected | Custom CSPRNG implementation                         |
-| `allowInsecure`        | `boolean`  | `false`       | When `false`, throws if CSPRNG cannot be resolved              |
-| `filterOffensiveWords` | `boolean`  | `false`       | Reject IDs containing offensive word substrings                |
-| `offensiveWords`       | `string[]` | `[]`          | Additional words to block alongside the built-in list          |
-| `maxFilterRetries`     | `number`   | `10`          | Max retry attempts when `filterOffensiveWords` rejects an ID   |
+| Option                 | Type                           | Default       | Description                                                  |
+| ---------------------- | ------------------------------ | ------------- | ------------------------------------------------------------ |
+| `machineId`            | `string`                       | Auto-detected | Custom machine identifier string (hashed before use)         |
+| `processId`            | `number`                       | Auto-detected | Custom process ID, masked to 16-bit                          |
+| `randomBytes`          | `(size: number) => Uint8Array` | Auto-detected | Custom CSPRNG implementation                                 |
+| `allowInsecure`        | `boolean`                      | `false`       | When `false`, throws if CSPRNG cannot be resolved            |
+| `filterOffensiveWords` | `boolean`                      | `false`       | Reject IDs containing offensive word substrings              |
+| `offensiveWords`       | `string[]`                     | `[]`          | Additional words to block alongside the built-in list        |
+| `maxFilterRetries`     | `number`                       | `10`          | Max retry attempts when `filterOffensiveWords` rejects an ID |
 
 ### Generator API
 
@@ -146,7 +146,10 @@ id.compare(other);  // -1, 0, or 1 (lexicographic)
 
 ### Helper functions
 
+Standalone utility functions for working with XIDs. These are used internally by the XID class and available as a deep import:
+
 ```typescript
+// Internal module — not part of the public package exports
 import { helpers } from 'nexid/core/helpers';
 
 helpers.compare(a, b);       // Lexicographic XID comparison
@@ -156,6 +159,8 @@ helpers.sortIds(ids);        // Sort XID array chronologically
 helpers.compareBytes(a, b);  // Lexicographic byte array comparison
 ```
 
+Prefer the equivalent XID instance methods (`id.compare()`, `id.equals()`, `id.isNil()`) for typical usage.
+
 ### Offensive word filter
 
 Opt-in filtering rejects generated IDs that contain offensive substrings, retrying with a new counter value.
@@ -163,7 +168,7 @@ Opt-in filtering rejects generated IDs that contain offensive substrings, retryi
 ```typescript
 import NeXID, { BLOCKED_WORDS } from 'nexid/node';
 
-// Use the built-in blocklist (~60 curated offensive words)
+// Use the built-in blocklist (57 curated offensive words)
 const nexid = NeXID.init({ filterOffensiveWords: true });
 
 // Extend the built-in blocklist with custom terms
@@ -296,7 +301,7 @@ NeXID delivers high performance on par with or exceeding Node's native `randomUU
 
 _Benchmarks on Node.js v22 on Apple Silicon. Results may vary by environment._
 
-### Speed and security
+### Note on speed and security
 
 For password hashing, slowness is intentional: attackers must brute-force a small input space (human-chosen passwords), so making each attempt expensive is the defense (that's why bcrypt/argon2 exist).
 
@@ -306,6 +311,10 @@ For unique IDs, security comes from entropy (randomness). If an ID has 128 bits 
 - The search space is 2^128 regardless of how fast you can generate IDs
 - Collision resistance is a function of bit-length (birthday bound), not generation throughput
 - There's no "entropy-hiding" to break, the output is the random value
+
+### Note on `SubtleCrypto()` vs. `MurmurHash3-32`
+
+The machine ID hash compresses an identifier like a hostname or browser fingerprint into 3 bytes with uniform distribution. With only 24 bits of output (16.7M possible values), the cryptographic guarantees of SHA-256 are lost to truncation, and the input itself is not a secret that needs protecting. MurmurHash3-32 achieves near-ideal avalanche properties, meaning small input changes spread evenly across the output space, which is exactly what matters for minimizing collisions in this 3-byte component. It also runs synchronously, which allowed us to remove the async initialization step that SubtleCrypto.digest() required from every consumer of the library.
 
 ## Comparison with alternative solutions
 
@@ -333,6 +342,14 @@ UUID v4 remains ideal for pure randomness, nanoid excels when string size is cri
 - **Distributed file systems**: lexicographical sorting optimizes indexes while machine IDs enable sharding.
 - **Progressive Web Apps**: client-side generation works offline while maintaining global uniqueness.
 - **Time-series data management**: XIDs function as both identifiers and time indices, reducing schema complexity.
+
+## CLI
+
+NeXID ships a CLI for quick ID generation:
+
+```bash
+npx nexid          # generate a single XID
+```
 
 ## Development
 
