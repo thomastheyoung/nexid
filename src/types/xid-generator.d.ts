@@ -71,7 +71,7 @@ export namespace Generator {
     /**
      * Enable filtering of generated IDs that contain offensive word substrings.
      * When enabled, the generator retries (incrementing the counter) until the
-     * filter passes or maxFilterRetries is reached.
+     * filter passes or maxFilterAttempts is exhausted.
      *
      * Uses a curated built-in blocklist of 57 universally offensive English
      * terms that can be formed from the base32-hex alphabet (0-9, a-v).
@@ -91,9 +91,9 @@ export namespace Generator {
     offensiveWords: readonly string[];
 
     /**
-     * Maximum retry attempts when the offensive word filter rejects an ID.
-     * Each retry consumes one counter value. If the budget is exhausted,
-     * the last generated ID is returned regardless (best-effort filtering).
+     * Maximum attempts to generate a clean ID when the offensive word filter
+     * is enabled. Each attempt consumes one counter value. If the budget is
+     * exhausted, the last generated ID is returned regardless (best-effort).
      *
      * A value of 0 returns the first generated ID unchecked. To disable
      * filtering entirely, set `filterOffensiveWords: false` instead.
@@ -103,6 +103,6 @@ export namespace Generator {
      *
      * @default 10
      */
-    maxFilterRetries: number;
+    maxFilterAttempts: number;
   }>;
 }

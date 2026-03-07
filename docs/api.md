@@ -251,8 +251,8 @@ const generator = init({
   // Optional: additional words to block alongside the built-in list
   offensiveWords: ['myterm'],
 
-  // Optional: max retries when filter rejects (default: 10)
-  maxFilterRetries: 10,
+  // Optional: max attempts when filter rejects (default: 10)
+  maxFilterAttempts: 10,
 });
 ```
 
@@ -266,7 +266,7 @@ const generator = init({
 | `allowInsecure`        | `boolean`  | `false`     | Allow insecure fallbacks for security-critical features          |
 | `filterOffensiveWords` | `boolean`  | `false`     | Reject IDs containing offensive word substrings                  |
 | `offensiveWords`       | `string[]` | `[]`        | Additional words to block alongside the built-in list            |
-| `maxFilterRetries`     | `number`   | `10`        | Max retry attempts when `filterOffensiveWords` rejects an ID     |
+| `maxFilterAttempts`     | `number`   | `10`        | Max attempts to find a clean ID when filtering is enabled        |
 
 ### Customizing machine ID
 
@@ -331,10 +331,10 @@ const generator2 = init({
   offensiveWords: ['mycompany', 'badterm'],
 });
 
-// Control retry budget
+// Control attempt budget
 const generator3 = init({
   filterOffensiveWords: true,
-  maxFilterRetries: 20, // default is 10
+  maxFilterAttempts: 20, // default is 10
 });
 ```
 
@@ -342,9 +342,9 @@ const generator3 = init({
 | ---------------------- | ---------- | ------- | ------------------------------------------------------------ |
 | `filterOffensiveWords` | `boolean`  | `false` | Enable filtering using the built-in offensive word blocklist  |
 | `offensiveWords`       | `string[]` | `[]`    | Additional words to block alongside the built-in list        |
-| `maxFilterRetries`     | `number`   | `10`    | Max retries before accepting the ID regardless               |
+| `maxFilterAttempts`     | `number`   | `10`    | Max attempts before accepting the ID regardless              |
 
-The filter strategy is bound at construction time — generators without filtering enabled pay zero overhead. Each retry consumes one counter value. If the retry budget is exhausted, the last generated ID is returned regardless.
+The filter strategy is bound at construction time — generators without filtering enabled pay zero overhead. Each attempt consumes one counter value. If the attempt budget is exhausted, the last generated ID is returned regardless.
 
 Only words representable in the base32-hex alphabet (0-9, a-v) will ever match generated IDs. Custom words outside this alphabet are accepted but will never trigger a rejection.
 

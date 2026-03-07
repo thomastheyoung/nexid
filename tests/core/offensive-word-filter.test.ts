@@ -144,13 +144,13 @@ describe('word-filter', () => {
       expect(ids.size).toBe(10000);
     });
 
-    it('handles maxFilterRetries of 0', () => {
+    it('handles maxFilterAttempts of 0', () => {
       // We can't easily test retry behavior with the boolean API,
-      // but we can verify maxFilterRetries is respected by checking
+      // but we can verify maxFilterAttempts is respected by checking
       // that the generator still produces IDs
       const gen = NeXID.init({
         filterOffensiveWords: true,
-        maxFilterRetries: 0,
+        maxFilterAttempts: 0,
       });
       const id = gen.newId();
       expect(id).toBeDefined();

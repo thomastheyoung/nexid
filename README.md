@@ -94,7 +94,7 @@ const nexid = NeXID.init({
 | `allowInsecure`        | `boolean`                      | `false`       | When `false`, throws if CSPRNG cannot be resolved            |
 | `filterOffensiveWords` | `boolean`                      | `false`       | Reject IDs containing offensive word substrings              |
 | `offensiveWords`       | `string[]`                     | `[]`          | Additional words to block alongside the built-in list        |
-| `maxFilterRetries`     | `number`                       | `10`          | Max retry attempts when `filterOffensiveWords` rejects an ID |
+| `maxFilterAttempts`     | `number`                       | `10`          | Max attempts to find a clean ID when filtering is enabled    |
 
 ### Generator API
 
