@@ -36,7 +36,7 @@ export const ProcessIdDefinition: FeatureDefinition<'ProcessId'> = {
     if (typeof impl !== 'function') return false;
     try {
       const result = impl();
-      return typeof result === 'number' && result > 0;
+      return typeof result === 'number' && Number.isFinite(result) && result >= 0;
     } catch {
       return false;
     }
