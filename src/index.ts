@@ -34,6 +34,7 @@ async function init(options?: Generator.Options): Promise<Generator.API> {
 }
 
 export { XID, init, resolveEnvironment };
+export { BLOCKED_WORDS } from './core/offensive-word-filter.js';
 export type { XIDBytes, XIDString } from 'nexid/types/xid';
 export type XIDGenerator = Generator.API;
 export default { init };

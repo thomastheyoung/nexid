@@ -46,6 +46,7 @@ function createXIDGenerator(options?: Generator.Options): Generator.API {
 }
 
 export { XID };
+export { BLOCKED_WORDS } from './core/offensive-word-filter.js';
 export type { XIDBytes, XIDString } from 'nexid/types/xid';
 export type XIDGenerator = Generator.API;
 export const init: initNeXID = createXIDGenerator;

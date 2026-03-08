@@ -43,11 +43,12 @@
 
 import { BYTE_MASK, PROCESS_ID_MASK, RAW_LEN } from 'nexid/common/constants';
 import { Environment } from 'nexid/env/environment';
-import { XIDBytes } from 'nexid/types/xid';
+import { XIDBytes, XIDString } from 'nexid/types/xid';
 import { Generator } from 'nexid/types/xid-generator';
 
 import { createAtomicCounter } from './counter';
 import { encode } from './encoding';
+import { resolveOffensiveWordFilter, type OffensiveWordFilterFn } from './offensive-word-filter';
 import { XID } from './xid';
 
 export type HashFn = (data: string | Uint8Array) => Uint8Array;
@@ -67,8 +68,16 @@ export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: G
   // ==========================================================================
   // Setup components
   // ==========================================================================
+  // Offensive word filter (opt-in) — resolve the boolean + extra words to a predicate or null
+  const offensiveWordFilter: OffensiveWordFilterFn | null = resolveOffensiveWordFilter(
+    options.filterOffensiveWords,
+    options.offensiveWords,
+  );
+  const raw = Math.floor(options.maxFilterAttempts ?? 10);
+  const maxFilterAttempts = Number.isFinite(raw) ? Math.min(100, Math.max(0, raw)) : 10;
+
   // Resolve capabilities
-  const randomBytes = env.get('RandomBytes', options.randomBytes ?? undefined);
+  const randomBytes = env.get('RandomBytes', options.randomBytes);
 
   const mid = options.machineId;
   const getMachineId = env.get('MachineId', mid ? () => mid : undefined);
@@ -87,13 +96,22 @@ export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: G
 
   // Machine ID (3 bytes)
   const machineId = getMachineId();
-  const machineIdBytes = hashMachineId(machineId).subarray(0, 3);
-  baseBuffer[4] = machineIdBytes[0] & BYTE_MASK;
-  baseBuffer[5] = machineIdBytes[1] & BYTE_MASK;
-  baseBuffer[6] = machineIdBytes[2] & BYTE_MASK;
+  let machineIdBytes = hashMachineId(machineId).slice(0, 3);
 
   // Process ID (2 bytes, big endian)
   const processId = getProcessId() & PROCESS_ID_MASK;
+
+  // Sanitize the fixed region (encoded chars 7–13) at construction time.
+  // These characters are determined entirely by machine ID + process ID bytes
+  // and cannot be changed by counter-based retries at generation time.
+  // Re-hash the machine ID with incremental salts until the region is clean.
+  if (offensiveWordFilter) {
+    machineIdBytes = sanitizeFixedRegion(machineIdBytes, processId, machineId, hashMachineId, offensiveWordFilter);
+  }
+
+  baseBuffer[4] = machineIdBytes[0] & BYTE_MASK;
+  baseBuffer[5] = machineIdBytes[1] & BYTE_MASK;
+  baseBuffer[6] = machineIdBytes[2] & BYTE_MASK;
   baseBuffer[7] = (processId >> 8) & BYTE_MASK;
   baseBuffer[8] = processId & BYTE_MASK;
 
@@ -150,6 +168,35 @@ export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: G
   }
 
   // ==========================================================================
+  // Generation strategies (bound once at construction time)
+  // ==========================================================================
+  // Counter retries only change chars 14–19. If the offensive match falls
+  // entirely in chars 0–13 (timestamp + machine/process region), further
+  // retries are futile — bail out immediately to avoid wasting counter values.
+  const generateBytes: (timestamp: number) => Readonly<XIDBytes> = offensiveWordFilter
+    ? timestamp => {
+        for (let attempt = 0; attempt < maxFilterAttempts; attempt++) {
+          const bytes = buildXIDBytes(timestamp);
+          const encoded = encode(bytes);
+          if (!offensiveWordFilter(encoded)) return bytes;
+          if (attempt === 0 && offensiveWordFilter(encoded.substring(0, 14))) return bytes;
+        }
+        return buildXIDBytes(timestamp);
+      }
+    : buildXIDBytes;
+
+  const generateString: (timestamp: number) => XIDString = offensiveWordFilter
+    ? timestamp => {
+        for (let attempt = 0; attempt < maxFilterAttempts; attempt++) {
+          const encoded = encode(buildXIDBytes(timestamp));
+          if (!offensiveWordFilter(encoded)) return encoded;
+          if (attempt === 0 && offensiveWordFilter(encoded.substring(0, 14))) return encoded;
+        }
+        return encode(buildXIDBytes(timestamp));
+      }
+    : timestamp => encode(buildXIDBytes(timestamp));
+
+  // ==========================================================================
   // Export API
   // ==========================================================================
   // Expose hashed machine ID bytes (hex) rather than raw system identifier
@@ -173,7 +220,7 @@ export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: G
       } else {
         timestamp = Date.now();
       }
-      return XID.fromBytes(buildXIDBytes(timestamp));
+      return XID.fromBytes(generateBytes(timestamp));
     },
 
     /**
@@ -184,7 +231,59 @@ export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: G
      * @returns A string representation of a new XID
      */
     fastId() {
-      return encode(buildXIDBytes(Date.now()));
+      return generateString(Date.now());
     },
   };
+}
+
+// ============================================================================
+// Construction-time fixed region sanitization
+// ============================================================================
+
+/**
+ * Encoded chars 7–13 are determined entirely by machine ID (bytes 4–6) and
+ * process ID (bytes 7–8). Counter-based retries at generation time only affect
+ * chars 14–19, so an offensive word in chars 7–13 would appear in every single
+ * generated ID, forever.
+ *
+ * This function detects the problem and re-hashes the machine ID with
+ * incremental salts until the fixed region is clean. The salted hash is still
+ * a valid, deterministic machine identifier — it just avoids the unfortunate
+ * byte combination.
+ */
+function sanitizeFixedRegion(
+  machineIdBytes: Uint8Array,
+  processId: number,
+  rawMachineId: string,
+  hashFn: HashFn,
+  filter: OffensiveWordFilterFn,
+): Uint8Array {
+  if (!isFixedRegionOffensive(machineIdBytes, processId, filter)) {
+    return machineIdBytes;
+  }
+
+  for (let salt = 1; salt <= 100; salt++) {
+    const candidate = hashFn(rawMachineId + '\0' + String(salt)).slice(0, 3);
+    if (!isFixedRegionOffensive(candidate, processId, filter)) {
+      return candidate;
+    }
+  }
+
+  // Extremely unlikely: all 100 salts still offensive. Return original (best-effort).
+  return machineIdBytes;
+}
+
+/**
+ * Checks whether the fixed region (encoded chars 7–13) contains an offensive
+ * word. Builds a temporary buffer with only the machine + process bytes set,
+ * encodes it, and tests the relevant substring.
+ */
+function isFixedRegionOffensive(mid: Uint8Array, pid: number, filter: OffensiveWordFilterFn): boolean {
+  const buf = new Uint8Array(RAW_LEN);
+  buf[4] = mid[0] & BYTE_MASK;
+  buf[5] = mid[1] & BYTE_MASK;
+  buf[6] = mid[2] & BYTE_MASK;
+  buf[7] = (pid >> 8) & BYTE_MASK;
+  buf[8] = pid & BYTE_MASK;
+  return filter(encode(buf as XIDBytes).substring(7, 14));
 }

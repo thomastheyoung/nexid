@@ -16,7 +16,7 @@ const TextColors = {
   pink: 'oklch(59.2% 0.249 0.584)',
   blue: 'oklch(62.3% 0.214 259.815)',
   orange: 'oklch(75% 0.183 55.934)',
-  emerald: 'oklch(59.6% 0.145 163.225)'
+  emerald: 'oklch(59.6% 0.145 163.225)',
 };
 
 export type LoggerVariant = keyof typeof TextColors;
@@ -28,7 +28,7 @@ export function Logger(variant: LoggerVariant, prefix: string) {
         `%c[${prefix}]%c`,
         `background: ${BACKGROUND}; color: ${TextColors[variant]}; font-weight: bold; line-height: 1rem;`,
         `background: ${BACKGROUND}; color: ${TEXT}; line-height: 1rem`,
-        ...args
+        ...args,
       );
     },
     error(...args: any[]) {
@@ -36,8 +36,8 @@ export function Logger(variant: LoggerVariant, prefix: string) {
         `%c[${prefix}]%c`,
         `background: ${BACKGROUND}; color: ${ERROR_H}; font-weight: bold; line-height: 1rem;`,
         `background: ${BACKGROUND}; color: ${ERROR_T}; line-height: 1rem`,
-        ...args
+        ...args,
       );
-    }
+    },
   };
 }

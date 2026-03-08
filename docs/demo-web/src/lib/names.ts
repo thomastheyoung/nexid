@@ -197,7 +197,7 @@ export const Heroes = [
   ['Johnny', 'Cash'],
   ['Dolly', 'Parton'],
   ['Willie', 'Nelson'],
-  ['Muddy', 'Waters']
+  ['Muddy', 'Waters'],
 ];
 
 export function shuffleArray<T = any>(array: T[]): T[] {

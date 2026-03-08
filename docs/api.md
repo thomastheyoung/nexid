@@ -11,8 +11,9 @@ NeXID is a high-performance library for generating globally unique, lexicographi
 5. [XID class API](#xid-class-api)
 6. [Helper functions](#helper-functions)
 7. [Advanced configuration](#advanced-configuration)
-8. [Type definitions](#type-definitions)
-9. [Error handling](#error-handling)
+8. [Offensive word filter](#offensive-word-filter)
+9. [Type definitions](#type-definitions)
+10. [Error handling](#error-handling)
 
 ## Installation
 
@@ -34,12 +35,13 @@ const generator = await NeXID.init();
 
 This entry point automatically detects the current runtime environment and dynamically imports the appropriate adapter. It returns a `Promise` and requires `await`. It's the most flexible option but may result in slightly larger bundle sizes.
 
-Also exports `resolveEnvironment()` for manual two-step initialization:
+Also exports `resolveEnvironment()` for manual two-step initialization. It returns a `ResolvedEnvironment` object with a synchronous `init` function:
 
 ```typescript
 import { resolveEnvironment } from 'nexid';
 
 const { init } = await resolveEnvironment();
+// init is now synchronous — (options?: Generator.Options) => Generator.API
 const generator = init();
 ```
 
@@ -146,10 +148,10 @@ const generator = init();
 
 ### Generator methods
 
-| Method                    | Description                                                           | Return type |
-| ------------------------- | --------------------------------------------------------------------- | ----------- |
-| `newId(timestamp?: Date)` | Creates a new XID, optionally with the specified timestamp            | `XID`       |
-| `fastId()`                | Creates a new XID and returns its string representation (~30% faster) | `XIDString` |
+| Method                    | Description                                                                                                                                                     | Return type |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| `newId(timestamp?: Date)` | Creates a new XID, optionally with the specified timestamp. Throws if an invalid `Date` is passed. Non-Date arguments are silently ignored (uses current time). | `XID`       |
+| `fastId()`                | Creates a new XID and returns its string representation (~30% faster)                                                                                           | `XIDString` |
 
 ### Generator properties
 
@@ -181,13 +183,13 @@ const generator = init();
 
 ### Instance properties
 
-| Property    | Type         | Description                                     |
-| ----------- | ------------ | ----------------------------------------------- |
-| `bytes`     | `Uint8Array` | The 12-byte raw representation (read-only copy) |
-| `time`      | `Date`       | The timestamp extracted from the XID            |
-| `machineId` | `Uint8Array` | The 3-byte machine ID component (copy)          |
-| `processId` | `number`     | The process ID component (16-bit)               |
-| `counter`   | `number`     | The counter component (24-bit)                  |
+| Property    | Type         | Description                                          |
+| ----------- | ------------ | ---------------------------------------------------- |
+| `bytes`     | `Uint8Array` | The 12-byte raw representation (read-only reference) |
+| `time`      | `Date`       | The timestamp extracted from the XID                 |
+| `machineId` | `Uint8Array` | The 3-byte machine ID component (copy)               |
+| `processId` | `number`     | The process ID component (16-bit)                    |
+| `counter`   | `number`     | The counter component (24-bit)                       |
 
 ## Helper functions
 
@@ -242,24 +244,36 @@ const generator = init({
   // Optional: allow insecure fallbacks (default: false)
   // When false, throws if CSPRNG cannot be resolved
   allowInsecure: true,
+
+  // Optional: reject IDs containing offensive substrings
+  filterOffensiveWords: true,
+
+  // Optional: additional words to block alongside the built-in list
+  offensiveWords: ['myterm'],
+
+  // Optional: max attempts when filter rejects (default: 10)
+  maxFilterAttempts: 10,
 });
 ```
 
 ### All options
 
-| Option          | Type                           | Default | Description                                             |
-| --------------- | ------------------------------ | ------- | ------------------------------------------------------- |
-| `machineId`     | `string`                       | auto    | Custom machine identifier (hashed to 3 bytes)           |
-| `processId`     | `number`                       | auto    | Custom process ID (masked to 16 bits)                   |
-| `randomBytes`   | `(size: number) => Uint8Array` | auto    | Custom CSPRNG function                                  |
-| `allowInsecure` | `boolean`                      | `false` | Allow insecure fallbacks for security-critical features |
+| Option                 | Type                           | Default | Description                                               |
+| ---------------------- | ------------------------------ | ------- | --------------------------------------------------------- |
+| `machineId`            | `string`                       | auto    | Custom machine identifier (hashed to 3 bytes)             |
+| `processId`            | `number`                       | auto    | Custom process ID (masked to 16 bits)                     |
+| `randomBytes`          | `(size: number) => Uint8Array` | auto    | Custom CSPRNG function                                    |
+| `allowInsecure`        | `boolean`                      | `false` | Allow insecure fallbacks for security-critical features   |
+| `filterOffensiveWords` | `boolean`                      | `false` | Reject IDs containing offensive word substrings           |
+| `offensiveWords`       | `string[]`                     | `[]`    | Additional words to block alongside the built-in list     |
+| `maxFilterAttempts`    | `number`                       | `10`    | Max attempts to find a clean ID when filtering is enabled |
 
 ### Customizing machine ID
 
 By default, NeXID uses platform-specific methods to generate a stable machine ID:
 
-- **Node.js/Deno**: OS host UUID (via `hostid` on macOS/Linux, registry on Windows)
-- **Browsers**: Stable fingerprint derived from hardware characteristics
+- **Node.js/Deno**: OS host UUID (`/etc/machine-id` on Linux, `IOPlatformUUID` on macOS, registry `MachineGuid` on Windows)
+- **Browsers**: localStorage-persisted random UUID via `crypto.randomUUID()`, with deterministic fingerprint fallback
 
 The machine ID is always hashed (SHA-256 on Node.js/Deno, MurmurHash3 on web) before being truncated to 3 bytes, so no system information is disclosed.
 
@@ -277,7 +291,7 @@ Process IDs help differentiate IDs generated from different processes on the sam
 
 - **Node.js**: `process.pid`
 - **Deno**: `Deno.pid`
-- **Browsers**: Tab/window identifier
+- **Browsers**: Cryptographic random 16-bit value via `crypto.getRandomValues()`
 
 Override with:
 
@@ -300,6 +314,43 @@ if (generator.degraded) {
 ```
 
 The `degraded` property on the generator is `true` when any security-critical feature (currently only `RandomBytes`) fell back to an insecure implementation.
+
+### Offensive word filter
+
+IDs are encoded with base32-hex (0-9, a-v), which can occasionally produce substrings that look like offensive words. The offensive word filter is an opt-in mechanism that rejects these IDs at generation time, retrying with a new counter value.
+
+```typescript
+import { init, BLOCKED_WORDS } from 'nexid/node';
+
+// Use the built-in blocklist (57 curated offensive words)
+const generator = init({ filterOffensiveWords: true });
+
+// Extend the built-in blocklist with your own terms
+const generator2 = init({
+  filterOffensiveWords: true,
+  offensiveWords: ['mycompany', 'badterm'],
+});
+
+// Control attempt budget
+const generator3 = init({
+  filterOffensiveWords: true,
+  maxFilterAttempts: 20, // default is 10
+});
+```
+
+| Option                 | Type       | Default | Description                                                  |
+| ---------------------- | ---------- | ------- | ------------------------------------------------------------ |
+| `filterOffensiveWords` | `boolean`  | `false` | Enable filtering using the built-in offensive word blocklist |
+| `offensiveWords`       | `string[]` | `[]`    | Additional words to block alongside the built-in list        |
+| `maxFilterAttempts`    | `number`   | `10`    | Max attempts before accepting the ID regardless              |
+
+The filter strategy is bound at construction time — generators without filtering enabled pay zero overhead. Each attempt consumes one counter value. If the attempt budget is exhausted, the last generated ID is returned regardless.
+
+Only words representable in the base32-hex alphabet (0-9, a-v) will ever match generated IDs. Custom words outside this alphabet are accepted but will never trigger a rejection.
+
+#### Exports
+
+All entry points export `BLOCKED_WORDS` (`readonly string[]`) — the raw built-in blocklist (57 words). This is useful for inspection or for building custom filtering logic outside the generator.
 
 ## Type definitions
 
