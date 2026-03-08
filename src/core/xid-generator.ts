@@ -97,7 +97,7 @@ export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: G
 
   // Machine ID (3 bytes)
   const machineId = getMachineId();
-  let machineIdBytes = hashMachineId(machineId).subarray(0, 3);
+  let machineIdBytes = hashMachineId(machineId).slice(0, 3);
 
   // Process ID (2 bytes, big endian)
   const processId = getProcessId() & PROCESS_ID_MASK;
@@ -264,7 +264,7 @@ function sanitizeFixedRegion(
   }
 
   for (let salt = 1; salt <= 100; salt++) {
-    const candidate = hashFn(rawMachineId + '\0' + String(salt)).subarray(0, 3);
+    const candidate = hashFn(rawMachineId + '\0' + String(salt)).slice(0, 3);
     if (!isFixedRegionOffensive(candidate, processId, filter)) {
       return candidate;
     }

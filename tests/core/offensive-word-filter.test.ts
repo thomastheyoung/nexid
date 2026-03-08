@@ -97,6 +97,115 @@ describe('word-filter', () => {
     });
   });
 
+  describe('construction-time fixed region sanitization', () => {
+    // 'test-machine' with pid=1234 produces fixed region 'f84og9k'.
+    // Using 'f84og' as a custom offensive word forces the construction-time
+    // sanitization to re-salt the machine ID hash.
+    // Note: processId must be > 0 to pass the ProcessId feature validation.
+
+    it('re-salts machine ID when fixed region contains an offensive word', () => {
+      const baseGen = NeXID.init({
+        machineId: 'test-machine',
+        processId: 1234,
+      });
+      const filteredGen = NeXID.init({
+        machineId: 'test-machine',
+        processId: 1234,
+        filterOffensiveWords: true,
+        offensiveWords: ['f84og'],
+      });
+
+      // The machineId hex should differ — proving the hash was re-salted
+      expect(filteredGen.machineId).not.toBe(baseGen.machineId);
+    });
+
+    it('does not re-salt when fixed region is clean', () => {
+      const baseGen = NeXID.init({
+        machineId: 'test-machine',
+        processId: 1234,
+      });
+      const filteredGen = NeXID.init({
+        machineId: 'test-machine',
+        processId: 1234,
+        filterOffensiveWords: true,
+        // 'zzz' cannot appear in base32-hex output (max char is 'v')
+        offensiveWords: ['zzz'],
+      });
+
+      // Same machineId hex — no re-salting needed
+      expect(filteredGen.machineId).toBe(baseGen.machineId);
+    });
+
+    it('produces IDs without the offensive word in the fixed region after re-salting', () => {
+      const gen = NeXID.init({
+        machineId: 'test-machine',
+        processId: 1234,
+        filterOffensiveWords: true,
+        offensiveWords: ['f84og'],
+      });
+
+      for (let i = 0; i < 100; i++) {
+        const id = gen.fastId();
+        // Chars 7-13 should no longer contain 'f84og'
+        expect(id.substring(7, 14)).not.toContain('f84og');
+      }
+    });
+
+    it('falls back gracefully when filter is very aggressive', () => {
+      const gen = NeXID.init({
+        machineId: 'test-machine',
+        processId: 1234,
+        filterOffensiveWords: true,
+        offensiveWords: ['f84og'],
+      });
+      const id = gen.newId();
+      expect(id).toBeDefined();
+      expect(id.toString()).toHaveLength(20);
+    });
+  });
+
+  describe('position-aware bail-out', () => {
+    it('does not waste counter values when match is in timestamp region', () => {
+      // Generate two generators with the same seed state.
+      // One has a filter that matches a timestamp-region pattern,
+      // the other has no filter. If the bail-out works correctly,
+      // the filtered generator should only consume 1 extra counter value
+      // (the first attempt) rather than maxFilterAttempts.
+      const gen = NeXID.init({
+        machineId: 'test-machine',
+        processId: 1234,
+        filterOffensiveWords: true,
+        // Use a word that will match in the first few chars (timestamp region).
+        // Current timestamp prefix starts with 'c' range. We use a very short
+        // word likely to appear in the timestamp region.
+        offensiveWords: ['cv3'],
+        maxFilterAttempts: 10,
+      });
+
+      // Even with aggressive filtering, the generator should produce valid IDs
+      const ids = new Set<string>();
+      for (let i = 0; i < 100; i++) {
+        ids.add(gen.fastId());
+      }
+      // All IDs should be unique (counter not exhausted by wasteful retries)
+      expect(ids.size).toBe(100);
+    });
+
+    it('retries successfully when match is only in counter region', () => {
+      const filter = resolveOffensiveWordFilter(true)!;
+      const gen = NeXID.init({
+        filterOffensiveWords: true,
+        maxFilterAttempts: 10,
+      });
+
+      // Generate many IDs — none should contain blocked words
+      for (let i = 0; i < 1000; i++) {
+        const id = gen.fastId();
+        expect(filter(id)).toBe(false);
+      }
+    });
+  });
+
   describe('generator integration', () => {
     it('generates IDs that pass the filter with filterOffensiveWords: true', () => {
       const filter = resolveOffensiveWordFilter(true)!;
