@@ -148,10 +148,10 @@ const generator = init();
 
 ### Generator methods
 
-| Method                    | Description                                                           | Return type |
-| ------------------------- | --------------------------------------------------------------------- | ----------- |
+| Method                    | Description                                                                                                                                                     | Return type |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
 | `newId(timestamp?: Date)` | Creates a new XID, optionally with the specified timestamp. Throws if an invalid `Date` is passed. Non-Date arguments are silently ignored (uses current time). | `XID`       |
-| `fastId()`                | Creates a new XID and returns its string representation (~30% faster) | `XIDString` |
+| `fastId()`                | Creates a new XID and returns its string representation (~30% faster)                                                                                           | `XIDString` |
 
 ### Generator properties
 
@@ -183,13 +183,13 @@ const generator = init();
 
 ### Instance properties
 
-| Property    | Type         | Description                                     |
-| ----------- | ------------ | ----------------------------------------------- |
+| Property    | Type         | Description                                          |
+| ----------- | ------------ | ---------------------------------------------------- |
 | `bytes`     | `Uint8Array` | The 12-byte raw representation (read-only reference) |
-| `time`      | `Date`       | The timestamp extracted from the XID            |
-| `machineId` | `Uint8Array` | The 3-byte machine ID component (copy)          |
-| `processId` | `number`     | The process ID component (16-bit)               |
-| `counter`   | `number`     | The counter component (24-bit)                  |
+| `time`      | `Date`       | The timestamp extracted from the XID                 |
+| `machineId` | `Uint8Array` | The 3-byte machine ID component (copy)               |
+| `processId` | `number`     | The process ID component (16-bit)                    |
+| `counter`   | `number`     | The counter component (24-bit)                       |
 
 ## Helper functions
 
@@ -258,15 +258,15 @@ const generator = init({
 
 ### All options
 
-| Option             | Type                           | Default     | Description                                             |
-| ------------------ | ------------------------------ | ----------- | ------------------------------------------------------- |
-| `machineId`        | `string`                       | auto        | Custom machine identifier (hashed to 3 bytes)           |
-| `processId`        | `number`                       | auto        | Custom process ID (masked to 16 bits)                   |
-| `randomBytes`      | `(size: number) => Uint8Array` | auto        | Custom CSPRNG function                                  |
-| `allowInsecure`        | `boolean`  | `false`     | Allow insecure fallbacks for security-critical features          |
-| `filterOffensiveWords` | `boolean`  | `false`     | Reject IDs containing offensive word substrings                  |
-| `offensiveWords`       | `string[]` | `[]`        | Additional words to block alongside the built-in list            |
-| `maxFilterAttempts`     | `number`   | `10`        | Max attempts to find a clean ID when filtering is enabled        |
+| Option                 | Type                           | Default | Description                                               |
+| ---------------------- | ------------------------------ | ------- | --------------------------------------------------------- |
+| `machineId`            | `string`                       | auto    | Custom machine identifier (hashed to 3 bytes)             |
+| `processId`            | `number`                       | auto    | Custom process ID (masked to 16 bits)                     |
+| `randomBytes`          | `(size: number) => Uint8Array` | auto    | Custom CSPRNG function                                    |
+| `allowInsecure`        | `boolean`                      | `false` | Allow insecure fallbacks for security-critical features   |
+| `filterOffensiveWords` | `boolean`                      | `false` | Reject IDs containing offensive word substrings           |
+| `offensiveWords`       | `string[]`                     | `[]`    | Additional words to block alongside the built-in list     |
+| `maxFilterAttempts`    | `number`                       | `10`    | Max attempts to find a clean ID when filtering is enabled |
 
 ### Customizing machine ID
 
@@ -340,9 +340,9 @@ const generator3 = init({
 
 | Option                 | Type       | Default | Description                                                  |
 | ---------------------- | ---------- | ------- | ------------------------------------------------------------ |
-| `filterOffensiveWords` | `boolean`  | `false` | Enable filtering using the built-in offensive word blocklist  |
+| `filterOffensiveWords` | `boolean`  | `false` | Enable filtering using the built-in offensive word blocklist |
 | `offensiveWords`       | `string[]` | `[]`    | Additional words to block alongside the built-in list        |
-| `maxFilterAttempts`     | `number`   | `10`    | Max attempts before accepting the ID regardless              |
+| `maxFilterAttempts`    | `number`   | `10`    | Max attempts before accepting the ID regardless              |
 
 The filter strategy is bound at construction time — generators without filtering enabled pay zero overhead. Each attempt consumes one counter value. If the attempt budget is exhausted, the last generated ID is returned regardless.
 
@@ -361,11 +361,11 @@ NeXID provides TypeScript branded types for compile-time safety:
 import type { XIDBytes, XIDGenerator, XIDString } from 'nexid';
 ```
 
-| Type           | Base type              | Description                                |
-| -------------- | ---------------------- | ------------------------------------------ |
-| `XIDBytes`     | `Readonly<Uint8Array>` | Branded 12-byte XID binary form            |
-| `XIDString`    | `Readonly<string>`     | Branded 20-character XID string form       |
-| `XIDGenerator` | `Generator.API`        | The generator interface type alias         |
+| Type           | Base type              | Description                          |
+| -------------- | ---------------------- | ------------------------------------ |
+| `XIDBytes`     | `Readonly<Uint8Array>` | Branded 12-byte XID binary form      |
+| `XIDString`    | `Readonly<string>`     | Branded 20-character XID string form |
+| `XIDGenerator` | `Generator.API`        | The generator interface type alias   |
 
 ### Generator types (internal)
 

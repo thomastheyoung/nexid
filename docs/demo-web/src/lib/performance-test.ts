@@ -12,14 +12,13 @@ export function runPerformanceTest(fn: Function, size: number = PERF_TEST_COUNT)
   const formatted = {
     size: size.toLocaleString(),
     time: (end - start).toFixed(1),
-    idsPerSecond: idsPerSecond.toLocaleString()
+    idsPerSecond: idsPerSecond.toLocaleString(),
   };
 
   return {
     time: end - start,
     idsPerSecond,
     sampleIds: ids.slice(-3),
-    toString: () =>
-      `Generated ${formatted.size} ids in ${formatted.time}ms (ids/second: ${formatted.idsPerSecond})`
+    toString: () => `Generated ${formatted.size} ids in ${formatted.time}ms (ids/second: ${formatted.idsPerSecond})`,
   };
 }

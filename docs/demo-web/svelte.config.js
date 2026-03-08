@@ -18,21 +18,21 @@ const config = {
       assets: 'build',
       fallback: undefined,
       precompress: false,
-      strict: true
+      strict: true,
     }),
 
     paths: {
-      base: process.argv.includes('dev') ? '' : '/nexid'
+      base: process.argv.includes('dev') ? '' : '/nexid',
     },
 
     serviceWorker: {
-      register: false
+      register: false,
     },
 
     files: {
-      serviceWorker: './src/workers/service-worker/service-worker'
-    }
-  }
+      serviceWorker: './src/workers/service-worker/service-worker',
+    },
+  },
 };
 
 export default config;

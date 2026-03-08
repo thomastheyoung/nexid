@@ -105,20 +105,17 @@ function getBuiltinRegex(): RegExp {
  * Built-in offensive word filter predicate. Returns true if the string
  * contains an offensive substring from the built-in blocklist.
  */
-const defaultOffensiveWordFilter: OffensiveWordFilterFn = (encoded) =>
-  getBuiltinRegex().test(encoded);
+const defaultOffensiveWordFilter: OffensiveWordFilterFn = encoded => getBuiltinRegex().test(encoded);
 
 /**
  * Creates a combined filter from the built-in blocklist plus additional words.
  * Extra words are lowercased and regex-escaped before compilation.
  */
 function createExtendedFilter(extraWords: readonly string[]): OffensiveWordFilterFn {
-  const escaped = extraWords
-    .filter(w => w.length > 0)
-    .map(w => w.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const escaped = extraWords.filter(w => w.length > 0).map(w => w.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
   const allWords = [...BLOCKED_WORDS, ...escaped];
   const regex = new RegExp(allWords.join('|'));
-  return (encoded) => regex.test(encoded);
+  return encoded => regex.test(encoded);
 }
 
 /**

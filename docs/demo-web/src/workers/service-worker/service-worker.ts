@@ -1,3 +1,11 @@
+import type { XIDGenerator } from 'nexid';
+
+import NeXID from 'nexid/web';
+
+import { Logger } from '../../lib/logger';
+import type { PayloadFor } from '../index';
+import type { ClientToWorkerMessage, WorkerToClientMessage } from './types';
+
 /// <reference types="@sveltejs/kit" />
 /// <reference no-default-lib="true"/>
 /// <reference lib="esnext" />
@@ -5,12 +13,6 @@
 
 declare var self: ServiceWorkerGlobalScope;
 export {};
-
-import type { XIDGenerator } from 'nexid';
-import NeXID from 'nexid/web';
-import { Logger } from '../../lib/logger';
-import type { PayloadFor } from '../index';
-import type { ClientToWorkerMessage, WorkerToClientMessage } from './types';
 
 // ============================================================================
 // Setup instance variables & functions
@@ -34,7 +36,7 @@ async function initNeXID() {
 function Messenger(client: Client | ServiceWorker) {
   return function sendMessage<T extends WorkerToClientMessage, K extends T['type']>(
     type: K,
-    payload?: PayloadFor<T, K>
+    payload?: PayloadFor<T, K>,
   ) {
     client.postMessage({ type, payload });
   };

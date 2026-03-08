@@ -48,8 +48,7 @@ import { Generator } from 'nexid/types/xid-generator';
 
 import { createAtomicCounter } from './counter';
 import { encode } from './encoding';
-import type { OffensiveWordFilterFn } from './offensive-word-filter';
-import { resolveOffensiveWordFilter } from './offensive-word-filter';
+import { resolveOffensiveWordFilter, type OffensiveWordFilterFn } from './offensive-word-filter';
 import { XID } from './xid';
 
 export type HashFn = (data: string | Uint8Array) => Uint8Array;
@@ -175,7 +174,7 @@ export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: G
   // entirely in chars 0–13 (timestamp + machine/process region), further
   // retries are futile — bail out immediately to avoid wasting counter values.
   const generateBytes: (timestamp: number) => Readonly<XIDBytes> = offensiveWordFilter
-    ? (timestamp) => {
+    ? timestamp => {
         for (let attempt = 0; attempt < maxFilterAttempts; attempt++) {
           const bytes = buildXIDBytes(timestamp);
           const encoded = encode(bytes);
@@ -187,7 +186,7 @@ export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: G
     : buildXIDBytes;
 
   const generateString: (timestamp: number) => XIDString = offensiveWordFilter
-    ? (timestamp) => {
+    ? timestamp => {
         for (let attempt = 0; attempt < maxFilterAttempts; attempt++) {
           const encoded = encode(buildXIDBytes(timestamp));
           if (!offensiveWordFilter(encoded)) return encoded;
@@ -195,7 +194,7 @@ export function XIDGenerator(env: Environment, hashMachineId: HashFn, options: G
         }
         return encode(buildXIDBytes(timestamp));
       }
-    : (timestamp) => encode(buildXIDBytes(timestamp));
+    : timestamp => encode(buildXIDBytes(timestamp));
 
   // ==========================================================================
   // Export API
@@ -279,11 +278,7 @@ function sanitizeFixedRegion(
  * word. Builds a temporary buffer with only the machine + process bytes set,
  * encodes it, and tests the relevant substring.
  */
-function isFixedRegionOffensive(
-  mid: Uint8Array,
-  pid: number,
-  filter: OffensiveWordFilterFn,
-): boolean {
+function isFixedRegionOffensive(mid: Uint8Array, pid: number, filter: OffensiveWordFilterFn): boolean {
   const buf = new Uint8Array(RAW_LEN);
   buf[4] = mid[0] & BYTE_MASK;
   buf[5] = mid[1] & BYTE_MASK;

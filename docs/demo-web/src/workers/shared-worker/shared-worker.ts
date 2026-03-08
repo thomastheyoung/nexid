@@ -1,11 +1,3 @@
-/// <reference types="@sveltejs/kit" />
-/// <reference no-default-lib="true"/>
-/// <reference lib="esnext" />
-/// <reference lib="webworker" />
-
-declare var self: SharedWorkerGlobalScope;
-export {};
-
 // ============================================================================
 // Inspect workers: {chrome,brave}://inspect/#workers
 // ============================================================================
@@ -13,9 +5,19 @@ export {};
 import { Logger } from '$lib/logger';
 import { Heroes } from '$lib/names';
 import type { XIDGenerator } from 'nexid';
+
 import NeXID from 'nexid/web';
+
 import type { PayloadFor } from '../index';
 import type { ClientToWorkerMessage, WorkerBroadcastMessage, WorkerToClientMessage } from './types';
+
+/// <reference types="@sveltejs/kit" />
+/// <reference no-default-lib="true"/>
+/// <reference lib="esnext" />
+/// <reference lib="webworker" />
+
+declare var self: SharedWorkerGlobalScope;
+export {};
 
 type ClientID = string;
 
@@ -136,16 +138,13 @@ const MessageHandler = (clientId: ClientID, port: MessagePort) => {
 function Messenger(port: MessagePort) {
   return function sendMessage<T extends WorkerToClientMessage, K extends T['type']>(
     type: K,
-    payload?: PayloadFor<T, K>
+    payload?: PayloadFor<T, K>,
   ) {
     port.postMessage({ dest: 'client', type, payload });
   };
 }
 
-function broadcast<T extends WorkerBroadcastMessage, K extends T['type']>(
-  type: K,
-  payload?: PayloadFor<T, K>
-) {
+function broadcast<T extends WorkerBroadcastMessage, K extends T['type']>(type: K, payload?: PayloadFor<T, K>) {
   for (const port of clients.values()) {
     port.postMessage({ dest: 'broadcast', type, payload });
   }

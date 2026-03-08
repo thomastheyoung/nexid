@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  BLOCKED_WORDS,
-  resolveOffensiveWordFilter,
-} from '../../src/core/offensive-word-filter';
+import { BLOCKED_WORDS, resolveOffensiveWordFilter } from '../../src/core/offensive-word-filter';
 import NeXID from '../../src/node';
 
 describe('word-filter', () => {

@@ -77,24 +77,24 @@ Creates an XID generator. Returns `Generator.API`.
 
 ```typescript
 const nexid = NeXID.init({
-  machineId: 'my-service-01', // Override auto-detected machine ID
-  processId: 42,              // Override auto-detected process ID (0–65535)
-  randomBytes: myCSPRNG,      // Custom (size: number) => Uint8Array
-  allowInsecure: false,       // Allow non-cryptographic fallbacks (default: false)
+  machineId: 'my-service-01',    // Override auto-detected machine ID
+  processId: 42,                 // Override auto-detected process ID (0–65535)
+  randomBytes: myCSPRNG,         // Custom (size: number) => Uint8Array
+  allowInsecure: false,          // Allow non-cryptographic fallbacks (default: false)
   filterOffensiveWords: true,    // Reject IDs containing offensive words
   offensiveWords: ['myterm'],    // Additional words to block
 });
 ```
 
-| Option                 | Type                           | Default       | Description                                                  |
-| ---------------------- | ------------------------------ | ------------- | ------------------------------------------------------------ |
-| `machineId`            | `string`                       | Auto-detected | Custom machine identifier string (hashed before use)         |
-| `processId`            | `number`                       | Auto-detected | Custom process ID, masked to 16-bit                          |
-| `randomBytes`          | `(size: number) => Uint8Array` | Auto-detected | Custom CSPRNG implementation                                 |
-| `allowInsecure`        | `boolean`                      | `false`       | When `false`, throws if CSPRNG cannot be resolved            |
-| `filterOffensiveWords` | `boolean`                      | `false`       | Reject IDs containing offensive word substrings              |
-| `offensiveWords`       | `string[]`                     | `[]`          | Additional words to block alongside the built-in list        |
-| `maxFilterAttempts`     | `number`                       | `10`          | Max attempts to find a clean ID when filtering is enabled    |
+| Option                 | Type                           | Default       | Description                                               |
+| ---------------------- | ------------------------------ | ------------- | --------------------------------------------------------- |
+| `machineId`            | `string`                       | Auto-detected | Custom machine identifier string (hashed before use)      |
+| `processId`            | `number`                       | Auto-detected | Custom process ID, masked to 16-bit                       |
+| `randomBytes`          | `(size: number) => Uint8Array` | Auto-detected | Custom CSPRNG implementation                              |
+| `allowInsecure`        | `boolean`                      | `false`       | When `false`, throws if CSPRNG cannot be resolved         |
+| `filterOffensiveWords` | `boolean`                      | `false`       | Reject IDs containing offensive word substrings           |
+| `offensiveWords`       | `string[]`                     | `[]`          | Additional words to block alongside the built-in list     |
+| `maxFilterAttempts`    | `number`                       | `10`          | Max attempts to find a clean ID when filtering is enabled |
 
 ### Generator API
 
