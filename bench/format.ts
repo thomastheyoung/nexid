@@ -7,7 +7,6 @@ export interface BenchmarkResult {
   p99ns: number;
   rme: number;
   samples: number;
-  unstable: boolean;
   sampleId: string;
   byteLength: number;
 }
@@ -69,7 +68,7 @@ export function printTaskComplete(result: BenchmarkResult, index: number, total:
   const name = styleName(result.name);
   const ops = fmtNum(result.opsPerSec);
   const rme = `\u00b1${result.rme.toFixed(1)}%`;
-  const warn = result.unstable ? ` ${styleText('yellow', '\u26a0')}` : '';
+  const warn = result.rme > 5 ? ` ${styleText('yellow', '\u26a0')}` : '';
   const counter = styleText('gray', `(${index + 1}/${total})`);
 
   process.stderr.write(`\x1b[2K  ${check} ${name} ${ops.padStart(14)} ops/sec  ${rme.padStart(7)}${warn}  ${counter}\n`);
@@ -100,7 +99,7 @@ export function printReport(report: BenchmarkReport): void {
       ? 'best'.padStart(8)
       : `${(r.opsPerSec / maxOps).toFixed(2)}x`.padStart(8);
     const barStr = bar(r.opsPerSec, maxOps, isNexid(r.name));
-    const warn = r.unstable
+    const warn = r.rme > 5
       ? `  ${styleText('yellow', `\u26a0 \u00b1${r.rme.toFixed(1)}%`)}`
       : '';
 

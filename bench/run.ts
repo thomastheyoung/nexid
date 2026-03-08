@@ -1,7 +1,5 @@
 import { parseArgs } from 'node:util';
 
-import { Bench } from 'tinybench';
-
 import {
   printHeader,
   printJson,
@@ -12,6 +10,7 @@ import {
   type BenchmarkResult,
 } from './format.js';
 import { createGenerators, type GeneratorEntry } from './generators.js';
+import { measureAsync, measureSync } from './measure.js';
 
 const { values: flags } = parseArgs({
   options: {
@@ -48,10 +47,6 @@ async function runBenchmarks(
   const total = generators.length;
   const results: BenchmarkResult[] = [];
 
-  // Run each generator as its own Bench instance so we get per-task progress.
-  // tinybench's bench.run() executes all tasks sequentially with no per-task
-  // callback between them, so running individually is the cleanest way to get
-  // real-time feedback.
   for (let i = 0; i < generators.length; i++) {
     const gen = generators[i]!;
 
@@ -59,34 +54,19 @@ async function runBenchmarks(
       printTaskStart(gen.name, i, total);
     }
 
-    // Capture a sample ID before benchmarking to keep the hot path clean
-    const sampleId = String(await gen.fn());
+    const sampleId = String(gen.async ? await gen.fn() : gen.fn());
 
-    const bench = new Bench({ time: 1000, warmup: true, warmupTime: 250 });
-
-    bench.add(gen.name, gen.fn);
-
-    await bench.run();
-
-    const task = bench.tasks[0]!;
-    const r = task.result;
-
-    if (r.state !== 'completed') {
-      process.stderr.write(`  \u2717 ${gen.name} failed (${r.state})\n`);
-      continue;
-    }
+    const { stats, opsPerSec } = gen.async
+      ? await measureAsync(gen.fn)
+      : measureSync(gen.fn);
 
     const result: BenchmarkResult = {
       name: gen.name,
-      // throughput.mean is the arithmetic mean of per-sample throughput values,
-      // which differs from 1/latency.mean due to Jensen's inequality. This is
-      // the more conservative (slightly lower) number.
-      opsPerSec: Math.round(r.throughput.mean),
-      nsPerOp: Math.round(r.latency.mean * 1_000_000),
-      p99ns: Math.round(r.latency.p99 * 1_000_000),
-      rme: r.latency.rme,
-      samples: r.latency.samplesCount,
-      unstable: r.latency.rme > 5,
+      opsPerSec,
+      nsPerOp: Math.round(stats.mean),
+      p99ns: Math.round(stats.p99),
+      rme: stats.rme,
+      samples: stats.sampleCount,
       sampleId,
       byteLength: Buffer.byteLength(sampleId, 'utf8'),
     };
