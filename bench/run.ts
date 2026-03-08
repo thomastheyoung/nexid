@@ -40,10 +40,7 @@ async function run() {
   }
 }
 
-async function runBenchmarks(
-  generators: GeneratorEntry[],
-  json: boolean,
-): Promise<BenchmarkResult[]> {
+async function runBenchmarks(generators: GeneratorEntry[], json: boolean): Promise<BenchmarkResult[]> {
   const total = generators.length;
   const results: BenchmarkResult[] = [];
 
@@ -56,9 +53,7 @@ async function runBenchmarks(
 
     const sampleId = String(gen.async ? await gen.fn() : gen.fn());
 
-    const { stats, opsPerSec } = gen.async
-      ? await measureAsync(gen.fn)
-      : measureSync(gen.fn);
+    const { stats, opsPerSec } = gen.async ? await measureAsync(gen.fn) : measureSync(gen.fn);
 
     const result: BenchmarkResult = {
       name: gen.name,
@@ -81,7 +76,7 @@ async function runBenchmarks(
   return results;
 }
 
-run().catch((err) => {
+run().catch(err => {
   console.error('Benchmark failed:', err);
   process.exitCode = 1;
 });

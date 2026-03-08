@@ -42,10 +42,7 @@ function calibrate(fn: () => unknown, warmupMs: number): number {
   return batchSize;
 }
 
-export function measureSync(
-  fn: () => unknown,
-  options?: MeasureOptions,
-): MeasureResult {
+export function measureSync(fn: () => unknown, options?: MeasureOptions): MeasureResult {
   const { time, warmupTime } = { ...defaults, ...options };
 
   const batchSize = calibrate(fn, warmupTime);
@@ -72,10 +69,7 @@ export function measureSync(
   };
 }
 
-export async function measureAsync(
-  fn: () => Promise<unknown>,
-  options?: MeasureOptions,
-): Promise<MeasureResult> {
+export async function measureAsync(fn: () => Promise<unknown>, options?: MeasureOptions): Promise<MeasureResult> {
   const { time, warmupTime } = { ...defaults, ...options };
 
   // Warmup (no batching — async overhead dwarfs timer cost)

@@ -71,7 +71,9 @@ export function printTaskComplete(result: BenchmarkResult, index: number, total:
   const warn = result.rme > 5 ? ` ${styleText('yellow', '\u26a0')}` : '';
   const counter = styleText('gray', `(${index + 1}/${total})`);
 
-  process.stderr.write(`\x1b[2K  ${check} ${name} ${ops.padStart(14)} ops/sec  ${rme.padStart(7)}${warn}  ${counter}\n`);
+  process.stderr.write(
+    `\x1b[2K  ${check} ${name} ${ops.padStart(14)} ops/sec  ${rme.padStart(7)}${warn}  ${counter}\n`,
+  );
 }
 
 // -- Final report (written to stdout) --
@@ -84,7 +86,9 @@ export function printReport(report: BenchmarkReport): void {
   const maxOps = sorted[0].opsPerSec;
 
   // Results table
-  console.log(`\n  ${styleText('gray', '\u2500\u2500')} ${styleText('bold', 'Results')} ${styleText('gray', '\u2500'.repeat(62))}\n`);
+  console.log(
+    `\n  ${styleText('gray', '\u2500\u2500')} ${styleText('bold', 'Results')} ${styleText('gray', '\u2500'.repeat(62))}\n`,
+  );
 
   const header = `  ${'#'.padStart(2)}  ${'Name'.padEnd(NAME_WIDTH)}  ${'ops/sec'.padStart(14)}  ${'p99'.padStart(8)}  ${'vs best'.padStart(8)}  `;
   console.log(styleText('gray', header));
@@ -95,38 +99,34 @@ export function printReport(report: BenchmarkReport): void {
     const name = styleName(r.name);
     const ops = fmtNum(r.opsPerSec).padStart(14);
     const p99 = fmtNs(r.p99ns).padStart(8);
-    const ratio = i === 0
-      ? 'best'.padStart(8)
-      : `${(r.opsPerSec / maxOps).toFixed(2)}x`.padStart(8);
+    const ratio = i === 0 ? 'best'.padStart(8) : `${(r.opsPerSec / maxOps).toFixed(2)}x`.padStart(8);
     const barStr = bar(r.opsPerSec, maxOps, isNexid(r.name));
-    const warn = r.rme > 5
-      ? `  ${styleText('yellow', `\u26a0 \u00b1${r.rme.toFixed(1)}%`)}`
-      : '';
+    const warn = r.rme > 5 ? `  ${styleText('yellow', `\u26a0 \u00b1${r.rme.toFixed(1)}%`)}` : '';
 
     console.log(`  ${rank}  ${name}  ${ops}  ${p99}  ${ratio}  ${barStr}${warn}`);
   });
 
   // Sample IDs
-  console.log(`\n  ${styleText('gray', '\u2500\u2500')} ${styleText('bold', 'Sample IDs')} ${styleText('gray', '\u2500'.repeat(59))}\n`);
-
-  const bySizeAndName = [...results].sort(
-    (a, b) => a.byteLength - b.byteLength || a.name.localeCompare(b.name),
+  console.log(
+    `\n  ${styleText('gray', '\u2500\u2500')} ${styleText('bold', 'Sample IDs')} ${styleText('gray', '\u2500'.repeat(59))}\n`,
   );
+
+  const bySizeAndName = [...results].sort((a, b) => a.byteLength - b.byteLength || a.name.localeCompare(b.name));
 
   for (const r of bySizeAndName) {
     const name = styleName(r.name);
     const id = styleText('gray', r.sampleId);
-    console.log(`  ${name}  ${id}  ${String(r.sampleId.length).padStart(2)} chars  ${String(r.byteLength).padStart(2)} bytes`);
+    console.log(
+      `  ${name}  ${id}  ${String(r.sampleId.length).padStart(2)} chars  ${String(r.byteLength).padStart(2)} bytes`,
+    );
   }
 
   // Summary — compare NeXID.fastId() to the most common alternative (uuid v4)
-  const nexidFast = results.find((r) => r.name === 'NeXID.fastId()');
-  const uuidV4 = results.find((r) => r.name === 'uuid v4');
+  const nexidFast = results.find(r => r.name === 'NeXID.fastId()');
+  const uuidV4 = results.find(r => r.name === 'uuid v4');
   if (nexidFast && uuidV4) {
     const ratio = (nexidFast.opsPerSec / uuidV4.opsPerSec).toFixed(1);
-    console.log(
-      `\n  ${styleText('green', `NeXID.fastId() is ${ratio}x faster than uuid v4`)}\n`,
-    );
+    console.log(`\n  ${styleText('green', `NeXID.fastId() is ${ratio}x faster than uuid v4`)}\n`);
   }
 }
 
